@@ -26,6 +26,19 @@ namespace GeometryFriendsAgents
         private DateTime lastMoveTime;
         private Random rnd;
 
+        private Platform platform;
+        private LevelArray levelArray;
+        private int targetPointX_InAir;
+        private bool getCollectibleFlag;
+        private SubgoalAStar subgoalAStar;
+        private int currentCollectibleNum;
+        private bool differentPlatformFlag;
+        private int previousCollectibleNum;
+        private Platform.MoveInfo? nextEdge;
+        private ActionSelector actionSelector;
+        private Platform.PlatformInfo? currentPlatform;
+        private Platform.PlatformInfo? previousPlatform;
+
         //Sensors Information
         private CountInformation numbersInfo;
         private RectangleRepresentation rectangleInfo;
@@ -35,15 +48,7 @@ namespace GeometryFriendsAgents
         private ObstacleRepresentation[] circlePlatformsInfo;
         private CollectibleRepresentation[] collectiblesInfo;
 
-        private Platform.PlatformInfo? previousPlatform;
-        private Platform.PlatformInfo? currentPlatform;
-        private bool getCollectibleFlag;
-        private bool differentPlatformFlag;
-
-        private Platform.MoveInfo? nextEdge;
-        private int targetPointX_InAir;
-
-        private int nCollectiblesLeft;
+        //private int nCollectiblesLeft;
 
         private List<AgentMessage> messages;
 
@@ -58,6 +63,11 @@ namespace GeometryFriendsAgents
             lastMoveTime = DateTime.Now;
             currentAction = Moves.NO_ACTION;
             rnd = new Random();
+
+            levelArray = new LevelArray();
+            platform = new Platform();
+            subgoalAStar = new SubgoalAStar();
+            actionSelector = new ActionSelector();
 
             //prepare the possible moves  
             possibleMoves = new List<Moves>();
@@ -79,7 +89,8 @@ namespace GeometryFriendsAgents
         public override void Setup(CountInformation nI, RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI, Rectangle area, double timeLimit)
         {
             numbersInfo = nI;
-            nCollectiblesLeft = nI.CollectiblesCount;
+            currentCollectibleNum = nI.CollectiblesCount;
+            //nCollectiblesLeft = nI.CollectiblesCount;
             rectangleInfo = rI;
             circleInfo = cI;
             obstaclesInfo = oI;
@@ -94,13 +105,17 @@ namespace GeometryFriendsAgents
             nextEdge = null;
             targetPointX_InAir = (int)circleInfo.X;
 
+            levelArray.CreateLevelArray(collectiblesInfo, obstaclesInfo, rectanglePlatformsInfo);
+            platform.SetUp(levelArray.GetLevelArray(), levelArray.initialCollectiblesInfo.Length);
+
             //DebugSensorsInfo();
         }
 
         //implements abstract rectangle interface: registers updates from the agent's sensors that it is up to date with the latest environment information
         public override void SensorsUpdated(int nC, RectangleRepresentation rI, CircleRepresentation cI, CollectibleRepresentation[] colI)
         {
-            nCollectiblesLeft = nC;
+            //nCollectiblesLeft = nC;
+            currentCollectibleNum = nC;
 
             rectangleInfo = rI;
             circleInfo = cI;
@@ -281,6 +296,14 @@ namespace GeometryFriendsAgents
             }
 
             previousPlatform = currentPlatform;
+        }
+
+        private void SetNextEdge()
+        {
+            nextEdge = null;
+            nextEdge = subgoalAStar.CalculateShortestPath(currentPlatform.Value, new LevelArray.Point((int)circleInfo.X, (int)circleInfo.Y),
+                Enumerable.Repeat<bool>(true, levelArray.initialCollectiblesInfo.Length).ToArray(),
+                levelArray.GetObtainedCollectibles(collectiblesInfo), levelArray.initialCollectiblesInfo);
         }
 
         //typically used console debugging used in previous implementations of GeometryFriends
