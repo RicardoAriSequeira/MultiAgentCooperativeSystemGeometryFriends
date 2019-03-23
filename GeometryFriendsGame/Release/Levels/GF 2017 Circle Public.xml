@@ -57,6 +57,11 @@
     <GreenElevators />
     <OrangeElevators />
     <TimeLimit value="180" />
+    <HighScores>
+      <HighScore name="KIT Agent" value="15" />
+      <HighScore name="KIT Agent" value="15" />
+      <HighScore name="KIT Agent" value="15" />
+    </HighScores>
   </Level3>
   <Level4>
     <Description />

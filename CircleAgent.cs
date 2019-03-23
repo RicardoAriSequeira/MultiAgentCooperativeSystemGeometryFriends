@@ -83,6 +83,11 @@ namespace GeometryFriendsAgents
         //implements abstract circle interface: used to setup the initial information so that the agent has basic knowledge about the level
         public override void Setup(CountInformation nI, RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI, Rectangle area, double timeLimit)
         {
+
+
+            Console.WriteLine("entao caralho");
+
+
             numbersInfo = nI;
             currentCollectibleNum = nI.CollectiblesCount;
             rectangleInfo = rI;
@@ -150,6 +155,8 @@ namespace GeometryFriendsAgents
         //implements abstract circle interface: updates the agent state logic and predictions
         public override void Update(TimeSpan elapsedGameTime)
         {
+            Console.WriteLine("x: " + circleInfo.X + " ; y: " + circleInfo.Y);
+
             if ((DateTime.Now - lastMoveTime).TotalMilliseconds >= 20)
             { 
                 // saber se a plataforma atual e diferente da plataforma anterior
@@ -220,7 +227,7 @@ namespace GeometryFriendsAgents
                 }
 
                 lastMoveTime = DateTime.Now;
-                //DebugSensorsInfo();
+                DebugSensorsInfo();
             }
 
             if (nextEdge.HasValue)
