@@ -84,10 +84,6 @@ namespace GeometryFriendsAgents
         public override void Setup(CountInformation nI, RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI, Rectangle area, double timeLimit)
         {
 
-
-            Console.WriteLine("entao caralho");
-
-
             numbersInfo = nI;
             currentCollectibleNum = nI.CollectiblesCount;
             rectangleInfo = rI;
@@ -155,7 +151,6 @@ namespace GeometryFriendsAgents
         //implements abstract circle interface: updates the agent state logic and predictions
         public override void Update(TimeSpan elapsedGameTime)
         {
-            Console.WriteLine("x: " + circleInfo.X + " ; y: " + circleInfo.Y);
 
             if ((DateTime.Now - lastMoveTime).TotalMilliseconds >= 20)
             { 

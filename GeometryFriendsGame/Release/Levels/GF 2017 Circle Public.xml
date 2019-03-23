@@ -58,6 +58,7 @@
     <OrangeElevators />
     <TimeLimit value="180" />
     <HighScores>
+      <HighScore name="RandPredictorCircle" value="12" />
       <HighScore name="KIT Agent" value="15" />
       <HighScore name="KIT Agent" value="15" />
       <HighScore name="KIT Agent" value="15" />

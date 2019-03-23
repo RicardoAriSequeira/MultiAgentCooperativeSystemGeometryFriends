@@ -72,6 +72,7 @@ namespace GeometryFriendsAgents
 
         public void SetPlatformInfoList(int[,] levelArray)
         {
+            /*
             int[,] platformArray = new int[levelArray.GetLength(0), levelArray.GetLength(1)];
 
             for (int i = 0; i < levelArray.GetLength(0); i++)
@@ -85,6 +86,7 @@ namespace GeometryFriendsAgents
 
                 });
             }
+            */
         }
 
         public void SetMoveInfoList(int[,] levelArray, int numCollectibles)
