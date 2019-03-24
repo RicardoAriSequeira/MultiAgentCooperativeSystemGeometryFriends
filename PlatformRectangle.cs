@@ -13,6 +13,9 @@ namespace GeometryFriendsAgents
             NO_ACTION, STAIR_GAP, FALL, MORPH_DOWN, MORPH_UP
         };
 
+        private int[] RECTANGLE_HEIGHTS = new int[8] { 192, 172, 152, 132, 112, 92, 72, 52 };
+        private int RECTANGLE_AREA = 10000; // ou 9984?
+
         public struct PlatformInfo
         {
             public int id;
@@ -72,7 +75,7 @@ namespace GeometryFriendsAgents
 
         public void SetPlatformInfoList(int[,] levelArray)
         {
-            /*
+        
             int[,] platformArray = new int[levelArray.GetLength(0), levelArray.GetLength(1)];
 
             for (int i = 0; i < levelArray.GetLength(0); i++)
@@ -80,13 +83,114 @@ namespace GeometryFriendsAgents
                 Parallel.For(0, levelArray.GetLength(1), j =>
                 {
 
-                    LevelArray.Point rectangleCenter = LevelArray.ConvertArrayPointIntoPoint(new LevelArray.ArrayPoint(j, i));
+                    foreach (int height in RECTANGLE_HEIGHTS)
+                    {
+                        LevelArray.Point rectangleCenter = LevelArray.ConvertArrayPointIntoPoint(new LevelArray.ArrayPoint(j, i));
+                        rectangleCenter.y -= (height / 2);
+                        List<LevelArray.ArrayPoint> rectanglePixels = GetRectanglePixels(rectangleCenter, height);
 
-
-
+                        if (!IsObstacle_onPixels(levelArray, rectanglePixels))
+                        {
+                            if (levelArray[i, j - 1] == LevelArray.OBSTACLE || levelArray[i, j] == LevelArray.OBSTACLE)
+                            {
+                                platformArray[i, j] = LevelArray.OBSTACLE;
+                            }
+                        }
+                    }
                 });
             }
-            */
+
+            Parallel.For(0, levelArray.GetLength(0), i =>
+            {
+                bool platformFlag = false;
+                int height = 0, leftEdge = 0, rightEdge = 0;
+
+                for (int j = 0; j < platformArray.GetLength(1); j++)
+                {
+                    if (platformArray[i, j] == LevelArray.OBSTACLE && !platformFlag)
+                    {
+                        height = LevelArray.ConvertValue_ArrayPointIntoPoint(i);
+                        leftEdge = LevelArray.ConvertValue_ArrayPointIntoPoint(j);
+                        platformFlag = true;
+                    }
+
+                    if (platformArray[i, j] == LevelArray.OPEN && platformFlag)
+                    {
+                        rightEdge = LevelArray.ConvertValue_ArrayPointIntoPoint(j - 1);
+
+                        if (rightEdge >= leftEdge)
+                        {
+                            lock (platformInfoList)
+                            {
+                                platformInfoList.Add(new PlatformInfo(0, height, leftEdge, rightEdge, new List<MoveInfo>()));
+                            }
+                        }
+
+                        platformFlag = false;
+                    }
+                }
+            });
+
+            SetPlatformID();
+
+        }
+
+        private List<LevelArray.ArrayPoint> GetRectanglePixels(LevelArray.Point rectangleCenter, int height)
+        {
+            List<LevelArray.ArrayPoint> rectanglePixels = new List<LevelArray.ArrayPoint>();
+
+            LevelArray.ArrayPoint rectangleCenterArray = LevelArray.ConvertPointIntoArrayPoint(rectangleCenter, false, false);
+            int rectangleHighestY = LevelArray.ConvertValue_PointIntoArrayPoint(rectangleCenter.y - (height/2), false);
+            int rectangleLowestY = LevelArray.ConvertValue_PointIntoArrayPoint(rectangleCenter.y + (height/2), true);
+
+
+            for (int i = rectangleHighestY; i <= rectangleLowestY; i++)
+            {
+                float rectangleWidth = RECTANGLE_AREA / height;
+
+                int rectangleLeftX = LevelArray.ConvertValue_PointIntoArrayPoint((int)(rectangleCenter.x - (rectangleWidth/2)), false) + 1;
+                int rectangleRightX = LevelArray.ConvertValue_PointIntoArrayPoint((int)(rectangleCenter.x + (rectangleWidth/2)), true) + 1;
+
+                for (int j = rectangleLeftX; j <= rectangleRightX; j++)
+                {
+                    rectanglePixels.Add(new LevelArray.ArrayPoint(j, i));
+                }
+            }
+
+            return rectanglePixels;
+        }
+
+        public void SetPlatformID()
+        {
+            platformInfoList.Sort((a, b) => {
+                int result = a.height - b.height;
+                return result != 0 ? result : a.leftEdge - b.leftEdge;
+            });
+
+            Parallel.For(0, platformInfoList.Count, i =>
+            {
+                PlatformInfo tempPlatfom = platformInfoList[i];
+                tempPlatfom.id = i + 1;
+                platformInfoList[i] = tempPlatfom;
+            });
+        }
+
+        private bool IsObstacle_onPixels(int[,] levelArray, List<LevelArray.ArrayPoint> checkPixels)
+        {
+            if (checkPixels.Count == 0)
+            {
+                return true;
+            }
+
+            foreach (LevelArray.ArrayPoint i in checkPixels)
+            {
+                if (levelArray[i.yArray, i.xArray] == LevelArray.OBSTACLE)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public void SetMoveInfoList(int[,] levelArray, int numCollectibles)

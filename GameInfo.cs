@@ -3,6 +3,7 @@
     class GameInfo
     {
         public const int CIRCLE_RADIUS = 40;
+        public const int MIN_RECTANGLE_HEIGHT = 52;
 
         public const int MAX_VELOCITYX = 200;
         public const int MAX_VELOCITYY = 20;

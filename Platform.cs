@@ -88,8 +88,6 @@ namespace GeometryFriendsAgents
             int[,] platformArray = new int[levelArray.GetLength(0), levelArray.GetLength(1)];
 
 
-            // neste for, se existe um obstaculo dentro da area do circulo (estando ele centrado em i,j)
-            // entao esse mesmo ponto i,j e considerado um obstaculo no platformArray (mesmo que nao o seja no levelArray)
             for (int i = 0; i < levelArray.GetLength(0); i++)
             {
                 Parallel.For(0, levelArray.GetLength(1), j =>

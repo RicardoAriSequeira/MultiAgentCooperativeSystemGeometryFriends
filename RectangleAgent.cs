@@ -26,7 +26,7 @@ namespace GeometryFriendsAgents
         private DateTime lastMoveTime;
         private Random rnd;
 
-        private Platform platform;
+        private PlatformRectangle platform;
         private LevelArray levelArray;
         private int targetPointX_InAir;
         private bool getCollectibleFlag;
@@ -65,7 +65,7 @@ namespace GeometryFriendsAgents
             rnd = new Random();
 
             levelArray = new LevelArray();
-            platform = new Platform();
+            platform = new PlatformRectangle();
             subgoalAStar = new SubgoalAStar();
             actionSelector = new ActionSelector();
 
@@ -177,96 +177,96 @@ namespace GeometryFriendsAgents
             }
             */
 
-            if ((DateTime.Now - lastMoveTime).TotalMilliseconds >= 20)
-            {
-                // saber se a plataforma atual e diferente da plataforma anterior
-                IsDifferentPlatform();
-                // saber se um diamante foi colecionado
-                IsGetCollectible();
+            //if ((DateTime.Now - lastMoveTime).TotalMilliseconds >= 20)
+            //{
+            //    // saber se a plataforma atual e diferente da plataforma anterior
+            //    IsDifferentPlatform();
+            //    // saber se um diamante foi colecionado
+            //    IsGetCollectible();
 
-                // se o circulo se encontra numa plataforma
-                if (currentPlatform.HasValue)
-                {
-                    if (differentPlatformFlag || getCollectibleFlag)
-                    {
-                        differentPlatformFlag = false;
-                        getCollectibleFlag = false;
+            //    // se o circulo se encontra numa plataforma
+            //    if (currentPlatform.HasValue)
+            //    {
+            //        if (differentPlatformFlag || getCollectibleFlag)
+            //        {
+            //            differentPlatformFlag = false;
+            //            getCollectibleFlag = false;
 
-                        targetPointX_InAir = (currentPlatform.Value.leftEdge + currentPlatform.Value.rightEdge) / 2;
+            //            targetPointX_InAir = (currentPlatform.Value.leftEdge + currentPlatform.Value.rightEdge) / 2;
 
-                        Task.Factory.StartNew(SetNextEdge);
-                    }
+            //            Task.Factory.StartNew(SetNextEdge);
+            //        }
 
-                    // se o proximo objetivo estiver definido
-                    if (nextEdge.HasValue)
-                    {
-                        if (-GameInfo.MAX_VELOCITYY <= circleInfo.VelocityY && circleInfo.VelocityY <= GameInfo.MAX_VELOCITYY)
-                        {
-                            if (nextEdge.Value.movementType == Platform.movementType.STAIR_GAP)
-                            {
-                                currentAction = nextEdge.Value.rightMove ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
-                            }
-                            else
-                            {
-                                currentAction = actionSelector.GetCurrentAction(circleInfo, nextEdge.Value.movePoint.x, nextEdge.Value.velocityX, nextEdge.Value.rightMove);
-                            }
-                        }
-                        else
-                        {
-                            currentAction = actionSelector.GetCurrentAction(circleInfo, targetPointX_InAir, 0, true);
-                        }
-                    }
-                }
+            //        // se o proximo objetivo estiver definido
+            //        if (nextEdge.HasValue)
+            //        {
+            //            if (-GameInfo.MAX_VELOCITYY <= circleInfo.VelocityY && circleInfo.VelocityY <= GameInfo.MAX_VELOCITYY)
+            //            {
+            //                if (nextEdge.Value.movementType == Platform.movementType.STAIR_GAP)
+            //                {
+            //                    currentAction = nextEdge.Value.rightMove ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
+            //                }
+            //                else
+            //                {
+            //                    currentAction = actionSelector.GetCurrentAction(circleInfo, nextEdge.Value.movePoint.x, nextEdge.Value.velocityX, nextEdge.Value.rightMove);
+            //                }
+            //            }
+            //            else
+            //            {
+            //                currentAction = actionSelector.GetCurrentAction(circleInfo, targetPointX_InAir, 0, true);
+            //            }
+            //        }
+            //    }
 
-                // se o circulo nao se encontra numa plataforma
-                else
-                {
-                    if (nextEdge.HasValue)
-                    {
-                        if (nextEdge.Value.movementType == Platform.movementType.STAIR_GAP)
-                        {
-                            currentAction = nextEdge.Value.rightMove ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
-                        }
-                        else
-                        {
-                            if (nextEdge.Value.collideCeiling && circleInfo.VelocityY < 0)
-                            {
-                                currentAction = Moves.NO_ACTION;
-                            }
-                            else
-                            {
-                                currentAction = actionSelector.GetCurrentAction(circleInfo, targetPointX_InAir, 0, true);
-                            }
-                        }
-                    }
-                }
+            //    // se o circulo nao se encontra numa plataforma
+            //    else
+            //    {
+            //        if (nextEdge.HasValue)
+            //        {
+            //            if (nextEdge.Value.movementType == Platform.movementType.STAIR_GAP)
+            //            {
+            //                currentAction = nextEdge.Value.rightMove ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
+            //            }
+            //            else
+            //            {
+            //                if (nextEdge.Value.collideCeiling && circleInfo.VelocityY < 0)
+            //                {
+            //                    currentAction = Moves.NO_ACTION;
+            //                }
+            //                else
+            //                {
+            //                    currentAction = actionSelector.GetCurrentAction(circleInfo, targetPointX_InAir, 0, true);
+            //                }
+            //            }
+            //        }
+            //    }
 
-                if (!nextEdge.HasValue)
-                {
-                    currentAction = actionSelector.GetCurrentAction(circleInfo, (int)circleInfo.X, 0, false);
-                }
+            //    if (!nextEdge.HasValue)
+            //    {
+            //        currentAction = actionSelector.GetCurrentAction(circleInfo, (int)circleInfo.X, 0, false);
+            //    }
 
-                lastMoveTime = DateTime.Now;
-                //DebugSensorsInfo();
-            }
+            //    lastMoveTime = DateTime.Now;
+            //    //DebugSensorsInfo();
+            //}
 
-            if (nextEdge.HasValue)
-            {
-                if (!actionSelector.IsGoal(circleInfo, nextEdge.Value.movePoint.x, nextEdge.Value.velocityX, nextEdge.Value.rightMove))
-                {
-                    return;
-                }
+            //if (nextEdge.HasValue)
+            //{
+            //    if (!actionSelector.IsGoal(circleInfo, nextEdge.Value.movePoint.x, nextEdge.Value.velocityX, nextEdge.Value.rightMove))
+            //    {
+            //        return;
+            //    }
 
-                if (-GameInfo.MAX_VELOCITYY <= circleInfo.VelocityY && circleInfo.VelocityY <= GameInfo.MAX_VELOCITYY)
-                {
-                    targetPointX_InAir = (nextEdge.Value.reachablePlatform.leftEdge + nextEdge.Value.reachablePlatform.rightEdge) / 2;
+            //    if (-GameInfo.MAX_VELOCITYY <= circleInfo.VelocityY && circleInfo.VelocityY <= GameInfo.MAX_VELOCITYY)
+            //    {
+            //        targetPointX_InAir = (nextEdge.Value.reachablePlatform.leftEdge + nextEdge.Value.reachablePlatform.rightEdge) / 2;
 
-                    if (nextEdge.Value.movementType == Platform.movementType.JUMP)
-                    {
-                        currentAction = Moves.JUMP;
-                    }
-                }
-            }
+            //        if (nextEdge.Value.movementType == Platform.movementType.JUMP)
+            //        {
+            //            currentAction = Moves.JUMP;
+            //        }
+            //    }
+            //}
         }
 
         private void IsGetCollectible()
@@ -281,7 +281,7 @@ namespace GeometryFriendsAgents
 
         private void IsDifferentPlatform()
         {
-            currentPlatform = platform.GetPlatform_onCircle(new LevelArray.Point((int)circleInfo.X, (int)circleInfo.Y));
+            //currentPlatform = platform.GetPlatform_onCircle(new LevelArray.Point((int)circleInfo.X, (int)circleInfo.Y));
 
             if (currentPlatform.HasValue)
             {

@@ -122,4 +122,18 @@
     <GreenElevators />
     <OrangeElevators />
   </Level6>
+  <Level7>
+    <Description />
+    <Tips />
+    <BallStartingPosition X="-1000" Y="-1000" />
+    <SquareStartingPosition X="200" Y="712" />
+    <Collectibles>
+      <Collectible X="1096" Y="696" />
+    </Collectibles>
+    <GreenObstacles />
+    <BlackObstacles />
+    <YellowObstacles />
+    <GreenElevators />
+    <OrangeElevators />
+  </Level7>
 </Levels>
