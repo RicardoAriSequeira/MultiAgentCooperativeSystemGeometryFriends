@@ -148,8 +148,8 @@ namespace GeometryFriendsAgents
             {
                 float rectangleWidth = RECTANGLE_AREA / height;
 
-                int rectangleLeftX = LevelArray.ConvertValue_PointIntoArrayPoint((int)(rectangleCenter.x - (rectangleWidth/2)), false) + 1;
-                int rectangleRightX = LevelArray.ConvertValue_PointIntoArrayPoint((int)(rectangleCenter.x + (rectangleWidth/2)), true) + 1;
+                int rectangleLeftX = LevelArray.ConvertValue_PointIntoArrayPoint((int)(rectangleCenter.x - (rectangleWidth/2)), false); //+ 1
+                int rectangleRightX = LevelArray.ConvertValue_PointIntoArrayPoint((int)(rectangleCenter.x + (rectangleWidth/2)), true); //+ 1
 
                 for (int j = rectangleLeftX; j <= rectangleRightX; j++)
                 {
@@ -195,6 +195,67 @@ namespace GeometryFriendsAgents
 
         public void SetMoveInfoList(int[,] levelArray, int numCollectibles)
         {
+            foreach (PlatformInfo i in platformInfoList)
+            {
+                //movementType movementType;
+                //movementType = movementType.JUMP;
+
+                int from = i.leftEdge + (i.leftEdge - GameInfo.LEVEL_ORIGINAL) % (LevelArray.PIXEL_LENGTH * 2);
+                int to = i.rightEdge - (i.rightEdge - GameInfo.LEVEL_ORIGINAL) % (LevelArray.PIXEL_LENGTH * 2);
+
+                Parallel.For(0, (to - from) / (LevelArray.PIXEL_LENGTH * 2) + 1, j =>
+                {
+                    LevelArray.Point movePoint;
+
+                    movePoint = new LevelArray.Point(from + j * LevelArray.PIXEL_LENGTH * 2, i.height - GameInfo.CIRCLE_RADIUS);
+
+                    SetMoveInfoList_NoAction(levelArray, i, movePoint, numCollectibles);
+                });
+            }
+        }
+
+        private void SetMoveInfoList_NoAction(int[,] levelArray, PlatformInfo fromPlatform, LevelArray.Point movePoint, int numCollectibles)
+        {
+            List<LevelArray.ArrayPoint> circlePixels = GetRectanglePixels(movePoint);
+
+            bool[] collectible_onPath = new bool[numCollectibles];
+
+            collectible_onPath = GetCollectibles_onPixels(levelArray, circlePixels, collectible_onPath.Length);
+
+            AddMoveInfoToList(fromPlatform, new MoveInfo(fromPlatform, movePoint, movePoint, 0, true, movementType.NO_ACTION, collectible_onPath, 0, false));
+        }
+
+        private bool[] GetCollectibles_onPixels(int[,] levelArray, List<LevelArray.ArrayPoint> checkPixels, int numCollectibles)
+        {
+            bool[] collectible_onPath = new bool[numCollectibles];
+
+            foreach (LevelArray.ArrayPoint i in checkPixels)
+            {
+                if (!(levelArray[i.yArray, i.xArray] == LevelArray.OBSTACLE || levelArray[i.yArray, i.xArray] == LevelArray.OPEN))
+                {
+                    collectible_onPath[levelArray[i.yArray, i.xArray] - 1] = true;
+                }
+            }
+
+            return collectible_onPath;
+        }
+
+        private void AddMoveInfoToList(PlatformInfo fromPlatform, MoveInfo mI)
+        {
+            lock (platformInfoList)
+            {
+                List<MoveInfo> moveInfoToRemove = new List<MoveInfo>();
+
+                if (IsPriorityHighest(fromPlatform, mI, ref moveInfoToRemove))
+                {
+                    fromPlatform.moveInfoList.Add(mI);
+                }
+
+                foreach (MoveInfo i in moveInfoToRemove)
+                {
+                    fromPlatform.moveInfoList.Remove(i);
+                }
+            }
         }
     }
 }
