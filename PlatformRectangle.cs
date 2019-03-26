@@ -10,7 +10,7 @@ namespace GeometryFriendsAgents
     {
         public enum movementType
         {
-            NO_ACTION, STAIR_GAP, FALL, MORPH_DOWN, MORPH_UP
+            NO_ACTION, STAIR_GAP, FALL, MORPH_DOWN, MORPH_UP, JUMP
         };
 
         private int[] RECTANGLE_HEIGHTS = new int[8] { 192, 172, 152, 132, 112, 92, 72, 52 };
@@ -75,7 +75,7 @@ namespace GeometryFriendsAgents
 
         public void SetPlatformInfoList(int[,] levelArray)
         {
-        
+
             int[,] platformArray = new int[levelArray.GetLength(0), levelArray.GetLength(1)];
 
             for (int i = 0; i < levelArray.GetLength(0); i++)
@@ -140,16 +140,16 @@ namespace GeometryFriendsAgents
             List<LevelArray.ArrayPoint> rectanglePixels = new List<LevelArray.ArrayPoint>();
 
             LevelArray.ArrayPoint rectangleCenterArray = LevelArray.ConvertPointIntoArrayPoint(rectangleCenter, false, false);
-            int rectangleHighestY = LevelArray.ConvertValue_PointIntoArrayPoint(rectangleCenter.y - (height/2), false);
-            int rectangleLowestY = LevelArray.ConvertValue_PointIntoArrayPoint(rectangleCenter.y + (height/2), true);
+            int rectangleHighestY = LevelArray.ConvertValue_PointIntoArrayPoint(rectangleCenter.y - (height / 2), false);
+            int rectangleLowestY = LevelArray.ConvertValue_PointIntoArrayPoint(rectangleCenter.y + (height / 2), true);
 
 
             for (int i = rectangleHighestY; i <= rectangleLowestY; i++)
             {
                 float rectangleWidth = RECTANGLE_AREA / height;
 
-                int rectangleLeftX = LevelArray.ConvertValue_PointIntoArrayPoint((int)(rectangleCenter.x - (rectangleWidth/2)), false); //+ 1
-                int rectangleRightX = LevelArray.ConvertValue_PointIntoArrayPoint((int)(rectangleCenter.x + (rectangleWidth/2)), true); //+ 1
+                int rectangleLeftX = LevelArray.ConvertValue_PointIntoArrayPoint((int)(rectangleCenter.x - (rectangleWidth / 2)), false); //+ 1
+                int rectangleRightX = LevelArray.ConvertValue_PointIntoArrayPoint((int)(rectangleCenter.x + (rectangleWidth / 2)), true); //+ 1
 
                 for (int j = rectangleLeftX; j <= rectangleRightX; j++)
                 {
@@ -162,7 +162,8 @@ namespace GeometryFriendsAgents
 
         public void SetPlatformID()
         {
-            platformInfoList.Sort((a, b) => {
+            platformInfoList.Sort((a, b) =>
+            {
                 int result = a.height - b.height;
                 return result != 0 ? result : a.leftEdge - b.leftEdge;
             });
@@ -197,8 +198,6 @@ namespace GeometryFriendsAgents
         {
             foreach (PlatformInfo i in platformInfoList)
             {
-                //movementType movementType;
-                //movementType = movementType.JUMP;
 
                 int from = i.leftEdge + (i.leftEdge - GameInfo.LEVEL_ORIGINAL) % (LevelArray.PIXEL_LENGTH * 2);
                 int to = i.rightEdge - (i.rightEdge - GameInfo.LEVEL_ORIGINAL) % (LevelArray.PIXEL_LENGTH * 2);
@@ -216,11 +215,11 @@ namespace GeometryFriendsAgents
 
         private void SetMoveInfoList_NoAction(int[,] levelArray, PlatformInfo fromPlatform, LevelArray.Point movePoint, int numCollectibles)
         {
-            List<LevelArray.ArrayPoint> circlePixels = GetRectanglePixels(movePoint);
+            List<LevelArray.ArrayPoint> rectanglePixels = GetRectanglePixels(movePoint, 100);
 
             bool[] collectible_onPath = new bool[numCollectibles];
 
-            collectible_onPath = GetCollectibles_onPixels(levelArray, circlePixels, collectible_onPath.Length);
+            collectible_onPath = GetCollectibles_onPixels(levelArray, rectanglePixels, collectible_onPath.Length);
 
             AddMoveInfoToList(fromPlatform, new MoveInfo(fromPlatform, movePoint, movePoint, 0, true, movementType.NO_ACTION, collectible_onPath, 0, false));
         }
@@ -256,6 +255,149 @@ namespace GeometryFriendsAgents
                     fromPlatform.moveInfoList.Remove(i);
                 }
             }
+        }
+
+        private bool IsPriorityHighest(PlatformInfo fromPlatform, MoveInfo mI, ref List<MoveInfo> moveInfoToRemove)
+        {
+            if (fromPlatform.id == mI.reachablePlatform.id && !Utilities.IsTrueValue_inMatrix(mI.collectibles_onPath))
+            {
+                return false;
+            }
+
+            bool priorityHighestFlag = true;
+
+            foreach (MoveInfo i in fromPlatform.moveInfoList)
+            {
+                if (!(mI.reachablePlatform.id == i.reachablePlatform.id))
+                {
+                    continue;
+                }
+
+                Utilities.numTrue trueNum = Utilities.CompTrueNum(mI.collectibles_onPath, i.collectibles_onPath);
+
+                if (trueNum == Utilities.numTrue.MORETRUE)
+                {
+                    if (mI.movementType != movementType.NO_ACTION && i.movementType == movementType.NO_ACTION)
+                    {
+                        continue;
+                    }
+                    else if (mI.movementType != movementType.NO_ACTION && i.movementType != movementType.NO_ACTION)
+                    {
+                        if (mI.movementType > i.movementType)
+                        {
+                            continue;
+                        }
+
+                        if (mI.velocityX > i.velocityX)
+                        {
+                            continue;
+                        }
+                    }
+
+                    moveInfoToRemove.Add(i);
+                    continue;
+                }
+
+                if (trueNum == Utilities.numTrue.LESSTRUE)
+                {
+                    if (mI.movementType == movementType.NO_ACTION && i.movementType != movementType.NO_ACTION)
+                    {
+                        continue;
+                    }
+                    else if (mI.movementType != movementType.NO_ACTION && i.movementType != movementType.NO_ACTION)
+                    {
+                        if (mI.movementType < i.movementType)
+                        {
+                            continue;
+                        }
+
+                        if (mI.velocityX < i.velocityX)
+                        {
+                            continue;
+                        }
+                    }
+
+                    priorityHighestFlag = false;
+                    continue;
+                }
+
+                if (trueNum == Utilities.numTrue.DIFFERENTTRUE)
+                {
+                    continue;
+                }
+
+                if (trueNum == Utilities.numTrue.SAMETRUE)
+                {
+                    if (mI.movementType == movementType.NO_ACTION && i.movementType == movementType.NO_ACTION)
+                    {
+                        int middlePos = (mI.reachablePlatform.rightEdge + mI.reachablePlatform.leftEdge) / 2;
+
+                        if (Math.Abs(middlePos - mI.landPoint.x) > Math.Abs(middlePos - i.landPoint.x))
+                        {
+                            priorityHighestFlag = false;
+                            continue;
+                        }
+
+                        moveInfoToRemove.Add(i);
+                        continue;
+                    }
+
+                    if (mI.movementType == movementType.NO_ACTION && i.movementType != movementType.NO_ACTION)
+                    {
+                        moveInfoToRemove.Add(i);
+                        continue;
+                    }
+
+                    if (mI.movementType != movementType.NO_ACTION && i.movementType == movementType.NO_ACTION)
+                    {
+                        priorityHighestFlag = false;
+                        continue;
+                    }
+
+                    if (mI.movementType != movementType.NO_ACTION && i.movementType != movementType.NO_ACTION)
+                    {
+                        if (mI.rightMove == i.rightMove || ((mI.movementType == movementType.JUMP && i.movementType == movementType.JUMP) && (mI.velocityX == 0 || i.velocityX == 0)))
+                        {
+                            if (mI.movementType > i.movementType)
+                            {
+                                priorityHighestFlag = false;
+                                continue;
+                            }
+
+                            if (mI.movementType < i.movementType)
+                            {
+                                moveInfoToRemove.Add(i);
+                                continue;
+                            }
+
+                            if (mI.velocityX > i.velocityX)
+                            {
+                                priorityHighestFlag = false;
+                                continue;
+                            }
+
+                            if (mI.velocityX < i.velocityX)
+                            {
+                                moveInfoToRemove.Add(i);
+                                continue;
+                            }
+
+                            int middlePos = (mI.reachablePlatform.rightEdge + mI.reachablePlatform.leftEdge) / 2;
+
+                            if (Math.Abs(middlePos - mI.landPoint.x) > Math.Abs(middlePos - i.landPoint.x))
+                            {
+                                priorityHighestFlag = false;
+                                continue;
+                            }
+
+                            moveInfoToRemove.Add(i);
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            return priorityHighestFlag;
         }
     }
 }
