@@ -18,7 +18,7 @@ namespace GeometryFriendsAgents
     {
         //agent implementation specificiation
         private bool implementedAgent;
-        private string agentName = "RanRect";
+        private string agentName = "RandRect";
 
         //auxiliary variables for agent action
         private Moves currentAction;
