@@ -135,5 +135,8 @@
     <YellowObstacles />
     <GreenElevators />
     <OrangeElevators />
+    <HighScores>
+      <HighScore name="RandRect" value="3" />
+    </HighScores>
   </Level7>
 </Levels>

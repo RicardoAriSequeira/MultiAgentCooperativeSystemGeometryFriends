@@ -55,6 +55,33 @@ namespace GeometryFriendsAgents
             return false;
         }
 
+        public bool IsGoal(RectangleRepresentation rI, int targetPointX, int targetVelocityX, bool rightMove)
+        {
+            float distanceX = rightMove ? rI.X - targetPointX : targetPointX - rI.X;
+
+            if (-DISCRETIZATION_DISTANCEX * 2 < distanceX && distanceX <= 0)
+            {
+                float relativeVelocityX = rightMove ? rI.VelocityX : -rI.VelocityX;
+
+                if (targetVelocityX == 0)
+                {
+                    if (targetVelocityX - DISCRETIZATION_VELOCITYX <= relativeVelocityX && relativeVelocityX < targetVelocityX + DISCRETIZATION_VELOCITYX)
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    if (targetVelocityX <= relativeVelocityX && relativeVelocityX < targetVelocityX + DISCRETIZATION_VELOCITYX * 2)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
         public Moves GetCurrentAction(CircleRepresentation cI, int targetPointX, int targetVelocityX, bool rightMove)
         {
             int stateNum = GetStateNum(cI, targetPointX, rightMove);
@@ -90,6 +117,41 @@ namespace GeometryFriendsAgents
             return currentAction;
         }
 
+        public Moves GetCurrentAction(RectangleRepresentation rI, int targetPointX, int targetVelocityX, bool rightMove)
+        {
+            int stateNum = GetStateNum(rI, targetPointX, rightMove);
+
+            int currentActionNum;
+
+            float distanceX = rightMove ? rI.X - targetPointX : targetPointX - rI.X;
+
+            if (distanceX <= -MAX_DISTANCEX)
+            {
+                currentActionNum = ACCELERATE;
+            }
+            else if (distanceX >= MAX_DISTANCEX)
+            {
+                currentActionNum = DEACCELERATE;
+            }
+            else
+            {
+                currentActionNum = GetOptimalActionNum(stateNum, targetVelocityX);
+            }
+
+            Moves currentAction;
+
+            if (currentActionNum == ACCELERATE)
+            {
+                currentAction = rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+            }
+            else
+            {
+                currentAction = rightMove ? Moves.MOVE_LEFT : Moves.MOVE_RIGHT;
+            }
+
+            return currentAction;
+        }
+
         public int GetStateNum(CircleRepresentation cI, int targetPointX, bool rightMove)
         {
             int discretizedVelocityX = (int)((rightMove ? cI.VelocityX : -cI.VelocityX) + 200) / DISCRETIZATION_VELOCITYX;
@@ -115,6 +177,33 @@ namespace GeometryFriendsAgents
             }
 
             return discretizedVelocityX + discretizedDistanceX * (GameInfo.MAX_VELOCITYX * 2 / DISCRETIZATION_VELOCITYX);          
+        }
+
+        public int GetStateNum(RectangleRepresentation rI, int targetPointX, bool rightMove)
+        {
+            int discretizedVelocityX = (int)((rightMove ? rI.VelocityX : -rI.VelocityX) + 200) / DISCRETIZATION_VELOCITYX;
+
+            if (discretizedVelocityX < 0)
+            {
+                discretizedVelocityX = 0;
+            }
+            else if (GameInfo.MAX_VELOCITYX * 2 / DISCRETIZATION_VELOCITYX <= discretizedVelocityX)
+            {
+                discretizedVelocityX = GameInfo.MAX_VELOCITYX * 2 / DISCRETIZATION_VELOCITYX - 1;
+            }
+
+            int discretizedDistanceX = (int)((rightMove ? rI.X - targetPointX : targetPointX - rI.X) + MAX_DISTANCEX) / DISCRETIZATION_DISTANCEX;
+
+            if (discretizedDistanceX < 0)
+            {
+                discretizedDistanceX = 0;
+            }
+            else if (MAX_DISTANCEX * 2 / DISCRETIZATION_DISTANCEX <= discretizedDistanceX)
+            {
+                discretizedDistanceX = MAX_DISTANCEX * 2 / DISCRETIZATION_DISTANCEX - 1;
+            }
+
+            return discretizedVelocityX + discretizedDistanceX * (GameInfo.MAX_VELOCITYX * 2 / DISCRETIZATION_VELOCITYX);
         }
 
         private int GetOptimalActionNum(int stateNum, int targetVelocityX)

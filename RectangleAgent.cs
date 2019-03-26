@@ -207,12 +207,12 @@ namespace GeometryFriendsAgents
                             }
                             else
                             {
-                                currentAction = actionSelector.GetCurrentAction(circleInfo, nextEdge.Value.movePoint.x, nextEdge.Value.velocityX, nextEdge.Value.rightMove);
+                                currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextEdge.Value.movePoint.x, nextEdge.Value.velocityX, nextEdge.Value.rightMove);
                             }
                         }
                         else
                         {
-                            currentAction = actionSelector.GetCurrentAction(circleInfo, targetPointX_InAir, 0, true);
+                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetPointX_InAir, 0, true);
                         }
                     }
                 }
@@ -242,7 +242,7 @@ namespace GeometryFriendsAgents
 
                 if (!nextEdge.HasValue)
                 {
-                    currentAction = actionSelector.GetCurrentAction(circleInfo, (int)circleInfo.X, 0, false);
+                    currentAction = actionSelector.GetCurrentAction(rectangleInfo, (int)rectangleInfo.X, 0, false);
                 }
 
                 lastMoveTime = DateTime.Now;
@@ -251,12 +251,12 @@ namespace GeometryFriendsAgents
 
             if (nextEdge.HasValue)
             {
-                if (!actionSelector.IsGoal(circleInfo, nextEdge.Value.movePoint.x, nextEdge.Value.velocityX, nextEdge.Value.rightMove))
+                if (!actionSelector.IsGoal(rectangleInfo, nextEdge.Value.movePoint.x, nextEdge.Value.velocityX, nextEdge.Value.rightMove))
                 {
                     return;
                 }
 
-                if (-GameInfo.MAX_VELOCITYY <= circleInfo.VelocityY && circleInfo.VelocityY <= GameInfo.MAX_VELOCITYY)
+                if (-GameInfo.MAX_VELOCITYY <= rectangleInfo.VelocityY && rectangleInfo.VelocityY <= GameInfo.MAX_VELOCITYY)
                 {
                     targetPointX_InAir = (nextEdge.Value.reachablePlatform.leftEdge + nextEdge.Value.reachablePlatform.rightEdge) / 2;
 
