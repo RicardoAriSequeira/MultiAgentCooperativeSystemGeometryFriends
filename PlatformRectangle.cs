@@ -6,74 +6,12 @@ using System.Threading.Tasks;
 
 namespace GeometryFriendsAgents
 {
-    class PlatformRectangle
+    class PlatformRectangle : Platform
     {
-        public enum movementType
-        {
-            NO_ACTION, STAIR_GAP, FALL, MORPH_DOWN, MORPH_UP, JUMP
-        };
 
-        private int[] RECTANGLE_HEIGHTS = new int[8] { 192, 172, 152, 132, 112, 92, 72, 52 };
-        private int RECTANGLE_AREA = 10000; // ou 9984?
+        public PlatformRectangle() : base()  { }
 
-        public struct PlatformInfo
-        {
-            public int id;
-            public int height;
-            public int leftEdge;
-            public int rightEdge;
-            public List<MoveInfo> moveInfoList;
-
-            public PlatformInfo(int id, int height, int leftEdge, int rightEdge, List<MoveInfo> moveInfoList)
-            {
-                this.id = id;
-                this.height = height;
-                this.leftEdge = leftEdge;
-                this.rightEdge = rightEdge;
-                this.moveInfoList = moveInfoList;
-            }
-        }
-
-        public struct MoveInfo
-        {
-            public PlatformInfo reachablePlatform;
-            public LevelArray.Point movePoint;
-            public LevelArray.Point landPoint;
-            public int velocityX;
-            public bool rightMove;
-            public movementType movementType;
-            public bool[] collectibles_onPath;
-            public int pathLength;
-            public bool collideCeiling;
-
-            public MoveInfo(PlatformInfo reachablePlatform, LevelArray.Point movePoint, LevelArray.Point landPoint, int velocityX, bool rightMove, movementType movementType, bool[] collectibles_onPath, int pathLength, bool collideCeiling)
-            {
-                this.reachablePlatform = reachablePlatform;
-                this.movePoint = movePoint;
-                this.landPoint = landPoint;
-                this.velocityX = velocityX;
-                this.rightMove = rightMove;
-                this.movementType = movementType;
-                this.collectibles_onPath = collectibles_onPath;
-                this.pathLength = pathLength;
-                this.collideCeiling = collideCeiling;
-            }
-        }
-
-        private List<PlatformInfo> platformInfoList;
-
-        public PlatformRectangle()
-        {
-            platformInfoList = new List<PlatformInfo>();
-        }
-
-        public void SetUp(int[,] levelArray, int numCollectibles)
-        {
-            SetPlatformInfoList(levelArray);
-            SetMoveInfoList(levelArray, numCollectibles);
-        }
-
-        public void SetPlatformInfoList(int[,] levelArray)
+        public override void SetPlatformInfoList(int[,] levelArray)
         {
 
             int[,] platformArray = new int[levelArray.GetLength(0), levelArray.GetLength(1)];
@@ -122,7 +60,7 @@ namespace GeometryFriendsAgents
                         {
                             lock (platformInfoList)
                             {
-                                platformInfoList.Add(new PlatformInfo(0, height, leftEdge, rightEdge, new List<MoveInfo>()));
+                                platformInfoList.Add(new Platform.PlatformInfo(0, height, leftEdge, rightEdge, new List<Platform.MoveInfo>()));
                             }
                         }
 
@@ -160,43 +98,9 @@ namespace GeometryFriendsAgents
             return rectanglePixels;
         }
 
-        public void SetPlatformID()
+        public override void SetMoveInfoList(int[,] levelArray, int numCollectibles)
         {
-            platformInfoList.Sort((a, b) =>
-            {
-                int result = a.height - b.height;
-                return result != 0 ? result : a.leftEdge - b.leftEdge;
-            });
-
-            Parallel.For(0, platformInfoList.Count, i =>
-            {
-                PlatformInfo tempPlatfom = platformInfoList[i];
-                tempPlatfom.id = i + 1;
-                platformInfoList[i] = tempPlatfom;
-            });
-        }
-
-        private bool IsObstacle_onPixels(int[,] levelArray, List<LevelArray.ArrayPoint> checkPixels)
-        {
-            if (checkPixels.Count == 0)
-            {
-                return true;
-            }
-
-            foreach (LevelArray.ArrayPoint i in checkPixels)
-            {
-                if (levelArray[i.yArray, i.xArray] == LevelArray.OBSTACLE)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        public void SetMoveInfoList(int[,] levelArray, int numCollectibles)
-        {
-            foreach (PlatformInfo i in platformInfoList)
+            foreach (Platform.PlatformInfo i in platformInfoList)
             {
 
                 int from = i.leftEdge + (i.leftEdge - GameInfo.LEVEL_ORIGINAL) % (LevelArray.PIXEL_LENGTH * 2);
@@ -213,7 +117,7 @@ namespace GeometryFriendsAgents
             }
         }
 
-        private void SetMoveInfoList_NoAction(int[,] levelArray, PlatformInfo fromPlatform, LevelArray.Point movePoint, int numCollectibles)
+        private void SetMoveInfoList_NoAction(int[,] levelArray, Platform.PlatformInfo fromPlatform, LevelArray.Point movePoint, int numCollectibles)
         {
             List<LevelArray.ArrayPoint> rectanglePixels = GetRectanglePixels(movePoint, 100);
 
@@ -221,183 +125,20 @@ namespace GeometryFriendsAgents
 
             collectible_onPath = GetCollectibles_onPixels(levelArray, rectanglePixels, collectible_onPath.Length);
 
-            AddMoveInfoToList(fromPlatform, new MoveInfo(fromPlatform, movePoint, movePoint, 0, true, movementType.NO_ACTION, collectible_onPath, 0, false));
+            AddMoveInfoToList(fromPlatform, new Platform.MoveInfo(fromPlatform, movePoint, movePoint, 0, true, Platform.movementType.NO_ACTION, collectible_onPath, 0, false));
         }
 
-        private bool[] GetCollectibles_onPixels(int[,] levelArray, List<LevelArray.ArrayPoint> checkPixels, int numCollectibles)
+        public Platform.PlatformInfo? GetPlatform_onRectangle(LevelArray.Point rectangleCenter, float height)
         {
-            bool[] collectible_onPath = new bool[numCollectibles];
-
-            foreach (LevelArray.ArrayPoint i in checkPixels)
+            foreach (Platform.PlatformInfo i in platformInfoList)
             {
-                if (!(levelArray[i.yArray, i.xArray] == LevelArray.OBSTACLE || levelArray[i.yArray, i.xArray] == LevelArray.OPEN))
+                if (i.leftEdge <= rectangleCenter.x && rectangleCenter.x <= i.rightEdge && 0 <= (i.height - rectangleCenter.y) && (i.height - rectangleCenter.y) <= height)
                 {
-                    collectible_onPath[levelArray[i.yArray, i.xArray] - 1] = true;
+                    return i;
                 }
             }
 
-            return collectible_onPath;
-        }
-
-        private void AddMoveInfoToList(PlatformInfo fromPlatform, MoveInfo mI)
-        {
-            lock (platformInfoList)
-            {
-                List<MoveInfo> moveInfoToRemove = new List<MoveInfo>();
-
-                if (IsPriorityHighest(fromPlatform, mI, ref moveInfoToRemove))
-                {
-                    fromPlatform.moveInfoList.Add(mI);
-                }
-
-                foreach (MoveInfo i in moveInfoToRemove)
-                {
-                    fromPlatform.moveInfoList.Remove(i);
-                }
-            }
-        }
-
-        private bool IsPriorityHighest(PlatformInfo fromPlatform, MoveInfo mI, ref List<MoveInfo> moveInfoToRemove)
-        {
-            if (fromPlatform.id == mI.reachablePlatform.id && !Utilities.IsTrueValue_inMatrix(mI.collectibles_onPath))
-            {
-                return false;
-            }
-
-            bool priorityHighestFlag = true;
-
-            foreach (MoveInfo i in fromPlatform.moveInfoList)
-            {
-                if (!(mI.reachablePlatform.id == i.reachablePlatform.id))
-                {
-                    continue;
-                }
-
-                Utilities.numTrue trueNum = Utilities.CompTrueNum(mI.collectibles_onPath, i.collectibles_onPath);
-
-                if (trueNum == Utilities.numTrue.MORETRUE)
-                {
-                    if (mI.movementType != movementType.NO_ACTION && i.movementType == movementType.NO_ACTION)
-                    {
-                        continue;
-                    }
-                    else if (mI.movementType != movementType.NO_ACTION && i.movementType != movementType.NO_ACTION)
-                    {
-                        if (mI.movementType > i.movementType)
-                        {
-                            continue;
-                        }
-
-                        if (mI.velocityX > i.velocityX)
-                        {
-                            continue;
-                        }
-                    }
-
-                    moveInfoToRemove.Add(i);
-                    continue;
-                }
-
-                if (trueNum == Utilities.numTrue.LESSTRUE)
-                {
-                    if (mI.movementType == movementType.NO_ACTION && i.movementType != movementType.NO_ACTION)
-                    {
-                        continue;
-                    }
-                    else if (mI.movementType != movementType.NO_ACTION && i.movementType != movementType.NO_ACTION)
-                    {
-                        if (mI.movementType < i.movementType)
-                        {
-                            continue;
-                        }
-
-                        if (mI.velocityX < i.velocityX)
-                        {
-                            continue;
-                        }
-                    }
-
-                    priorityHighestFlag = false;
-                    continue;
-                }
-
-                if (trueNum == Utilities.numTrue.DIFFERENTTRUE)
-                {
-                    continue;
-                }
-
-                if (trueNum == Utilities.numTrue.SAMETRUE)
-                {
-                    if (mI.movementType == movementType.NO_ACTION && i.movementType == movementType.NO_ACTION)
-                    {
-                        int middlePos = (mI.reachablePlatform.rightEdge + mI.reachablePlatform.leftEdge) / 2;
-
-                        if (Math.Abs(middlePos - mI.landPoint.x) > Math.Abs(middlePos - i.landPoint.x))
-                        {
-                            priorityHighestFlag = false;
-                            continue;
-                        }
-
-                        moveInfoToRemove.Add(i);
-                        continue;
-                    }
-
-                    if (mI.movementType == movementType.NO_ACTION && i.movementType != movementType.NO_ACTION)
-                    {
-                        moveInfoToRemove.Add(i);
-                        continue;
-                    }
-
-                    if (mI.movementType != movementType.NO_ACTION && i.movementType == movementType.NO_ACTION)
-                    {
-                        priorityHighestFlag = false;
-                        continue;
-                    }
-
-                    if (mI.movementType != movementType.NO_ACTION && i.movementType != movementType.NO_ACTION)
-                    {
-                        if (mI.rightMove == i.rightMove || ((mI.movementType == movementType.JUMP && i.movementType == movementType.JUMP) && (mI.velocityX == 0 || i.velocityX == 0)))
-                        {
-                            if (mI.movementType > i.movementType)
-                            {
-                                priorityHighestFlag = false;
-                                continue;
-                            }
-
-                            if (mI.movementType < i.movementType)
-                            {
-                                moveInfoToRemove.Add(i);
-                                continue;
-                            }
-
-                            if (mI.velocityX > i.velocityX)
-                            {
-                                priorityHighestFlag = false;
-                                continue;
-                            }
-
-                            if (mI.velocityX < i.velocityX)
-                            {
-                                moveInfoToRemove.Add(i);
-                                continue;
-                            }
-
-                            int middlePos = (mI.reachablePlatform.rightEdge + mI.reachablePlatform.leftEdge) / 2;
-
-                            if (Math.Abs(middlePos - mI.landPoint.x) > Math.Abs(middlePos - i.landPoint.x))
-                            {
-                                priorityHighestFlag = false;
-                                continue;
-                            }
-
-                            moveInfoToRemove.Add(i);
-                            continue;
-                        }
-                    }
-                }
-            }
-
-            return priorityHighestFlag;
+            return null;
         }
     }
 }

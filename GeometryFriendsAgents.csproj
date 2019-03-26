@@ -47,6 +47,7 @@
   <ItemGroup>
     <Compile Include="ActionSelector.cs" />
     <Compile Include="CircleAgent.cs" />
+    <Compile Include="PlatformCircle.cs" />
     <Compile Include="PlatformRectangle.cs" />
     <Compile Include="GameInfo.cs" />
     <Compile Include="LevelArray.cs" />

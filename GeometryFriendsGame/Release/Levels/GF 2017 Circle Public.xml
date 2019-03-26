@@ -118,5 +118,8 @@
     <YellowObstacles />
     <GreenElevators />
     <OrangeElevators />
+    <HighScores>
+      <HighScore name="KIT Agent" value="5" />
+    </HighScores>
   </Level6>
 </Levels>

@@ -160,113 +160,112 @@ namespace GeometryFriendsAgents
         //implements abstract rectangle interface: updates the agent state logic and predictions
         public override void Update(TimeSpan elapsedGameTime)
         {
-            /*
-            if (lastMoveTime == 60)
-                lastMoveTime = 0;
+            
+            //if (lastMoveTime == 60)
+            //    lastMoveTime = 0;
 
-            if ((lastMoveTime) <= (DateTime.Now.Second) && (lastMoveTime < 60))
-            {
-                if (!(DateTime.Now.Second == 59))
-                {
-                    RandomAction();
-                    lastMoveTime = lastMoveTime + 1;
-                    //DebugSensorsInfo();
-                }
-                else
-                    lastMoveTime = 60;
-            }
-            */
-
-            //if ((DateTime.Now - lastMoveTime).TotalMilliseconds >= 20)
+            //if ((lastMoveTime) <= (DateTime.Now.Second) && (lastMoveTime < 60))
             //{
-            //    // saber se a plataforma atual e diferente da plataforma anterior
-            //    IsDifferentPlatform();
-            //    // saber se um diamante foi colecionado
-            //    IsGetCollectible();
-
-            //    // se o circulo se encontra numa plataforma
-            //    if (currentPlatform.HasValue)
+            //    if (!(DateTime.Now.Second == 59))
             //    {
-            //        if (differentPlatformFlag || getCollectibleFlag)
-            //        {
-            //            differentPlatformFlag = false;
-            //            getCollectibleFlag = false;
-
-            //            targetPointX_InAir = (currentPlatform.Value.leftEdge + currentPlatform.Value.rightEdge) / 2;
-
-            //            Task.Factory.StartNew(SetNextEdge);
-            //        }
-
-            //        // se o proximo objetivo estiver definido
-            //        if (nextEdge.HasValue)
-            //        {
-            //            if (-GameInfo.MAX_VELOCITYY <= circleInfo.VelocityY && circleInfo.VelocityY <= GameInfo.MAX_VELOCITYY)
-            //            {
-            //                if (nextEdge.Value.movementType == Platform.movementType.STAIR_GAP)
-            //                {
-            //                    currentAction = nextEdge.Value.rightMove ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
-            //                }
-            //                else
-            //                {
-            //                    currentAction = actionSelector.GetCurrentAction(circleInfo, nextEdge.Value.movePoint.x, nextEdge.Value.velocityX, nextEdge.Value.rightMove);
-            //                }
-            //            }
-            //            else
-            //            {
-            //                currentAction = actionSelector.GetCurrentAction(circleInfo, targetPointX_InAir, 0, true);
-            //            }
-            //        }
+            //        RandomAction();
+            //        lastMoveTime = lastMoveTime + 1;
+            //        //DebugSensorsInfo();
             //    }
-
-            //    // se o circulo nao se encontra numa plataforma
             //    else
-            //    {
-            //        if (nextEdge.HasValue)
-            //        {
-            //            if (nextEdge.Value.movementType == Platform.movementType.STAIR_GAP)
-            //            {
-            //                currentAction = nextEdge.Value.rightMove ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
-            //            }
-            //            else
-            //            {
-            //                if (nextEdge.Value.collideCeiling && circleInfo.VelocityY < 0)
-            //                {
-            //                    currentAction = Moves.NO_ACTION;
-            //                }
-            //                else
-            //                {
-            //                    currentAction = actionSelector.GetCurrentAction(circleInfo, targetPointX_InAir, 0, true);
-            //                }
-            //            }
-            //        }
-            //    }
-
-            //    if (!nextEdge.HasValue)
-            //    {
-            //        currentAction = actionSelector.GetCurrentAction(circleInfo, (int)circleInfo.X, 0, false);
-            //    }
-
-            //    lastMoveTime = DateTime.Now;
-            //    //DebugSensorsInfo();
+            //        lastMoveTime = 60;
             //}
 
-            //if (nextEdge.HasValue)
-            //{
-            //    if (!actionSelector.IsGoal(circleInfo, nextEdge.Value.movePoint.x, nextEdge.Value.velocityX, nextEdge.Value.rightMove))
-            //    {
-            //        return;
-            //    }
+            if ((DateTime.Now - lastMoveTime).TotalMilliseconds >= 20)
+            {
+                // saber se a plataforma atual e diferente da plataforma anterior
+                IsDifferentPlatform();
+                // saber se um diamante foi colecionado
+                IsGetCollectible();
 
-            //    if (-GameInfo.MAX_VELOCITYY <= circleInfo.VelocityY && circleInfo.VelocityY <= GameInfo.MAX_VELOCITYY)
-            //    {
-            //        targetPointX_InAir = (nextEdge.Value.reachablePlatform.leftEdge + nextEdge.Value.reachablePlatform.rightEdge) / 2;
+                // se o circulo se encontra numa plataforma
+                if (currentPlatform.HasValue)
+                {
+                    if (differentPlatformFlag || getCollectibleFlag)
+                    {
+                        differentPlatformFlag = false;
+                        getCollectibleFlag = false;
 
-            //        if (nextEdge.Value.movementType == Platform.movementType.JUMP)
-            //        {
-            //            currentAction = Moves.JUMP;
-            //        }
-            //    }
-            //}
+                        targetPointX_InAir = (currentPlatform.Value.leftEdge + currentPlatform.Value.rightEdge) / 2;
+
+                        Task.Factory.StartNew(SetNextEdge);
+                    }
+
+                    // se o proximo objetivo estiver definido
+                    if (nextEdge.HasValue)
+                    {
+                        if (-GameInfo.MAX_VELOCITYY <= rectangleInfo.VelocityY && rectangleInfo.VelocityY <= GameInfo.MAX_VELOCITYY)
+                        {
+                            if (nextEdge.Value.movementType == Platform.movementType.STAIR_GAP)
+                            {
+                                currentAction = nextEdge.Value.rightMove ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
+                            }
+                            else
+                            {
+                                currentAction = actionSelector.GetCurrentAction(circleInfo, nextEdge.Value.movePoint.x, nextEdge.Value.velocityX, nextEdge.Value.rightMove);
+                            }
+                        }
+                        else
+                        {
+                            currentAction = actionSelector.GetCurrentAction(circleInfo, targetPointX_InAir, 0, true);
+                        }
+                    }
+                }
+
+                // se o circulo nao se encontra numa plataforma
+                //else
+                //{
+                //    if (nextEdge.HasValue)
+                //    {
+                //        if (nextEdge.Value.movementType == Platform.movementType.STAIR_GAP)
+                //        {
+                //            currentAction = nextEdge.Value.rightMove ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
+                //        }
+                //        else
+                //        {
+                //            if (nextEdge.Value.collideCeiling && circleInfo.VelocityY < 0)
+                //            {
+                //                currentAction = Moves.NO_ACTION;
+                //            }
+                //            else
+                //            {
+                //                currentAction = actionSelector.GetCurrentAction(circleInfo, targetPointX_InAir, 0, true);
+                //            }
+                //        }
+                //    }
+                //}
+
+                if (!nextEdge.HasValue)
+                {
+                    currentAction = actionSelector.GetCurrentAction(circleInfo, (int)circleInfo.X, 0, false);
+                }
+
+                lastMoveTime = DateTime.Now;
+                //DebugSensorsInfo();
+            }
+
+            if (nextEdge.HasValue)
+            {
+                if (!actionSelector.IsGoal(circleInfo, nextEdge.Value.movePoint.x, nextEdge.Value.velocityX, nextEdge.Value.rightMove))
+                {
+                    return;
+                }
+
+                if (-GameInfo.MAX_VELOCITYY <= circleInfo.VelocityY && circleInfo.VelocityY <= GameInfo.MAX_VELOCITYY)
+                {
+                    targetPointX_InAir = (nextEdge.Value.reachablePlatform.leftEdge + nextEdge.Value.reachablePlatform.rightEdge) / 2;
+
+                    if (nextEdge.Value.movementType == Platform.movementType.JUMP)
+                    {
+                        currentAction = Moves.JUMP;
+                    }
+                }
+            }
         }
 
         private void IsGetCollectible()
@@ -281,7 +280,7 @@ namespace GeometryFriendsAgents
 
         private void IsDifferentPlatform()
         {
-            //currentPlatform = platform.GetPlatform_onCircle(new LevelArray.Point((int)circleInfo.X, (int)circleInfo.Y));
+            currentPlatform = platform.GetPlatform_onRectangle(new LevelArray.Point((int)rectangleInfo.X, (int)rectangleInfo.Y), rectangleInfo.Height);
 
             if (currentPlatform.HasValue)
             {
@@ -301,7 +300,7 @@ namespace GeometryFriendsAgents
         private void SetNextEdge()
         {
             nextEdge = null;
-            nextEdge = subgoalAStar.CalculateShortestPath(currentPlatform.Value, new LevelArray.Point((int)circleInfo.X, (int)circleInfo.Y),
+            nextEdge = subgoalAStar.CalculateShortestPath(currentPlatform.Value, new LevelArray.Point((int)rectangleInfo.X, (int)rectangleInfo.Y),
                 Enumerable.Repeat<bool>(true, levelArray.initialCollectiblesInfo.Length).ToArray(),
                 levelArray.GetObtainedCollectibles(collectiblesInfo), levelArray.initialCollectiblesInfo);
         }

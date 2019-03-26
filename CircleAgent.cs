@@ -16,7 +16,7 @@ namespace GeometryFriendsAgents
     public class CircleAgent : AbstractCircleAgent
     {
         private LevelArray levelArray;
-        private Platform platform;
+        private PlatformCircle platform;
         private SubgoalAStar subgoalAStar;
         private ActionSelector actionSelector;
 
@@ -64,7 +64,7 @@ namespace GeometryFriendsAgents
             rnd = new Random();
 
             levelArray = new LevelArray();
-            platform = new Platform();
+            platform = new PlatformCircle();
             subgoalAStar = new SubgoalAStar();
             actionSelector = new ActionSelector();
 
