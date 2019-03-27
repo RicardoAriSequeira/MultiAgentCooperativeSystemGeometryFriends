@@ -258,13 +258,13 @@ namespace GeometryFriendsAgents
                 float currentTime = i * TIME_STEP;
 
                 previousCircleCenter = currentCircleCenter;
-                currentCircleCenter = GetCurrentCircleCenter(movePoint, velocityX, velocityY, currentTime);
+                currentCircleCenter = GetCurrentCenter(movePoint, velocityX, velocityY, currentTime);
                 List<LevelArray.ArrayPoint> circlePixels = GetCirclePixels(currentCircleCenter);
 
                 if (IsObstacle_onPixels(levelArray, circlePixels))
                 {
                     collidePoint = previousCircleCenter;
-                    collideType = GetCollideType(levelArray, currentCircleCenter, velocityY - GameInfo.GRAVITY * (i - 1) * TIME_STEP >= 0, velocityX > 0);
+                    collideType = GetCollideType(levelArray, currentCircleCenter, velocityY - GameInfo.GRAVITY * (i - 1) * TIME_STEP >= 0, velocityX > 0, 2 * GameInfo.CIRCLE_RADIUS);
 
                     if (collideType == collideType.CEILING)
                     {
@@ -335,14 +335,6 @@ namespace GeometryFriendsAgents
             }
 
             return null;
-        }
-
-        private LevelArray.Point GetCurrentCircleCenter(LevelArray.Point movePoint, float velocityX, float velocityY, float currentTime)
-        {
-            float distanceX = velocityX * currentTime;
-            float distanceY = -velocityY * currentTime + GameInfo.GRAVITY * (float)Math.Pow(currentTime, 2) / 2;
-
-            return new LevelArray.Point((int)(movePoint.x + distanceX), (int)(movePoint.y + distanceY));
         }
     }
 }

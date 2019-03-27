@@ -83,6 +83,9 @@
     <GreenElevators />
     <OrangeElevators />
     <TimeLimit value="150" />
+    <HighScores>
+      <HighScore name="KIT Agent" value="9" />
+    </HighScores>
   </Level4>
   <Level5>
     <Description />
@@ -122,4 +125,43 @@
       <HighScore name="KIT Agent" value="5" />
     </HighScores>
   </Level6>
+  <Level7>
+    <Description />
+    <Tips />
+    <BallStartingPosition X="232" Y="376" />
+    <SquareStartingPosition X="-1000" Y="-1000" />
+    <Collectibles>
+      <Collectible X="1064" Y="696" />
+    </Collectibles>
+    <GreenObstacles />
+    <BlackObstacles>
+      <Obstacle width="800" height="64" X="40" Y="424" centered="false" />
+    </BlackObstacles>
+    <YellowObstacles />
+    <GreenElevators />
+    <OrangeElevators />
+    <HighScores>
+      <HighScore name="KIT Agent" value="5" />
+    </HighScores>
+  </Level7>
+  <Level8>
+    <Description />
+    <Tips />
+    <BallStartingPosition X="152" Y="120" />
+    <SquareStartingPosition X="-1000" Y="-1000" />
+    <Collectibles>
+      <Collectible X="1112" Y="344" />
+      <Collectible X="136" Y="536" />
+      <Collectible X="1160" Y="696" />
+    </Collectibles>
+    <GreenObstacles />
+    <BlackObstacles>
+      <Obstacle width="704" height="80" X="88" Y="168" centered="false" />
+      <Obstacle width="608" height="64" X="584" Y="392" centered="false" />
+      <Obstacle width="560" height="64" X="104" Y="584" centered="false" />
+    </BlackObstacles>
+    <YellowObstacles />
+    <GreenElevators />
+    <OrangeElevators />
+  </Level8>
 </Levels>

@@ -160,21 +160,6 @@ namespace GeometryFriendsAgents
         //implements abstract rectangle interface: updates the agent state logic and predictions
         public override void Update(TimeSpan elapsedGameTime)
         {
-            
-            //if (lastMoveTime == 60)
-            //    lastMoveTime = 0;
-
-            //if ((lastMoveTime) <= (DateTime.Now.Second) && (lastMoveTime < 60))
-            //{
-            //    if (!(DateTime.Now.Second == 59))
-            //    {
-            //        RandomAction();
-            //        lastMoveTime = lastMoveTime + 1;
-            //        //DebugSensorsInfo();
-            //    }
-            //    else
-            //        lastMoveTime = 60;
-            //}
 
             if ((DateTime.Now - lastMoveTime).TotalMilliseconds >= 20)
             {
@@ -203,7 +188,7 @@ namespace GeometryFriendsAgents
                         {
                             if (nextEdge.Value.movementType == Platform.movementType.STAIR_GAP)
                             {
-                                currentAction = nextEdge.Value.rightMove ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
+                                currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                             }
                             else
                             {
@@ -217,28 +202,28 @@ namespace GeometryFriendsAgents
                     }
                 }
 
-                // se o circulo nao se encontra numa plataforma
-                //else
-                //{
-                //    if (nextEdge.HasValue)
-                //    {
-                //        if (nextEdge.Value.movementType == Platform.movementType.STAIR_GAP)
-                //        {
-                //            currentAction = nextEdge.Value.rightMove ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
-                //        }
-                //        else
-                //        {
-                //            if (nextEdge.Value.collideCeiling && circleInfo.VelocityY < 0)
-                //            {
-                //                currentAction = Moves.NO_ACTION;
-                //            }
-                //            else
-                //            {
-                //                currentAction = actionSelector.GetCurrentAction(circleInfo, targetPointX_InAir, 0, true);
-                //            }
-                //        }
-                //    }
-                //}
+                //se o circulo nao se encontra numa plataforma
+                else
+                {
+                    if (nextEdge.HasValue)
+                    {
+                        if (nextEdge.Value.movementType == Platform.movementType.STAIR_GAP)
+                        {
+                            currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                        }
+                        else
+                        {
+                            if (nextEdge.Value.collideCeiling && rectangleInfo.VelocityY < 0)
+                            {
+                                currentAction = Moves.NO_ACTION;
+                            }
+                            else
+                            {
+                                currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetPointX_InAir, 0, true);
+                            }
+                        }
+                    }
+                }
 
                 if (!nextEdge.HasValue)
                 {

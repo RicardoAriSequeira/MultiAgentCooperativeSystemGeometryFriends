@@ -152,22 +152,22 @@ namespace GeometryFriendsAgents
             return true;
         }
 
-        protected collideType GetCollideType(int[,] levelArray, LevelArray.Point circleCenter, bool ascent, bool rightMove)
+        protected collideType GetCollideType(int[,] levelArray, LevelArray.Point center, bool ascent, bool rightMove, int height)
         {
-            LevelArray.ArrayPoint circleCenterArray = LevelArray.ConvertPointIntoArrayPoint(circleCenter, false, false);
-            int circleHighestY = LevelArray.ConvertValue_PointIntoArrayPoint(circleCenter.y - GameInfo.CIRCLE_RADIUS, false);
-            int circleLowestY = LevelArray.ConvertValue_PointIntoArrayPoint(circleCenter.y + GameInfo.CIRCLE_RADIUS, true);
+            LevelArray.ArrayPoint centerArray = LevelArray.ConvertPointIntoArrayPoint(center, false, false);
+            int highestY = LevelArray.ConvertValue_PointIntoArrayPoint(center.y - (height/2), false);
+            int lowestY = LevelArray.ConvertValue_PointIntoArrayPoint(center.y + (height/2), true);
 
             if (!ascent)
             {
-                if (levelArray[circleLowestY, circleCenterArray.xArray] == LevelArray.OBSTACLE)
+                if (levelArray[lowestY, centerArray.xArray] == LevelArray.OBSTACLE)
                 {
                     return collideType.FLOOR;
                 }
             }
             else
             {
-                if (levelArray[circleHighestY, circleCenterArray.xArray] == LevelArray.OBSTACLE)
+                if (levelArray[highestY, centerArray.xArray] == LevelArray.OBSTACLE)
                 {
                     return collideType.CEILING;
                 }
@@ -368,6 +368,15 @@ namespace GeometryFriendsAgents
             }
 
             return priorityHighestFlag;
-        } 
+        }
+
+        protected LevelArray.Point GetCurrentCenter(LevelArray.Point movePoint, float velocityX, float velocityY, float currentTime)
+        {
+            float distanceX = velocityX * currentTime;
+            float distanceY = -velocityY * currentTime + GameInfo.GRAVITY * (float)Math.Pow(currentTime, 2) / 2;
+
+            return new LevelArray.Point((int)(movePoint.x + distanceX), (int)(movePoint.y + distanceY));
+        }
+
     }
 }
