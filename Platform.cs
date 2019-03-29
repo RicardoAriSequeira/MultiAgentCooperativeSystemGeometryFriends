@@ -86,7 +86,45 @@ namespace GeometryFriendsAgents
             SetMoveInfoList(levelArray, numCollectibles);
         }
 
-        public abstract void SetPlatformInfoList(int[,] levelArray);
+        public void SetPlatformInfoList(int[,] levelArray)
+        {
+            int[,] platformArray = IdentifyObstacles(levelArray);
+
+            Parallel.For(0, levelArray.GetLength(0), i =>
+            {
+                bool platformFlag = false;
+                int height = 0, leftEdge = 0, rightEdge = 0;
+
+                for (int j = 0; j < platformArray.GetLength(1); j++)
+                {
+                    if (platformArray[i, j] == LevelArray.OBSTACLE && !platformFlag)
+                    {
+                        height = LevelArray.ConvertValue_ArrayPointIntoPoint(i);
+                        leftEdge = LevelArray.ConvertValue_ArrayPointIntoPoint(j);
+                        platformFlag = true;
+                    }
+
+                    if (platformArray[i, j] == LevelArray.OPEN && platformFlag)
+                    {
+                        rightEdge = LevelArray.ConvertValue_ArrayPointIntoPoint(j - 1);
+
+                        if (rightEdge >= leftEdge)
+                        {
+                            lock (platformInfoList)
+                            {
+                                platformInfoList.Add(new PlatformInfo(0, height, leftEdge, rightEdge, new List<MoveInfo>()));
+                            }
+                        }
+
+                        platformFlag = false;
+                    }
+                }
+            });
+
+            SetPlatformID();
+        }
+
+        public abstract int[,] IdentifyObstacles(int[,] levelArray);
 
         public abstract void SetMoveInfoList(int[,] levelArray, int numCollectibles);
 
@@ -152,11 +190,11 @@ namespace GeometryFriendsAgents
             return true;
         }
 
-        protected collideType GetCollideType(int[,] levelArray, LevelArray.Point center, bool ascent, bool rightMove, int height)
+        protected collideType GetCollideType(int[,] levelArray, LevelArray.Point center, bool ascent, bool rightMove, int radius)
         {
             LevelArray.ArrayPoint centerArray = LevelArray.ConvertPointIntoArrayPoint(center, false, false);
-            int highestY = LevelArray.ConvertValue_PointIntoArrayPoint(center.y - (height/2), false);
-            int lowestY = LevelArray.ConvertValue_PointIntoArrayPoint(center.y + (height/2), true);
+            int highestY = LevelArray.ConvertValue_PointIntoArrayPoint(center.y - radius, false);
+            int lowestY = LevelArray.ConvertValue_PointIntoArrayPoint(center.y + radius, true);
 
             if (!ascent)
             {
@@ -370,12 +408,89 @@ namespace GeometryFriendsAgents
             return priorityHighestFlag;
         }
 
+        protected void GetPathInfo(int[,] levelArray, LevelArray.Point movePoint, float velocityX, float velocityY,
+            ref LevelArray.Point collidePoint, ref collideType collideType, ref float collideVelocityX, ref float collideVelocityY, ref bool[] collectible_onPath, ref float pathLength, int radius)
+        {
+            LevelArray.Point previousRectangleCenter;
+            LevelArray.Point currentRectangleCenter = movePoint;
+
+            for (int i = 1; true; i++)
+            {
+                float currentTime = i * TIME_STEP;
+
+                previousRectangleCenter = currentRectangleCenter;
+                currentRectangleCenter = GetCurrentCenter(movePoint, velocityX, velocityY, currentTime);
+                List<LevelArray.ArrayPoint> rectanglePixels = GetCirclePixels(currentRectangleCenter, radius);
+
+                if (IsObstacle_onPixels(levelArray, rectanglePixels))
+                {
+                    collidePoint = previousRectangleCenter;
+                    collideType = GetCollideType(levelArray, currentRectangleCenter, velocityY - GameInfo.GRAVITY * (i - 1) * TIME_STEP >= 0, velocityX > 0, radius);
+
+                    if (collideType == collideType.CEILING)
+                    {
+                        collideVelocityX = velocityX / 3;
+                        collideVelocityY = -(velocityY - GameInfo.GRAVITY * (i - 1) * TIME_STEP) / 3;
+                    }
+                    else
+                    {
+                        collideVelocityX = 0;
+                        collideVelocityY = 0;
+                    }
+
+                    return;
+                }
+
+                collectible_onPath = Utilities.GetOrMatrix(collectible_onPath, GetCollectibles_onPixels(levelArray, rectanglePixels, collectible_onPath.Length));
+
+                pathLength += (float)Math.Sqrt(Math.Pow(currentRectangleCenter.x - previousRectangleCenter.x, 2) + Math.Pow(currentRectangleCenter.y - previousRectangleCenter.y, 2));
+            }
+        }
+
         protected LevelArray.Point GetCurrentCenter(LevelArray.Point movePoint, float velocityX, float velocityY, float currentTime)
         {
             float distanceX = velocityX * currentTime;
             float distanceY = -velocityY * currentTime + GameInfo.GRAVITY * (float)Math.Pow(currentTime, 2) / 2;
 
             return new LevelArray.Point((int)(movePoint.x + distanceX), (int)(movePoint.y + distanceY));
+        }
+
+        protected List<LevelArray.ArrayPoint> GetCirclePixels(LevelArray.Point circleCenter, int radius)
+        {
+            List<LevelArray.ArrayPoint> circlePixels = new List<LevelArray.ArrayPoint>();
+
+            LevelArray.ArrayPoint circleCenterArray = LevelArray.ConvertPointIntoArrayPoint(circleCenter, false, false);
+            int circleHighestY = LevelArray.ConvertValue_PointIntoArrayPoint(circleCenter.y - radius, false);
+            int circleLowestY = LevelArray.ConvertValue_PointIntoArrayPoint(circleCenter.y + radius, true);
+
+
+            for (int i = circleHighestY; i <= circleLowestY; i++)
+            {
+                float circleWidth;
+
+                if (i < circleCenterArray.yArray)
+                {
+                    circleWidth = (float)Math.Sqrt(Math.Pow(radius, 2) - Math.Pow(LevelArray.ConvertValue_ArrayPointIntoPoint(i + 1) - circleCenter.y, 2));
+                }
+                else if (i > circleCenterArray.yArray)
+                {
+                    circleWidth = (float)Math.Sqrt(Math.Pow(radius, 2) - Math.Pow(LevelArray.ConvertValue_ArrayPointIntoPoint(i) - circleCenter.y, 2));
+                }
+                else
+                {
+                    circleWidth = radius;
+                }
+
+                int circleLeftX = LevelArray.ConvertValue_PointIntoArrayPoint((int)(circleCenter.x - circleWidth), false);
+                int circleRightX = LevelArray.ConvertValue_PointIntoArrayPoint((int)(circleCenter.x + circleWidth), true);
+
+                for (int j = circleLeftX; j <= circleRightX; j++)
+                {
+                    circlePixels.Add(new LevelArray.ArrayPoint(j, i));
+                }
+            }
+
+            return circlePixels;
         }
 
     }

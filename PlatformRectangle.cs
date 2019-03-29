@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace GeometryFriendsAgents
 {
     class PlatformRectangle : Platform
     {
+
         public PlatformRectangle() : base()  { }
 
-        public override void SetPlatformInfoList(int[,] levelArray)
+        public override int[,] IdentifyObstacles(int[,] levelArray)
         {
 
             int[,] platformArray = new int[levelArray.GetLength(0), levelArray.GetLength(1)];
@@ -19,82 +18,23 @@ namespace GeometryFriendsAgents
             {
                 Parallel.For(0, levelArray.GetLength(1), j =>
                 {
+                    LevelArray.Point rectangleCenter = LevelArray.ConvertArrayPointIntoPoint(new LevelArray.ArrayPoint(j, i));
+                    rectangleCenter.y -= 50;
 
-                    foreach (int height in RECTANGLE_HEIGHTS)
+                    List<LevelArray.ArrayPoint> rectanglePixels = GetRectanglePixels(rectangleCenter);
+
+                    if (!IsObstacle_onPixels(levelArray, rectanglePixels))
                     {
-                        LevelArray.Point rectangleCenter = LevelArray.ConvertArrayPointIntoPoint(new LevelArray.ArrayPoint(j, i));
-                        rectangleCenter.y -= (height / 2);
-                        List<LevelArray.ArrayPoint> rectanglePixels = GetRectanglePixels(rectangleCenter, height);
-
-                        if (!IsObstacle_onPixels(levelArray, rectanglePixels))
+                        if (levelArray[i, j - 1] == LevelArray.OBSTACLE || levelArray[i, j] == LevelArray.OBSTACLE)
                         {
-                            if (levelArray[i, j - 1] == LevelArray.OBSTACLE || levelArray[i, j] == LevelArray.OBSTACLE)
-                            {
-                                platformArray[i, j] = LevelArray.OBSTACLE;
-                            }
+                            platformArray[i, j] = LevelArray.OBSTACLE;
                         }
                     }
                 });
             }
 
-            Parallel.For(0, levelArray.GetLength(0), i =>
-            {
-                bool platformFlag = false;
-                int height = 0, leftEdge = 0, rightEdge = 0;
+            return platformArray;
 
-                for (int j = 0; j < platformArray.GetLength(1); j++)
-                {
-                    if (platformArray[i, j] == LevelArray.OBSTACLE && !platformFlag)
-                    {
-                        height = LevelArray.ConvertValue_ArrayPointIntoPoint(i);
-                        leftEdge = LevelArray.ConvertValue_ArrayPointIntoPoint(j);
-                        platformFlag = true;
-                    }
-
-                    if (platformArray[i, j] == LevelArray.OPEN && platformFlag)
-                    {
-                        rightEdge = LevelArray.ConvertValue_ArrayPointIntoPoint(j - 1);
-
-                        if (rightEdge >= leftEdge)
-                        {
-                            lock (platformInfoList)
-                            {
-                                platformInfoList.Add(new Platform.PlatformInfo(0, height, leftEdge, rightEdge, new List<Platform.MoveInfo>()));
-                            }
-                        }
-
-                        platformFlag = false;
-                    }
-                }
-            });
-
-            SetPlatformID();
-
-        }
-
-        private List<LevelArray.ArrayPoint> GetRectanglePixels(LevelArray.Point rectangleCenter, int height)
-        {
-            List<LevelArray.ArrayPoint> rectanglePixels = new List<LevelArray.ArrayPoint>();
-
-            LevelArray.ArrayPoint rectangleCenterArray = LevelArray.ConvertPointIntoArrayPoint(rectangleCenter, false, false);
-            int rectangleHighestY = LevelArray.ConvertValue_PointIntoArrayPoint(rectangleCenter.y - (height / 2), false);
-            int rectangleLowestY = LevelArray.ConvertValue_PointIntoArrayPoint(rectangleCenter.y + (height / 2), true);
-
-
-            for (int i = rectangleHighestY; i <= rectangleLowestY; i++)
-            {
-                float rectangleWidth = RECTANGLE_AREA / height;
-
-                int rectangleLeftX = LevelArray.ConvertValue_PointIntoArrayPoint((int)(rectangleCenter.x - (rectangleWidth / 2)), false); //+ 1
-                int rectangleRightX = LevelArray.ConvertValue_PointIntoArrayPoint((int)(rectangleCenter.x + (rectangleWidth / 2)), true); //+ 1
-
-                for (int j = rectangleLeftX; j <= rectangleRightX; j++)
-                {
-                    rectanglePixels.Add(new LevelArray.ArrayPoint(j, i));
-                }
-            }
-
-            return rectanglePixels;
         }
 
         public override void SetMoveInfoList(int[,] levelArray, int numCollectibles)
@@ -115,7 +55,7 @@ namespace GeometryFriendsAgents
                 {
                     LevelArray.Point movePoint;
 
-                    movePoint = new LevelArray.Point(from + j * LevelArray.PIXEL_LENGTH * 2, i.height - 50);
+                    movePoint = new LevelArray.Point(from + j * LevelArray.PIXEL_LENGTH * 2, i.height - GameInfo.RECTANGLE_RADIUS);
 
                     SetMoveInfoList_NoAction(levelArray, i, movePoint, numCollectibles);
 
@@ -146,13 +86,13 @@ namespace GeometryFriendsAgents
 
                     velocityX = VELOCITYX_STEP * k;
 
-                    movePoint = new LevelArray.Point(i.leftEdge - LevelArray.PIXEL_LENGTH, i.height - 50);
+                    movePoint = new LevelArray.Point(i.leftEdge - LevelArray.PIXEL_LENGTH, i.height - GameInfo.RECTANGLE_RADIUS);
 
                     rightMove = false;
 
                     SetMoveInfoList_JumpOrFall(levelArray, i, movePoint, velocityX, rightMove, movementType, numCollectibles);
 
-                    movePoint = new LevelArray.Point(i.rightEdge + LevelArray.PIXEL_LENGTH, i.height - 50);
+                    movePoint = new LevelArray.Point(i.rightEdge + LevelArray.PIXEL_LENGTH, i.height - GameInfo.RECTANGLE_RADIUS);
 
                     rightMove = true;
 
@@ -164,7 +104,7 @@ namespace GeometryFriendsAgents
 
         private void SetMoveInfoList_NoAction(int[,] levelArray, Platform.PlatformInfo fromPlatform, LevelArray.Point movePoint, int numCollectibles)
         {
-            List<LevelArray.ArrayPoint> rectanglePixels = GetRectanglePixels(movePoint, 100);
+            List<LevelArray.ArrayPoint> rectanglePixels = GetRectanglePixels(movePoint);
 
             bool[] collectible_onPath = new bool[numCollectibles];
 
@@ -199,7 +139,7 @@ namespace GeometryFriendsAgents
 
                     for (int k = from; k <= to; k += LevelArray.PIXEL_LENGTH)
                     {
-                        List<LevelArray.ArrayPoint> rectanglePixels = GetRectanglePixels(new LevelArray.Point(k, j.height - 50), 100);
+                        List<LevelArray.ArrayPoint> rectanglePixels = GetRectanglePixels(new LevelArray.Point(k, j.height - 50));
 
                         if (IsObstacle_onPixels(levelArray, rectanglePixels))
                         {
@@ -244,7 +184,7 @@ namespace GeometryFriendsAgents
                 prevCollidePoint = collidePoint;
 
                 GetPathInfo(levelArray, collidePoint, collideVelocityX, collideVelocityY,
-                    ref collidePoint, ref collideType, ref collideVelocityX, ref collideVelocityY, ref collectible_onPath, ref pathLength);
+                    ref collidePoint, ref collideType, ref collideVelocityX, ref collideVelocityY, ref collectible_onPath, ref pathLength, GameInfo.RECTANGLE_RADIUS);
 
                 if (collideType == collideType.CEILING)
                 {
@@ -260,6 +200,7 @@ namespace GeometryFriendsAgents
 
             if (collideType == collideType.FLOOR)
             {
+
                 PlatformInfo? toPlatform = GetPlatform_onRectangle(collidePoint, 100);
 
                 if (toPlatform.HasValue)
@@ -274,45 +215,6 @@ namespace GeometryFriendsAgents
             }
         }
 
-        private void GetPathInfo(int[,] levelArray, LevelArray.Point movePoint, float velocityX, float velocityY,
-            ref LevelArray.Point collidePoint, ref collideType collideType, ref float collideVelocityX, ref float collideVelocityY, ref bool[] collectible_onPath, ref float pathLength)
-        {
-            LevelArray.Point previousRectangleCenter;
-            LevelArray.Point currentRectangleCenter = movePoint;
-
-            for (int i = 1; true; i++)
-            {
-                float currentTime = i * TIME_STEP;
-
-                previousRectangleCenter = currentRectangleCenter;
-                currentRectangleCenter = GetCurrentCenter(movePoint, velocityX, velocityY, currentTime);
-                List<LevelArray.ArrayPoint> rectanglePixels = GetRectanglePixels(currentRectangleCenter, 100);
-
-                if (IsObstacle_onPixels(levelArray, rectanglePixels))
-                {
-                    collidePoint = previousRectangleCenter;
-                    collideType = GetCollideType(levelArray, currentRectangleCenter, velocityY - GameInfo.GRAVITY * (i - 1) * TIME_STEP >= 0, velocityX > 0, 100);
-
-                    if (collideType == collideType.CEILING)
-                    {
-                        collideVelocityX = velocityX / 3;
-                        collideVelocityY = -(velocityY - GameInfo.GRAVITY * (i - 1) * TIME_STEP) / 3;
-                    }
-                    else
-                    {
-                        collideVelocityX = 0;
-                        collideVelocityY = 0;
-                    }
-
-                    return;
-                }
-
-                collectible_onPath = Utilities.GetOrMatrix(collectible_onPath, GetCollectibles_onPixels(levelArray, rectanglePixels, collectible_onPath.Length));
-
-                pathLength += (float)Math.Sqrt(Math.Pow(currentRectangleCenter.x - previousRectangleCenter.x, 2) + Math.Pow(currentRectangleCenter.y - previousRectangleCenter.y, 2));
-            }
-        }
-
         public Platform.PlatformInfo? GetPlatform_onRectangle(LevelArray.Point rectangleCenter, float height)
         {
             foreach (Platform.PlatformInfo i in platformInfoList)
@@ -324,6 +226,31 @@ namespace GeometryFriendsAgents
             }
 
             return null;
+        }
+
+        private List<LevelArray.ArrayPoint> GetRectanglePixels(LevelArray.Point rectangleCenter)
+        {
+            List<LevelArray.ArrayPoint> rectanglePixels = new List<LevelArray.ArrayPoint>();
+
+            LevelArray.ArrayPoint rectangleCenterArray = LevelArray.ConvertPointIntoArrayPoint(rectangleCenter, false, false);
+            int rectangleHighestY = LevelArray.ConvertValue_PointIntoArrayPoint(rectangleCenter.y - 50, false);
+            int rectangleLowestY = LevelArray.ConvertValue_PointIntoArrayPoint(rectangleCenter.y + 50, true);
+
+
+            for (int i = rectangleHighestY; i <= rectangleLowestY; i++)
+            {
+                float rectangleWidth = 100;
+
+                int rectangleLeftX = LevelArray.ConvertValue_PointIntoArrayPoint((int)(rectangleCenter.x - (rectangleWidth / 2)), false); //+ 1
+                int rectangleRightX = LevelArray.ConvertValue_PointIntoArrayPoint((int)(rectangleCenter.x + (rectangleWidth / 2)), true); //+ 1
+
+                for (int j = rectangleLeftX; j <= rectangleRightX; j++)
+                {
+                    rectanglePixels.Add(new LevelArray.ArrayPoint(j, i));
+                }
+            }
+
+            return rectanglePixels;
         }
     }
 }
