@@ -169,4 +169,20 @@
       <HighScore name="KIT Agent" value="27" />
     </HighScores>
   </Level8>
+  <Level9>
+    <Description />
+    <Tips />
+    <BallStartingPosition X="104" Y="712" />
+    <SquareStartingPosition X="-1000" Y="-1000" />
+    <Collectibles>
+      <Collectible X="1192" Y="488" />
+    </Collectibles>
+    <GreenObstacles />
+    <BlackObstacles>
+      <Obstacle width="704" height="224" X="552" Y="536" centered="false" />
+    </BlackObstacles>
+    <YellowObstacles />
+    <GreenElevators />
+    <OrangeElevators />
+  </Level9>
 </Levels>

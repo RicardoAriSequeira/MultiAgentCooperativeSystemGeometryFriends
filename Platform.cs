@@ -26,8 +26,8 @@ namespace GeometryFriendsAgents
         protected const int STAIR_MAXWIDTH = 48;
         protected const int STAIR_MAXHEIGHT = 16;
 
-        protected int[] RECTANGLE_HEIGHTS = new int[8] { 192, 172, 152, 132, 112, 92, 72, 52 };
-        protected int RECTANGLE_AREA = 10000; // ou 9984?
+        protected const int NO_OBSTACLE = -1;
+        public const int NO_HEIGHT = -1;
 
         protected List<PlatformInfo> platformInfoList;
 
@@ -37,15 +37,17 @@ namespace GeometryFriendsAgents
             public int height;
             public int leftEdge;
             public int rightEdge;
+            public int obstacleHeight;
             public List<MoveInfo> moveInfoList;
 
-            public PlatformInfo(int id, int height, int leftEdge, int rightEdge, List<MoveInfo> moveInfoList)
+            public PlatformInfo(int id, int height, int leftEdge, int rightEdge, List<MoveInfo> moveInfoList, int obstacleHeight = NO_OBSTACLE)
             {
                 this.id = id;
                 this.height = height;
                 this.leftEdge = leftEdge;
                 this.rightEdge = rightEdge;
                 this.moveInfoList = moveInfoList;
+                this.obstacleHeight = obstacleHeight;
             }
         }
 
@@ -60,8 +62,9 @@ namespace GeometryFriendsAgents
             public bool[] collectibles_onPath;
             public int pathLength;
             public bool collideCeiling;
+            public int height;
 
-            public MoveInfo(PlatformInfo reachablePlatform, LevelArray.Point movePoint, LevelArray.Point landPoint, int velocityX, bool rightMove, movementType movementType, bool[] collectibles_onPath, int pathLength, bool collideCeiling)
+            public MoveInfo(PlatformInfo reachablePlatform, LevelArray.Point movePoint, LevelArray.Point landPoint, int velocityX, bool rightMove, movementType movementType, bool[] collectibles_onPath, int pathLength, bool collideCeiling, int height = NO_HEIGHT)
             {
                 this.reachablePlatform = reachablePlatform;
                 this.movePoint = movePoint;
@@ -72,6 +75,7 @@ namespace GeometryFriendsAgents
                 this.collectibles_onPath = collectibles_onPath;
                 this.pathLength = pathLength;
                 this.collideCeiling = collideCeiling;
+                this.height = height;
             }
         }
 
@@ -86,45 +90,9 @@ namespace GeometryFriendsAgents
             SetMoveInfoList(levelArray, numCollectibles);
         }
 
-        public void SetPlatformInfoList(int[,] levelArray)
-        {
-            int[,] platformArray = IdentifyObstacles(levelArray);
+        public abstract void SetPlatformInfoList(int[,] levelArray);
 
-            Parallel.For(0, levelArray.GetLength(0), i =>
-            {
-                bool platformFlag = false;
-                int height = 0, leftEdge = 0, rightEdge = 0;
-
-                for (int j = 0; j < platformArray.GetLength(1); j++)
-                {
-                    if (platformArray[i, j] == LevelArray.OBSTACLE && !platformFlag)
-                    {
-                        height = LevelArray.ConvertValue_ArrayPointIntoPoint(i);
-                        leftEdge = LevelArray.ConvertValue_ArrayPointIntoPoint(j);
-                        platformFlag = true;
-                    }
-
-                    if (platformArray[i, j] == LevelArray.OPEN && platformFlag)
-                    {
-                        rightEdge = LevelArray.ConvertValue_ArrayPointIntoPoint(j - 1);
-
-                        if (rightEdge >= leftEdge)
-                        {
-                            lock (platformInfoList)
-                            {
-                                platformInfoList.Add(new PlatformInfo(0, height, leftEdge, rightEdge, new List<MoveInfo>()));
-                            }
-                        }
-
-                        platformFlag = false;
-                    }
-                }
-            });
-
-            SetPlatformID();
-        }
-
-        public abstract int[,] IdentifyObstacles(int[,] levelArray);
+        public abstract int[,] IdentifyPlatforms(int[,] levelArray);
 
         public abstract void SetMoveInfoList(int[,] levelArray, int numCollectibles);
 
@@ -427,7 +395,7 @@ namespace GeometryFriendsAgents
                     collidePoint = previousRectangleCenter;
                     collideType = GetCollideType(levelArray, currentRectangleCenter, velocityY - GameInfo.GRAVITY * (i - 1) * TIME_STEP >= 0, velocityX > 0, radius);
 
-                    if (collideType == collideType.CEILING)
+                     if (collideType == collideType.CEILING)
                     {
                         collideVelocityX = velocityX / 3;
                         collideVelocityY = -(velocityY - GameInfo.GRAVITY * (i - 1) * TIME_STEP) / 3;

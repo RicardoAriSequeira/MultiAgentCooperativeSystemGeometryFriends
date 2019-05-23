@@ -9,7 +9,7 @@ namespace GeometryFriendsAgents
   
         public PlatformCircle() : base()  {}
 
-        public override int[,] IdentifyObstacles(int[,] levelArray)
+        public override int[,] IdentifyPlatforms(int[,] levelArray)
         {
             int[,] platformArray = new int[levelArray.GetLength(0), levelArray.GetLength(1)];
 
@@ -34,6 +34,44 @@ namespace GeometryFriendsAgents
 
             return platformArray;
 
+        }
+
+        public override void SetPlatformInfoList(int[,] levelArray)
+        {
+            int[,] platformArray = IdentifyPlatforms(levelArray);
+
+            Parallel.For(0, levelArray.GetLength(0), i =>
+            {
+                bool platformFlag = false;
+                int height = 0, leftEdge = 0, rightEdge = 0;
+
+                for (int j = 0; j < platformArray.GetLength(1); j++)
+                {
+                    if (platformArray[i, j] == LevelArray.OBSTACLE && !platformFlag)
+                    {
+                        height = LevelArray.ConvertValue_ArrayPointIntoPoint(i);
+                        leftEdge = LevelArray.ConvertValue_ArrayPointIntoPoint(j);
+                        platformFlag = true;
+                    }
+
+                    if (platformArray[i, j] == LevelArray.OPEN && platformFlag)
+                    {
+                        rightEdge = LevelArray.ConvertValue_ArrayPointIntoPoint(j - 1);
+
+                        if (rightEdge >= leftEdge)
+                        {
+                            lock (platformInfoList)
+                            {
+                                platformInfoList.Add(new PlatformInfo(0, height, leftEdge, rightEdge, new List<MoveInfo>()));
+                            }
+                        }
+
+                        platformFlag = false;
+                    }
+                }
+            });
+
+            SetPlatformID();
         }
 
         public override void SetMoveInfoList(int[,] levelArray, int numCollectibles)
@@ -181,11 +219,6 @@ namespace GeometryFriendsAgents
             do
             {
                 prevCollidePoint = collidePoint;
-
-                if (movementType == movementType.FALL && rightMove)
-                {
-                    Console.WriteLine("aa");
-                }
 
                 GetPathInfo(levelArray, collidePoint, collideVelocityX, collideVelocityY,
                     ref collidePoint, ref collideType, ref collideVelocityX, ref collideVelocityY, ref collectible_onPath, ref pathLength, GameInfo.CIRCLE_RADIUS);

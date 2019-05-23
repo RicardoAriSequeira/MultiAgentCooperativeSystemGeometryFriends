@@ -1,6 +1,8 @@
 ﻿using GeometryFriends;
 using GeometryFriends.AI;
+using GeometryFriends.AI.ActionSimulation;
 using GeometryFriends.AI.Communication;
+using GeometryFriends.AI.Debug;
 using GeometryFriends.AI.Interfaces;
 using GeometryFriends.AI.Perceptions.Information;
 using System;
@@ -24,6 +26,7 @@ namespace GeometryFriendsAgents
         private Moves currentAction;
         private List<Moves> possibleMoves;
         private DateTime lastMoveTime;
+        //private long lastMoveTime;
         private Random rnd;
 
         private PlatformRectangle platform;
@@ -36,6 +39,8 @@ namespace GeometryFriendsAgents
         private int previousCollectibleNum;
         private Platform.MoveInfo? nextEdge;
         private ActionSelector actionSelector;
+        private ActionSimulator predictor;
+        //private DebugInformation[] debugInfo = null;
         private Platform.PlatformInfo? currentPlatform;
         private Platform.PlatformInfo? previousPlatform;
 
@@ -61,6 +66,7 @@ namespace GeometryFriendsAgents
             implementedAgent = true;
 
             lastMoveTime = DateTime.Now;
+            //lastMoveTime = DateTime.Now.Second;
             currentAction = Moves.NO_ACTION;
             rnd = new Random();
 
@@ -122,6 +128,11 @@ namespace GeometryFriendsAgents
             collectiblesInfo = colI;
         }
 
+        public override void ActionSimulatorUpdated(ActionSimulator updatedSimulator)
+        {
+            predictor = updatedSimulator;
+        }
+
         //implements abstract rectangle interface: signals if the agent is actually implemented or not
         public override bool ImplementedAgent()
         {
@@ -168,7 +179,7 @@ namespace GeometryFriendsAgents
                 // saber se um diamante foi colecionado
                 IsGetCollectible();
 
-                // se o circulo se encontra numa plataforma
+                // se o retangulo se encontra numa plataforma
                 if (currentPlatform.HasValue)
                 {
                     if (differentPlatformFlag || getCollectibleFlag)
@@ -188,28 +199,61 @@ namespace GeometryFriendsAgents
                         {
                             if (nextEdge.Value.movementType == Platform.movementType.STAIR_GAP)
                             {
-                                currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+
+                                if (nextEdge.Value.height != Platform.NO_HEIGHT &&
+                                    (rectangleInfo.Height < nextEdge.Value.height - 3 ||
+                                    rectangleInfo.Height > nextEdge.Value.height + 3))
+                                {
+                                    if (rectangleInfo.Height < nextEdge.Value.height)
+                                    {
+                                        currentAction = Moves.MORPH_UP;
+                                    }
+                                    else
+                                    {
+                                        currentAction = Moves.MORPH_DOWN;
+                                    }
+                                }
+                                else
+                                {
+                                    currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                                }
                             }
                             else
                             {
-                                currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextEdge.Value.movePoint.x, nextEdge.Value.velocityX, nextEdge.Value.rightMove);
+                                currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextEdge.Value.movePoint.x, nextEdge.Value.velocityX, nextEdge.Value.rightMove, nextEdge.Value.height);
                             }
                         }
                         else
                         {
-                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetPointX_InAir, 0, true);
+                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetPointX_InAir, 0, true, nextEdge.Value.height);
                         }
                     }
                 }
 
-                //se o circulo nao se encontra numa plataforma
+                //se o retangulo nao se encontra numa plataforma
                 else
                 {
                     if (nextEdge.HasValue)
                     {
                         if (nextEdge.Value.movementType == Platform.movementType.STAIR_GAP)
                         {
-                            currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                            if (nextEdge.Value.height != Platform.NO_HEIGHT &&
+                                (rectangleInfo.Height < nextEdge.Value.height - 3 ||
+                                 rectangleInfo.Height > nextEdge.Value.height + 3))
+                            {
+                                if (rectangleInfo.Height < nextEdge.Value.height)
+                                {
+                                    currentAction = Moves.MORPH_UP;
+                                }
+                                else
+                                {
+                                    currentAction = Moves.MORPH_DOWN;
+                                }
+                            }
+                            else
+                            {
+                                currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                            }
                         }
                         else
                         {
@@ -219,7 +263,7 @@ namespace GeometryFriendsAgents
                             }
                             else
                             {
-                                currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetPointX_InAir, 0, true);
+                                currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetPointX_InAir, 0, true, nextEdge.Value.height);
                             }
                         }
                     }
@@ -227,7 +271,7 @@ namespace GeometryFriendsAgents
 
                 if (!nextEdge.HasValue)
                 {
-                    currentAction = actionSelector.GetCurrentAction(rectangleInfo, (int)rectangleInfo.X, 0, false);
+                    currentAction = actionSelector.GetCurrentAction(rectangleInfo, (int)rectangleInfo.X, 0, false, Platform.NO_HEIGHT);
                 }
 
                 lastMoveTime = DateTime.Now;
@@ -245,12 +289,14 @@ namespace GeometryFriendsAgents
                 {
                     targetPointX_InAir = (nextEdge.Value.reachablePlatform.leftEdge + nextEdge.Value.reachablePlatform.rightEdge) / 2;
 
-                    if (nextEdge.Value.movementType == Platform.movementType.JUMP)
-                    {
-                        currentAction = Moves.JUMP;
-                    }
+                    //if (nextEdge.Value.movementType == Platform.movementType.MORPH_DOWN)
+                    //{
+                    //    currentAction = Moves.MORPH_DOWN;
+                    //}
+
                 }
             }
+
         }
 
         private void IsGetCollectible()
