@@ -235,6 +235,8 @@ namespace GeometryFriendsAgents
 
         protected bool IsPriorityHighest(PlatformInfo fromPlatform, MoveInfo mI, ref List<MoveInfo> moveInfoToRemove)
         {
+
+            // if the move is to the same platform and there is no collectible
             if (fromPlatform.id == mI.reachablePlatform.id && !Utilities.IsTrueValue_inMatrix(mI.collectibles_onPath))
             {
                 return false;
@@ -244,6 +246,8 @@ namespace GeometryFriendsAgents
 
             foreach (MoveInfo i in fromPlatform.moveInfoList)
             {
+
+                // finds the reachable platform
                 if (!(mI.reachablePlatform.id == i.reachablePlatform.id))
                 {
                     continue;
@@ -253,10 +257,13 @@ namespace GeometryFriendsAgents
 
                 if (trueNum == Utilities.numTrue.MORETRUE)
                 {
+                    // actions have higher priority than no actions
                     if (mI.movementType != movementType.NO_ACTION && i.movementType == movementType.NO_ACTION)
                     {
                         continue;
                     }
+
+                    // comparison between no action movements
                     else if (mI.movementType != movementType.NO_ACTION && i.movementType != movementType.NO_ACTION)
                     {
                         if (mI.movementType > i.movementType)
@@ -309,6 +316,14 @@ namespace GeometryFriendsAgents
                         int middlePos = (mI.reachablePlatform.rightEdge + mI.reachablePlatform.leftEdge) / 2;
 
                         if (Math.Abs(middlePos - mI.landPoint.x) > Math.Abs(middlePos - i.landPoint.x))
+                        {
+                            priorityHighestFlag = false;
+                            continue;
+                        }
+
+                        if (i.height == GameInfo.SQUARE_HEIGHT ||
+                           (i.height > GameInfo.SQUARE_HEIGHT && i.height < mI.height) ||
+                           (i.height < GameInfo.SQUARE_HEIGHT && i.height > mI.height))
                         {
                             priorityHighestFlag = false;
                             continue;

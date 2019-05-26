@@ -120,18 +120,6 @@ namespace GeometryFriendsAgents
         public Moves GetCurrentAction(RectangleRepresentation rI, int targetPointX, int targetVelocityX, bool rightMove, int height)
         {
 
-            //if (height != Platform.NO_HEIGHT && rI.Height != height)
-            //{
-            //    if (rI.Height < height)
-            //    {
-            //        return Moves.MORPH_UP;
-            //    }
-            //    else
-            //    {
-            //        return Moves.MORPH_DOWN;
-            //    }
-            //}
-
             int stateNum = GetStateNum(rI, targetPointX, rightMove);
 
             int currentActionNum;

@@ -174,12 +174,10 @@ namespace GeometryFriendsAgents
 
             if ((DateTime.Now - lastMoveTime).TotalMilliseconds >= 20)
             {
-                // saber se a plataforma atual e diferente da plataforma anterior
                 IsDifferentPlatform();
-                // saber se um diamante foi colecionado
                 IsGetCollectible();
 
-                // se o retangulo se encontra numa plataforma
+                // rectangle on a platform
                 if (currentPlatform.HasValue)
                 {
                     if (differentPlatformFlag || getCollectibleFlag)
@@ -192,36 +190,38 @@ namespace GeometryFriendsAgents
                         Task.Factory.StartNew(SetNextEdge);
                     }
 
-                    // se o proximo objetivo estiver definido
                     if (nextEdge.HasValue)
                     {
                         if (-GameInfo.MAX_VELOCITYY <= rectangleInfo.VelocityY && rectangleInfo.VelocityY <= GameInfo.MAX_VELOCITYY)
                         {
+
                             if (nextEdge.Value.movementType == Platform.movementType.STAIR_GAP)
                             {
+                                currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                            }
 
-                                if (nextEdge.Value.height != Platform.NO_HEIGHT &&
-                                    (rectangleInfo.Height < nextEdge.Value.height - 3 ||
-                                    rectangleInfo.Height > nextEdge.Value.height + 3))
+                            else if (nextEdge.Value.movementType == Platform.movementType.MORPH_DOWN)
+                            {
+                                if (rectangleInfo.Height > nextEdge.Value.height - LevelArray.PIXEL_LENGTH)
                                 {
-                                    if (rectangleInfo.Height < nextEdge.Value.height)
-                                    {
-                                        currentAction = Moves.MORPH_UP;
-                                    }
-                                    else
-                                    {
-                                        currentAction = Moves.MORPH_DOWN;
-                                    }
+                                    currentAction = Moves.MORPH_DOWN;
                                 }
                                 else
                                 {
                                     currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                                 }
                             }
+
+                            else if (nextEdge.Value.movementType == Platform.movementType.NO_ACTION && rectangleInfo.Height < nextEdge.Value.height)
+                            {
+                                currentAction = Moves.MORPH_UP;
+                            }
+
                             else
                             {
                                 currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextEdge.Value.movePoint.x, nextEdge.Value.velocityX, nextEdge.Value.rightMove, nextEdge.Value.height);
                             }
+
                         }
                         else
                         {
@@ -230,31 +230,34 @@ namespace GeometryFriendsAgents
                     }
                 }
 
-                //se o retangulo nao se encontra numa plataforma
+                // rectangle is not on a platform
                 else
                 {
                     if (nextEdge.HasValue)
                     {
+
                         if (nextEdge.Value.movementType == Platform.movementType.STAIR_GAP)
                         {
-                            if (nextEdge.Value.height != Platform.NO_HEIGHT &&
-                                (rectangleInfo.Height < nextEdge.Value.height - 3 ||
-                                 rectangleInfo.Height > nextEdge.Value.height + 3))
+                            currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                        }
+
+                        else if (nextEdge.Value.movementType == Platform.movementType.MORPH_DOWN)
+                        {
+                            if (rectangleInfo.Height > nextEdge.Value.height - LevelArray.PIXEL_LENGTH)
                             {
-                                if (rectangleInfo.Height < nextEdge.Value.height)
-                                {
-                                    currentAction = Moves.MORPH_UP;
-                                }
-                                else
-                                {
-                                    currentAction = Moves.MORPH_DOWN;
-                                }
+                                currentAction = Moves.MORPH_DOWN;
                             }
                             else
                             {
                                 currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                             }
                         }
+
+                        else if (nextEdge.Value.movementType == Platform.movementType.NO_ACTION && rectangleInfo.Height < nextEdge.Value.height)
+                        {
+                            currentAction = Moves.MORPH_UP;
+                        }
+
                         else
                         {
                             if (nextEdge.Value.collideCeiling && rectangleInfo.VelocityY < 0)
@@ -288,12 +291,6 @@ namespace GeometryFriendsAgents
                 if (-GameInfo.MAX_VELOCITYY <= rectangleInfo.VelocityY && rectangleInfo.VelocityY <= GameInfo.MAX_VELOCITYY)
                 {
                     targetPointX_InAir = (nextEdge.Value.reachablePlatform.leftEdge + nextEdge.Value.reachablePlatform.rightEdge) / 2;
-
-                    //if (nextEdge.Value.movementType == Platform.movementType.MORPH_DOWN)
-                    //{
-                    //    currentAction = Moves.MORPH_DOWN;
-                    //}
-
                 }
             }
 
@@ -334,6 +331,11 @@ namespace GeometryFriendsAgents
             nextEdge = subgoalAStar.CalculateShortestPath(currentPlatform.Value, new LevelArray.Point((int)rectangleInfo.X, (int)rectangleInfo.Y),
                 Enumerable.Repeat<bool>(true, levelArray.initialCollectiblesInfo.Length).ToArray(),
                 levelArray.GetObtainedCollectibles(collectiblesInfo), levelArray.initialCollectiblesInfo);
+        }
+
+        private bool canMorphUp()
+        {
+            return levelArray.canMorphUp(rectangleInfo);
         }
 
         //typically used console debugging used in previous implementations of GeometryFriends
