@@ -20,7 +20,7 @@ namespace GeometryFriendsAgents
     {
         //agent implementation specificiation
         private bool implementedAgent;
-        private string agentName = "RandRect";
+        private string agentName = "IST Rectangle";
 
         //auxiliary variables for agent action
         private Moves currentAction;
@@ -197,35 +197,51 @@ namespace GeometryFriendsAgents
 
                             if (nextEdge.Value.movementType == Platform.movementType.STAIR_GAP)
                             {
-                                currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
-                            }
-
-                            else if (nextEdge.Value.movementType == Platform.movementType.MORPH_DOWN)
-                            {
-                                if (rectangleInfo.Height > nextEdge.Value.height - LevelArray.PIXEL_LENGTH)
+                                if (nextEdge.Value.height < 55 && rectangleInfo.Height > 55)
                                 {
                                     currentAction = Moves.MORPH_DOWN;
                                 }
+
+                                else if (nextEdge.Value.height > 190 && rectangleInfo.Height < 190)
+                                {
+                                    currentAction = Moves.MORPH_UP;
+                                }
+
                                 else
                                 {
                                     currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                                 }
                             }
 
-                            else if (nextEdge.Value.movementType == Platform.movementType.NO_ACTION && rectangleInfo.Height < nextEdge.Value.height)
+                            else if (nextEdge.Value.movementType == Platform.movementType.MORPH_DOWN && rectangleInfo.Height > nextEdge.Value.height - LevelArray.PIXEL_LENGTH)
                             {
-                                currentAction = Moves.MORPH_UP;
+                                currentAction = Moves.MORPH_DOWN;
                             }
+
+                            else if (nextEdge.Value.movementType == Platform.movementType.FALL && nextEdge.Value.velocityX == 0 && rectangleInfo.Height > 55)
+                            {
+                                currentAction = Moves.MORPH_DOWN;
+                            }
+
+                            else if (nextEdge.Value.movementType == Platform.movementType.MORPH_DOWN && rectangleInfo.Height <= nextEdge.Value.height - LevelArray.PIXEL_LENGTH)
+                            {
+                                currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                            }
+
+                            //else if (nextEdge.Value.movementType == Platform.movementType.NO_ACTION && rectangleInfo.Height < nextEdge.Value.height)
+                            //{
+                            //    currentAction = Moves.MORPH_UP;
+                            //}
 
                             else
                             {
-                                currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextEdge.Value.movePoint.x, nextEdge.Value.velocityX, nextEdge.Value.rightMove, nextEdge.Value.height);
+                                currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextEdge.Value.movePoint.x, nextEdge.Value.velocityX, nextEdge.Value.rightMove);
                             }
 
                         }
                         else
                         {
-                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetPointX_InAir, 0, true, nextEdge.Value.height);
+                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetPointX_InAir, 0, true);
                         }
                     }
                 }
@@ -238,24 +254,35 @@ namespace GeometryFriendsAgents
 
                         if (nextEdge.Value.movementType == Platform.movementType.STAIR_GAP)
                         {
-                            currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
-                        }
-
-                        else if (nextEdge.Value.movementType == Platform.movementType.MORPH_DOWN)
-                        {
-                            if (rectangleInfo.Height > nextEdge.Value.height - LevelArray.PIXEL_LENGTH)
+                            if (nextEdge.Value.height < 55 && rectangleInfo.Height > 55)
                             {
                                 currentAction = Moves.MORPH_DOWN;
                             }
+
+                            else if (nextEdge.Value.height > 190 && rectangleInfo.Height < 190)
+                            {
+                                currentAction = Moves.MORPH_UP;
+                            }
+
                             else
                             {
                                 currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                             }
                         }
 
-                        else if (nextEdge.Value.movementType == Platform.movementType.NO_ACTION && rectangleInfo.Height < nextEdge.Value.height)
+                        else if (nextEdge.Value.movementType == Platform.movementType.MORPH_DOWN && rectangleInfo.Height > nextEdge.Value.height - LevelArray.PIXEL_LENGTH)
                         {
-                            currentAction = Moves.MORPH_UP;
+                            currentAction = Moves.MORPH_DOWN;
+                        }
+
+                        //else if (nextEdge.Value.movementType == Platform.movementType.FALL && nextEdge.Value.velocityX == 0 && rectangleInfo.Height > 55)
+                        //{
+                        //    currentAction = Moves.MORPH_DOWN;
+                        //}
+
+                        else if (nextEdge.Value.movementType == Platform.movementType.MORPH_DOWN && rectangleInfo.Height <= nextEdge.Value.height - LevelArray.PIXEL_LENGTH)
+                        {
+                            currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                         }
 
                         else
@@ -266,7 +293,8 @@ namespace GeometryFriendsAgents
                             }
                             else
                             {
-                                currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetPointX_InAir, 0, true, nextEdge.Value.height);
+                                //currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetPointX_InAir, 0, true);
+                                currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextEdge.Value.movePoint.x, nextEdge.Value.velocityX, nextEdge.Value.rightMove);
                             }
                         }
                     }
@@ -274,7 +302,7 @@ namespace GeometryFriendsAgents
 
                 if (!nextEdge.HasValue)
                 {
-                    currentAction = actionSelector.GetCurrentAction(rectangleInfo, (int)rectangleInfo.X, 0, false, Platform.NO_HEIGHT);
+                    currentAction = actionSelector.GetCurrentAction(rectangleInfo, (int)rectangleInfo.X, 0, false);
                 }
 
                 lastMoveTime = DateTime.Now;
@@ -291,6 +319,30 @@ namespace GeometryFriendsAgents
                 if (-GameInfo.MAX_VELOCITYY <= rectangleInfo.VelocityY && rectangleInfo.VelocityY <= GameInfo.MAX_VELOCITYY)
                 {
                     targetPointX_InAir = (nextEdge.Value.reachablePlatform.leftEdge + nextEdge.Value.reachablePlatform.rightEdge) / 2;
+
+                    //if (nextEdge.Value.movementType == Platform.movementType.NO_ACTION && rectangleInfo.Height < nextEdge.Value.height)
+                    if (nextEdge.Value.movementType == Platform.movementType.NO_ACTION)
+                    {
+                        if (rectangleInfo.Height < nextEdge.Value.height)
+                        {
+                            currentAction = Moves.MORPH_UP;
+                        }
+                        else if (rectangleInfo.Height > nextEdge.Value.height)
+                        {
+                            currentAction = Moves.MORPH_DOWN;
+                        }
+                        
+                    }
+
+                    if (nextEdge.Value.movementType == Platform.movementType.FALL && nextEdge.Value.velocityX == 0 && rectangleInfo.Height < 190)
+                    {
+                        currentAction = Moves.MORPH_UP;
+                    }
+
+                    //if (nextEdge.Value.movementType == Platform.movementType.MORPH_DOWN && rectangleInfo.Height > nextEdge.Value.height - LevelArray.PIXEL_LENGTH)
+                    //{
+                    //    currentAction = Moves.MORPH_DOWN;
+                    //}
                 }
             }
 
@@ -331,11 +383,6 @@ namespace GeometryFriendsAgents
             nextEdge = subgoalAStar.CalculateShortestPath(currentPlatform.Value, new LevelArray.Point((int)rectangleInfo.X, (int)rectangleInfo.Y),
                 Enumerable.Repeat<bool>(true, levelArray.initialCollectiblesInfo.Length).ToArray(),
                 levelArray.GetObtainedCollectibles(collectiblesInfo), levelArray.initialCollectiblesInfo);
-        }
-
-        private bool canMorphUp()
-        {
-            return levelArray.canMorphUp(rectangleInfo);
         }
 
         //typically used console debugging used in previous implementations of GeometryFriends

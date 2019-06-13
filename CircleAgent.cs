@@ -33,7 +33,7 @@ namespace GeometryFriendsAgents
 
         //agent implementation specificiation
         private bool implementedAgent;
-        private string agentName = "KIT Agent";
+        private string agentName = "IST Circle";
 
         //auxiliary variables for agent action
         private Moves currentAction;

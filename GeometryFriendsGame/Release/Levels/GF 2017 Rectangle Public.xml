@@ -43,6 +43,8 @@
       <HighScore name="RandRect" value="2" />
       <HighScore name="RandRect" value="2" />
       <HighScore name="RandRect" value="2" />
+      <HighScore name="RandRect" value="2" />
+      <HighScore name="RandRect" value="2" />
     </HighScores>
   </Level2>
   <Level3>
@@ -133,6 +135,8 @@
       <HighScore name="RandRect" value="3" />
       <HighScore name="RandRect" value="3" />
       <HighScore name="RandRect" value="3" />
+      <HighScore name="RandRect" value="3" />
+      <HighScore name="RandRect" value="3" />
     </HighScores>
   </Level6>
   <Level7>
@@ -178,6 +182,10 @@
     <OrangeElevators />
     <HighScores>
       <HighScore name="RandRect" value="7" />
+      <HighScore name="RandRect" value="7" />
+      <HighScore name="RandRect" value="8" />
+      <HighScore name="RandRect" value="9" />
+      <HighScore name="RandRect" value="10" />
     </HighScores>
   </Level8>
   <Level9>
@@ -186,61 +194,61 @@
     <BallStartingPosition X="-1000" Y="-1000" />
     <SquareStartingPosition X="328" Y="344" />
     <Collectibles>
-      <Collectible X="824" Y="344" />
+      <Collectible X="120" Y="584" />
     </Collectibles>
     <GreenObstacles />
     <BlackObstacles>
       <Obstacle width="368" height="80" X="200" Y="392" centered="false" />
-      <Obstacle width="400" height="80" X="600" Y="392" centered="false" />
     </BlackObstacles>
     <YellowObstacles />
     <GreenElevators />
     <OrangeElevators />
     <HighScores>
-      <HighScore name="RandRect" value="2" />
-      <HighScore name="RandRect" value="2" />
-      <HighScore name="RandRect" value="2" />
-      <HighScore name="RandRect" value="2" />
-      <HighScore name="RandRect" value="2" />
+      <HighScore name="IST Rectangle" value="3" />
+      <HighScore name="IST Rectangle" value="58" />
     </HighScores>
   </Level9>
   <Level10>
     <Description />
     <Tips />
     <BallStartingPosition X="-1000" Y="-1000" />
-    <SquareStartingPosition X="184" Y="712" />
+    <SquareStartingPosition X="1096" Y="248" />
     <Collectibles>
-      <Collectible X="1208" Y="584" />
+      <Collectible X="104" Y="600" />
     </Collectibles>
     <GreenObstacles />
     <BlackObstacles>
-      <Obstacle width="80" height="656" X="1096" Y="40" centered="false" />
-    </BlackObstacles>
-    <YellowObstacles />
-    <GreenElevators />
-    <OrangeElevators />
-  </Level10>
-  <Level11>
-    <Description />
-    <Tips />
-    <BallStartingPosition X="-1000" Y="-1000" />
-    <SquareStartingPosition X="216" Y="712" />
-    <Collectibles>
-      <Collectible X="1128" Y="696" />
-    </Collectibles>
-    <GreenObstacles />
-    <BlackObstacles>
-      <Obstacle width="128" height="144" X="552" Y="536" centered="false" />
+      <Obstacle width="528" height="32" X="40" Y="296" centered="false" />
+      <Obstacle width="32" height="32" X="552" Y="296" centered="false" />
+      <Obstacle width="592" height="32" X="680" Y="296" centered="false" />
     </BlackObstacles>
     <YellowObstacles />
     <GreenElevators />
     <OrangeElevators />
     <HighScores>
-      <HighScore name="RandRect" value="3" />
-      <HighScore name="RandRect" value="3" />
-      <HighScore name="RandRect" value="3" />
-      <HighScore name="RandRect" value="3" />
-      <HighScore name="RandRect" value="3" />
+      <HighScore name="RandRect" value="13" />
+    </HighScores>
+  </Level10>
+  <Level11>
+    <Description />
+    <Tips />
+    <BallStartingPosition X="-1000" Y="-1000" />
+    <SquareStartingPosition X="200" Y="184" />
+    <Collectibles>
+      <Collectible X="104" Y="616" />
+    </Collectibles>
+    <GreenObstacles />
+    <BlackObstacles>
+      <Obstacle width="544" height="64" X="40" Y="232" centered="false" />
+      <Obstacle width="528" height="64" X="712" Y="232" centered="false" />
+    </BlackObstacles>
+    <YellowObstacles />
+    <GreenElevators />
+    <OrangeElevators />
+    <HighScores>
+      <HighScore name="RandRect" value="10" />
+      <HighScore name="RandRect" value="10" />
+      <HighScore name="RandRect" value="11" />
     </HighScores>
   </Level11>
   <Level12>
@@ -258,5 +266,12 @@
     <YellowObstacles />
     <GreenElevators />
     <OrangeElevators />
+    <HighScores>
+      <HighScore name="RandRect" value="4" />
+      <HighScore name="RandRect" value="4" />
+      <HighScore name="RandRect" value="5" />
+      <HighScore name="RandRect" value="6" />
+      <HighScore name="RandRect" value="6" />
+    </HighScores>
   </Level12>
 </Levels>

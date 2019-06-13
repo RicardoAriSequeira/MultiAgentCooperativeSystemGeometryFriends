@@ -203,12 +203,5 @@ namespace GeometryFriendsAgents
             return obtainedCollectibles;
         }
 
-        public bool CanMorphUp(RectangleRepresentation rI)
-        {
-
-            rI.Y + (rI.Height / 2) - 200;
-
-            return true;
-        }
     }
 }

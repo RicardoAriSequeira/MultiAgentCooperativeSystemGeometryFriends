@@ -62,7 +62,8 @@ namespace GeometryFriendsAgents
             public bool[] collectibles_onPath;
             public int pathLength;
             public bool collideCeiling;
-            public int height;
+            public int height; // sera mesmo necessario?
+
 
             public MoveInfo(PlatformInfo reachablePlatform, LevelArray.Point movePoint, LevelArray.Point landPoint, int velocityX, bool rightMove, movementType movementType, bool[] collectibles_onPath, int pathLength, bool collideCeiling, int height = NO_HEIGHT)
             {
@@ -394,21 +395,21 @@ namespace GeometryFriendsAgents
         protected void GetPathInfo(int[,] levelArray, LevelArray.Point movePoint, float velocityX, float velocityY,
             ref LevelArray.Point collidePoint, ref collideType collideType, ref float collideVelocityX, ref float collideVelocityY, ref bool[] collectible_onPath, ref float pathLength, int radius)
         {
-            LevelArray.Point previousRectangleCenter;
-            LevelArray.Point currentRectangleCenter = movePoint;
+            LevelArray.Point previousCenter;
+            LevelArray.Point currentCenter = movePoint;
 
             for (int i = 1; true; i++)
             {
                 float currentTime = i * TIME_STEP;
 
-                previousRectangleCenter = currentRectangleCenter;
-                currentRectangleCenter = GetCurrentCenter(movePoint, velocityX, velocityY, currentTime);
-                List<LevelArray.ArrayPoint> rectanglePixels = GetCirclePixels(currentRectangleCenter, radius);
+                previousCenter = currentCenter;
+                currentCenter = GetCurrentCenter(movePoint, velocityX, velocityY, currentTime);
+                List<LevelArray.ArrayPoint> pixels = GetCirclePixels(currentCenter, radius);
 
-                if (IsObstacle_onPixels(levelArray, rectanglePixels))
+                if (IsObstacle_onPixels(levelArray, pixels))
                 {
-                    collidePoint = previousRectangleCenter;
-                    collideType = GetCollideType(levelArray, currentRectangleCenter, velocityY - GameInfo.GRAVITY * (i - 1) * TIME_STEP >= 0, velocityX > 0, radius);
+                    collidePoint = previousCenter;
+                    collideType = GetCollideType(levelArray, currentCenter, velocityY - GameInfo.GRAVITY * (i - 1) * TIME_STEP >= 0, velocityX > 0, radius);
 
                      if (collideType == collideType.CEILING)
                     {
@@ -424,9 +425,9 @@ namespace GeometryFriendsAgents
                     return;
                 }
 
-                collectible_onPath = Utilities.GetOrMatrix(collectible_onPath, GetCollectibles_onPixels(levelArray, rectanglePixels, collectible_onPath.Length));
+                collectible_onPath = Utilities.GetOrMatrix(collectible_onPath, GetCollectibles_onPixels(levelArray, pixels, collectible_onPath.Length));
 
-                pathLength += (float)Math.Sqrt(Math.Pow(currentRectangleCenter.x - previousRectangleCenter.x, 2) + Math.Pow(currentRectangleCenter.y - previousRectangleCenter.y, 2));
+                pathLength += (float)Math.Sqrt(Math.Pow(currentCenter.x - previousCenter.x, 2) + Math.Pow(currentCenter.y - previousCenter.y, 2));
             }
         }
 

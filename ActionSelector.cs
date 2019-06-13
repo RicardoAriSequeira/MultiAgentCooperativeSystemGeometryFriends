@@ -117,7 +117,7 @@ namespace GeometryFriendsAgents
             return currentAction;
         }
 
-        public Moves GetCurrentAction(RectangleRepresentation rI, int targetPointX, int targetVelocityX, bool rightMove, int height)
+        public Moves GetCurrentAction(RectangleRepresentation rI, int targetPointX, int targetVelocityX, bool rightMove)
         {
 
             int stateNum = GetStateNum(rI, targetPointX, rightMove);

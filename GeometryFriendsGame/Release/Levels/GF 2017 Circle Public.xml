@@ -21,23 +21,23 @@
   <Level2>
     <Description />
     <Tips />
-    <BallStartingPosition X="200" Y="248" />
+    <BallStartingPosition X="88" Y="712" />
     <SquareStartingPosition X="-5000" Y="-5000" />
     <Collectibles>
-      <Collectible X="616" Y="696" />
-      <Collectible X="88" Y="312" />
-      <Collectible X="1016" Y="312" />
+      <Collectible X="808" Y="56" />
     </Collectibles>
     <GreenObstacles />
     <BlackObstacles>
-      <Obstacle width="416" height="32" X="152" Y="296" centered="false" />
-      <Obstacle width="32" height="32" X="536" Y="328" centered="false" />
-      <Obstacle width="560" height="32" X="536" Y="360" centered="false" />
+      <Obstacle width="80" height="32" X="776" Y="232" centered="false" />
+      <Obstacle width="64" height="32" X="520" Y="536" centered="false" />
     </BlackObstacles>
     <YellowObstacles />
     <GreenElevators />
     <OrangeElevators />
-    <TimeLimit value="180" />
+    <HighScores>
+      <HighScore name="KIT Agent" value="54" />
+      <HighScore name="KIT Agent" value="119" />
+    </HighScores>
   </Level2>
   <Level3>
     <Description />
@@ -185,4 +185,42 @@
     <GreenElevators />
     <OrangeElevators />
   </Level9>
+  <Level10>
+    <Description />
+    <Tips />
+    <BallStartingPosition X="456" Y="264" />
+    <SquareStartingPosition X="-1000" Y="-1000" />
+    <Collectibles>
+      <Collectible X="104" Y="680" />
+      <Collectible X="632" Y="600" />
+      <Collectible X="616" Y="184" />
+    </Collectibles>
+    <GreenObstacles />
+    <BlackObstacles>
+      <Obstacle width="176" height="32" X="408" Y="312" centered="false" />
+      <Obstacle width="16" height="80" X="568" Y="344" centered="false" />
+      <Obstacle width="48" height="80" X="536" Y="344" centered="false" />
+      <Obstacle width="176" height="32" X="664" Y="312" centered="false" />
+      <Obstacle width="48" height="64" X="664" Y="344" centered="false" />
+      <Obstacle width="48" height="80" X="664" Y="344" centered="false" />
+      <Obstacle width="176" height="32" X="200" Y="536" centered="false" />
+      <Obstacle width="176" height="48" X="200" Y="536" centered="false" />
+      <Obstacle width="64" height="48" X="376" Y="584" centered="false" />
+      <Obstacle width="64" height="48" X="440" Y="632" centered="false" />
+      <Obstacle width="240" height="48" X="504" Y="680" centered="false" />
+      <Obstacle width="64" height="48" X="744" Y="632" centered="false" />
+      <Obstacle width="64" height="48" X="808" Y="584" centered="false" />
+      <Obstacle width="192" height="48" X="872" Y="536" centered="false" />
+    </BlackObstacles>
+    <YellowObstacles />
+    <GreenElevators />
+    <OrangeElevators />
+    <HighScores>
+      <HighScore name="KIT Agent" value="12" />
+      <HighScore name="KIT Agent" value="16" />
+      <HighScore name="KIT Agent" value="21" />
+      <HighScore name="KIT Agent" value="22" />
+      <HighScore name="KIT Agent" value="83" />
+    </HighScores>
+  </Level10>
 </Levels>

@@ -174,6 +174,15 @@ namespace GeometryFriendsAgents
                     int from = rightMove ? i.rightEdge : j.rightEdge;
                     int to = rightMove ? j.leftEdge : i.leftEdge;
 
+
+                    /*
+                     *  POSSIVEL BUG
+                     * 
+                     *  ISTO NAO ATUALIZA A LISTA DE COLLECTIBLES
+                     *  ISTO VAI ESCREVENDO SEMPRE POR CIMA DO COLLECTIBLE_ONPATH   
+                     * 
+                     * 
+                     */
                     for (int k = from; k <= to; k += LevelArray.PIXEL_LENGTH)
                     {
                         List<LevelArray.ArrayPoint> circlePixels = GetCirclePixels(new LevelArray.Point(k, j.height - GameInfo.CIRCLE_RADIUS), GameInfo.CIRCLE_RADIUS);
