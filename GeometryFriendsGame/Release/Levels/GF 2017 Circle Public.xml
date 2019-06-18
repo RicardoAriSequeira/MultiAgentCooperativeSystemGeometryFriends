@@ -107,6 +107,12 @@
     <GreenElevators />
     <OrangeElevators />
     <TimeLimit value="240" />
+    <HighScores>
+      <HighScore name="IST Circle" value="25" />
+      <HighScore name="IST Circle" value="25" />
+      <HighScore name="IST Circle" value="26" />
+      <HighScore name="IST Circle" value="26" />
+    </HighScores>
   </Level5>
   <Level6>
     <Description />

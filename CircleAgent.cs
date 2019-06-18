@@ -257,7 +257,7 @@ namespace GeometryFriendsAgents
 
         private void IsDifferentPlatform()
         {
-            currentPlatform = platform.GetPlatform_onCircle(new LevelArray.Point((int)circleInfo.X, (int)circleInfo.Y));
+            currentPlatform = platform.GetPlatform(new LevelArray.Point((int)circleInfo.X, (int)circleInfo.Y), 2 * circleInfo.Radius);
 
             if (currentPlatform.HasValue)
             {

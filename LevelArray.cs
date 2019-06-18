@@ -7,6 +7,7 @@ namespace GeometryFriendsAgents
         public const int OBSTACLE = -1;
         public const int OPEN = 0;
 
+        public const int MARGIN = 5;
         public const int PIXEL_LENGTH = 8;
         private int[] COLLECTIBLE_SIZE = new int[] { 2, 4, 6, 6, 4, 2 };
 
