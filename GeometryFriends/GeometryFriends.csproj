@@ -1,0 +1,580 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{9FE863F3-8A05-43A4-81DF-43B63AC5F37F}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>GeometryFriends</RootNamespace>
+    <AssemblyName>GeometryFriends</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DebugSymbols>true</DebugSymbols>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>GeometryFriends.Program</StartupObject>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Game.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>ExternalReferences\OpenTK.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WiimoteInput, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>ExternalReferences\WiimoteInput.dll</HintPath>
+    </Reference>
+    <Reference Include="WiimoteLib, Version=1.6.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>ExternalReferences\WiimoteLib.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AI\Communication\AgentMessage.cs" />
+    <Compile Include="AI\Perceptions\Information\CollectibleRepresentation.cs" />
+    <Compile Include="AI\AgentsManager.cs" />
+    <Compile Include="AI\Debug\DebugInformationFactory.cs" />
+    <Compile Include="AI\Interfaces\AbstractAgent.cs" />
+    <Compile Include="AI\Interfaces\AbstractCircleAgent.cs" />
+    <Compile Include="AI\Interfaces\AbstractRectangleAgent.cs" />
+    <Compile Include="AI\Moves.cs" />
+    <Compile Include="AI\Pausable.cs" />
+    <Compile Include="AI\ActionSimulation\ActionSimulator.cs" />
+    <Compile Include="AI\ActionSimulation\InvalidSimulationTimeException.cs" />
+    <Compile Include="AI\Debug\DebugInformation.cs" />
+    <Compile Include="AI\ActionSimulation\SimulatorInstruction.cs" />
+    <Compile Include="AI\Perceptions\Information\CircleInformation.cs" />
+    <Compile Include="AI\Perceptions\Information\ObstaclesInformation.cs" />
+    <Compile Include="AI\Perceptions\Information\RectangleInformation.cs" />
+    <Compile Include="AI\Perceptions\Navigation\AStarNavNodeComparer.cs" />
+    <Compile Include="AI\Perceptions\Navigation\NavGraph.cs" />
+    <Compile Include="AI\Perceptions\Navigation\NavNode.cs" />
+    <Compile Include="AI\Perceptions\Navigation\NavPath.cs" />
+    <Compile Include="AI\Perceptions\SensorsManager.cs" />
+    <Compile Include="AI\Perceptions\Sensors\BooleanSensor.cs" />
+    <Compile Include="AI\Perceptions\Sensors\CirclePlatformsListSensor.cs" />
+    <Compile Include="AI\Perceptions\Sensors\CirclePositionSensor.cs" />
+    <Compile Include="AI\Perceptions\Sensors\CircleRadiusSensor.cs" />
+    <Compile Include="AI\Perceptions\Sensors\CircleVelocitySensor.cs" />
+    <Compile Include="AI\Perceptions\Sensors\CollectiblesListSensor.cs" />
+    <Compile Include="AI\Perceptions\Sensors\IdleCircleTimeSensor.cs" />
+    <Compile Include="AI\Perceptions\Information\CountInformation.cs" />
+    <Compile Include="AI\Perceptions\Sensors\ObstaclesListSensor.cs" />
+    <Compile Include="AI\Perceptions\Sensors\RectangleHeightSensor.cs" />
+    <Compile Include="AI\Perceptions\Sensors\RectanglePlatformsListSensor.cs" />
+    <Compile Include="AI\Perceptions\Sensors\RectanglePositionSensor.cs" />
+    <Compile Include="AI\Perceptions\Sensors\RectangleVelocitySensor.cs" />
+    <Compile Include="AI\Perceptions\Sensors\Sensor.cs" />
+    <Compile Include="AI\Perceptions\Information\SensorData.cs" />
+    <Compile Include="Components\AgentDebugPane.cs" />
+    <Compile Include="Components\FramerateCounterComponent.cs" />
+    <Compile Include="Components\InGameConsole.cs" />
+    <Compile Include="Components\InGameMessageLayer.cs" />
+    <Compile Include="Components\OnScreenKeyboard.cs" />
+    <Compile Include="Levels\Shared\LevelResult.cs" />
+    <Compile Include="Log.cs" />
+    <Compile Include="DrawingSystem\CircleBrush.cs" />
+    <Compile Include="DrawingSystem\GameAreaInformation.cs" />
+    <Compile Include="DrawingSystem\DrawingHelper.cs" />
+    <Compile Include="DrawingSystem\GameColors.cs" />
+    <Compile Include="DrawingSystem\LineBrush.cs" />
+    <Compile Include="DrawingSystem\RectangleBrush.cs" />
+    <Compile Include="Engine.cs" />
+    <Compile Include="FarseerExtensions.cs" />
+    <Compile Include="GameViewers\GamePanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="GameViewers\GeometryFriendsBatchSimulator.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GameViewers\GeometryFriendsBatchSimulator.Designer.cs">
+      <DependentUpon>GeometryFriendsBatchSimulator.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GameViewers\GeometryFriendsViewer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GameViewers\GeometryFriendsViewer.Designer.cs">
+      <DependentUpon>GeometryFriendsViewer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GameViewers\GeometryFriendsSimulationController.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GameViewers\GeometryFriendsSimulationController.Designer.cs">
+      <DependentUpon>GeometryFriendsSimulationController.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Input\CircleAltControl.cs" />
+    <Compile Include="Input\CircleKeyboardControl.cs" />
+    <Compile Include="Input\CircleStandardControl.cs" />
+    <Compile Include="Input\CircleWiiInputSchema.cs" />
+    <Compile Include="Input\InputState.cs" />
+    <Compile Include="Input\RectangleAltControl.cs" />
+    <Compile Include="Input\RectangleKeyboardControl.cs" />
+    <Compile Include="Input\RectangleStandardControl.cs" />
+    <Compile Include="Input\RectangleWiiInputSchema.cs" />
+    <Compile Include="Input\WiiInputSchema.cs" />
+    <Compile Include="Input\WiimoteHandler.cs" />
+    <Compile Include="InvalidArgumentsException.cs" />
+    <Compile Include="LevelEditor\BlackPlatformTool.cs" />
+    <Compile Include="LevelEditor\CircleStartTool.cs" />
+    <Compile Include="LevelEditor\CollectibleTool.cs" />
+    <Compile Include="LevelEditor\DialogTool.cs" />
+    <Compile Include="LevelEditor\EditorCursor.cs" />
+    <Compile Include="LevelEditor\EditorLevel.cs" />
+    <Compile Include="LevelEditor\EraserTool.cs" />
+    <Compile Include="LevelEditor\ExitTool.cs" />
+    <Compile Include="LevelEditor\GreenPlatformTool.cs" />
+    <Compile Include="LevelEditor\PlatformTool.cs" />
+    <Compile Include="LevelEditor\PositionTool.cs" />
+    <Compile Include="LevelEditor\RectangleStartTool.cs" />
+    <Compile Include="LevelEditor\Tool.cs" />
+    <Compile Include="LevelEditor\ToolBox.cs" />
+    <Compile Include="LevelEditor\YellowPlatformTool.cs" />
+    <Compile Include="Levels\LevelPreview.cs" />
+    <Compile Include="Levels\MultiplayerLevel.cs" />
+    <Compile Include="Levels\Shared\AngularSpringLever.cs" />
+    <Compile Include="Levels\Shared\Border.cs" />
+    <Compile Include="Levels\Shared\CircleCharacter.cs" />
+    <Compile Include="Levels\Shared\Elevator.cs" />
+    <Compile Include="Levels\Shared\GeoShape.cs" />
+    <Compile Include="Levels\Shared\InfoArea.cs" />
+    <Compile Include="Levels\Shared\IXmlSerializable.cs" />
+    <Compile Include="Levels\Shared\Level.cs" />
+    <Compile Include="Levels\Shared\RectangleCharacter.cs" />
+    <Compile Include="Levels\Shared\RectanglePlatform.cs" />
+    <Compile Include="Levels\Shared\TriangleCollectible.cs" />
+    <Compile Include="Levels\SinglePlayerLevel.cs" />
+    <Compile Include="Levels\XMLLevel.cs" />
+    <Compile Include="Levels\XMLLevelParser.cs" />
+    <Compile Include="LogCore.cs" />
+    <Compile Include="MojoLog.cs" />
+    <Compile Include="PhysicsSimulatorView.cs" />
+    <Compile Include="PriorityQueue.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ScreenSystem\BackgroundScreen.cs" />
+    <Compile Include="ScreenSystem\SimulationScreen.cs" />
+    <Compile Include="ScreenSystem\DiagnosticsScreen.cs" />
+    <Compile Include="ScreenSystem\EditorLevelSelectScreen.cs" />
+    <Compile Include="ScreenSystem\EditorMenuScreen.cs" />
+    <Compile Include="ScreenSystem\GameOptionsScreen.cs" />
+    <Compile Include="ScreenSystem\GameScreen.cs" />
+    <Compile Include="ScreenSystem\LevelSelectScreen.cs" />
+    <Compile Include="ScreenSystem\LoadingScreen.cs" />
+    <Compile Include="ScreenSystem\LogoScreen.cs" />
+    <Compile Include="ScreenSystem\MainMenuScreen.cs" />
+    <Compile Include="ScreenSystem\MenuScreen.cs" />
+    <Compile Include="ScreenSystem\MultiplayerMenuScreen.cs" />
+    <Compile Include="ScreenSystem\PauseScreen.cs" />
+    <Compile Include="ScreenSystem\SafeAreaScreen.cs" />
+    <Compile Include="ScreenSystem\ScreenManager.cs" />
+    <Compile Include="ScreenSystem\VictoryScreen.cs" />
+    <Compile Include="ScreenSystem\WiimoteDiagnosticScreen.cs" />
+    <Compile Include="Settings.cs" />
+    <Compile Include="XNAStub\ButtonState.cs" />
+    <Compile Include="XNAStub\Color.cs" />
+    <Compile Include="XNAStub\ContentLoadException.cs" />
+    <Compile Include="XNAStub\ContentManager.cs" />
+    <Compile Include="XNAStub\OpenALSoundPlayer.cs" />
+    <Compile Include="XNAStub\DrawableGameComponent.cs" />
+    <Compile Include="XNAStub\DrawingInstructions\CircleInstruction.cs" />
+    <Compile Include="XNAStub\DrawingInstructions\ClearInstruction.cs" />
+    <Compile Include="XNAStub\DrawingInstructions\DrawingInsctruction.cs" />
+    <Compile Include="XNAStub\DrawingInstructions\DrawingInstructionsBatch.cs" />
+    <Compile Include="XNAStub\DrawingInstructions\LineInstruction.cs" />
+    <Compile Include="XNAStub\DrawingInstructions\RectangleInstruction.cs" />
+    <Compile Include="XNAStub\DrawingInstructions\ResetMatrixInstruction.cs" />
+    <Compile Include="XNAStub\DrawingInstructions\SetMatrixInstruction.cs" />
+    <Compile Include="XNAStub\DrawingInstructions\StringInstruction.cs" />
+    <Compile Include="XNAStub\DrawingInstructions\TextureInstruction.cs" />
+    <Compile Include="XNAStub\Game.cs" />
+    <Compile Include="XNAStub\GameComponentCollection.cs" />
+    <Compile Include="XNAStub\GameComponentCollectionEventArgs.cs" />
+    <Compile Include="XNAStub\GameTime.cs" />
+    <Compile Include="XNAStub\IGraphicsDevice.cs" />
+    <Compile Include="XNAStub\IInputDevice.cs" />
+    <Compile Include="XNAStub\Keyboard.cs" />
+    <Compile Include="XNAStub\KeyboardState.cs" />
+    <Compile Include="XNAStub\Keys.cs" />
+    <Compile Include="XNAStub\KeyState.cs" />
+    <Compile Include="XNAStub\MathHelper.cs" />
+    <Compile Include="XNAStub\Mouse.cs" />
+    <Compile Include="XNAStub\MouseState.cs" />
+    <Compile Include="XNAStub\InteractivePlatform.cs" />
+    <Compile Include="XNAStub\SoundEffect.cs" />
+    <Compile Include="XNAStub\SoundEffectInstance.cs" />
+    <Compile Include="XNAStub\SoundEffectInstanceFactory.cs" />
+    <Compile Include="XNAStub\SpriteFont.cs" />
+    <Compile Include="XNAStub\Texture2D.cs" />
+    <EmbeddedResource Include="GameViewers\GamePanel.resx">
+      <DependentUpon>GamePanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GameViewers\GeometryFriendsBatchSimulator.resx">
+      <DependentUpon>GeometryFriendsBatchSimulator.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GameViewers\GeometryFriendsViewer.resx">
+      <DependentUpon>GeometryFriendsViewer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GameViewers\GeometryFriendsSimulationController.resx">
+      <DependentUpon>GeometryFriendsSimulationController.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <None Include="Content\Common\geometryfriends-logo.xcf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Fonts\Arista.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Fonts\CARTOONIA.TTF">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Fonts\subtitleFont.spritefont">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Fonts\detailsFont.spritefont">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Fonts\diagnosticFont.spritefont">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Fonts\elevatorCollFont.spritefont">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Fonts\frameRateCounterFont.spritefont">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Fonts\gameFont.spritefont">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Fonts\menuFont.spritefont">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\Fonts\titleFont.spritefont">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="ExternalReferences\OpenTK.dll.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Content\Agents\Debug\RandomAgents.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Agents\Debug\RandomAgents.pdb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Agents\Debug\RapidlyExploringRandomTreeAgents.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Agents\Debug\RapidlyExploringRandomTreeAgents.pdb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Agents\Debug\ReinforcementLearningAgents.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Agents\Debug\ReinforcementLearningAgents.pdb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Agents\Debug\SubGoalAStarAgents.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Agents\Debug\SubGoalAStarAgents.pdb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Agents\Release\RandomAgents.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Agents\Release\RandomAgents.pdb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Agents\Release\RapidlyExploringRandomTreeAgents.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Agents\Release\RapidlyExploringRandomTreeAgents.pdb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Agents\Release\ReinforcementLearningAgents.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Agents\Release\ReinforcementLearningAgents.pdb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Agents\Release\SubGoalAStarAgents.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Agents\Release\SubGoalAStarAgents.pdb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Common\background.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Common\blank.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Common\geometryfriends-logo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Common\geometryfriends-logo1.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Common\gradient.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Common\Lock-icon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Common\logo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Common\test.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Common\tools.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Common\wiimote.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\LevelEditor\BlackPlatformToolCursor.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\LevelEditor\BlackPlatformToolIcon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\LevelEditor\CircleStartToolIcon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\LevelEditor\CollectibleToolIcon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\LevelEditor\DialogBg.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\LevelEditor\EraserToolIcon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\LevelEditor\ExitToolIcon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\LevelEditor\GreenPlatformToolIcon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\LevelEditor\SquareStartToolIcon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\LevelEditor\YellowPlatformToolIcon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\AlfaCircleLevels.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\AlfaSquareLevels.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\Circle 2013 Competition.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\Circle 2014 Competition.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\Comp C.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\Comp R.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\Compcoop.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\Cooperative 2013 Competition.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\Cooperative 2014 Competition.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\Dangerous.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\Draft Circle 2016.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\Draft Cooperative 2016.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\Draft Rectangle 2016.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\GF 2015 Circle Track.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\GF 2015 Coop Track.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\GF 2015 Rectangle Track.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\GF 2016 Circle Private.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\GF 2016 Circle Public.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\GF 2016 Circle.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\GF 2016 Cooperative Private.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\GF 2016 Cooperative Public.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\GF 2016 Cooperative.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\GF 2016 Rectangle Private.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\GF 2016 Rectangle Public.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\GF 2016 Rectangle.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\Hard Core.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\Levels.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\New World.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\OtherWorld.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\Recommended.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\Rectangle 2013 Competition.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\Rectangle 2014 Competition.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\SingleTest.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Levels\tutorials.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Sound\contract.wav">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Sound\down.wav">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Sound\grow.wav">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Sound\levelMusic.wav">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Sound\menuMusic.wav">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Sound\nyanyan.wav">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Sound\spring1.wav">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Sound\up.wav">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\Sound\victoryMusic.wav">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\XBoxLogoWithBorder.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="ExternalReferences\OpenTK.dll" />
+    <Content Include="ExternalReferences\OpenTK.pdb" />
+    <Content Include="ExternalReferences\OpenTK.xml" />
+    <Content Include="ExternalReferences\WiimoteInput.dll" />
+    <Content Include="ExternalReferences\WiimoteLib.dll" />
+    <Content Include="Game.ico" />
+    <Content Include="GameThumbnail.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Results\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FarseerPhysics\FarseerPhysics.csproj">
+      <Project>{a3f44be2-0880-401f-877f-c7f28f3adc37}</Project>
+      <Name>FarseerPhysics</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent Condition=" '$(OS)' != 'Unix' ">copy "$(ProjectDir)ExternalReferences\OpenTK.dll.config" "$(TargetDir)OpenTK.dll.config"</PostBuildEvent>
+    <PostBuildEvent Condition=" '$(OS)' == 'Unix' ">cp "$(ProjectDir)ExternalReferences\OpenTK.dll.config" "$(TargetDir)OpenTK.dll.config"</PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

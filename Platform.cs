@@ -101,7 +101,7 @@ namespace GeometryFriendsAgents
                 SetMoveInfoList_Morph(levelArray, numCollectibles, fromPlatform);
                 SetMoveInfoList_NoAction(levelArray, numCollectibles, fromPlatform);
                 SetMoveInfoList_StairOrGap(levelArray, numCollectibles, fromPlatform);
-                //SetMoveInfoList_StraightFall(levelArray, fromPlatform, numCollectibles);
+                SetMoveInfoList_StraightFall(levelArray, numCollectibles, fromPlatform);
 
                 Parallel.For(0, (GameInfo.MAX_VELOCITYX / VELOCITYX_STEP), k =>
                 {
@@ -143,6 +143,11 @@ namespace GeometryFriendsAgents
         }
 
         protected virtual void SetMoveInfoList_Jump(int[,] levelArray, int numCollectibles, PlatformInfo fromPlatform, int velocityX)
+        {
+            return;
+        }
+
+        protected virtual void SetMoveInfoList_StraightFall(int[,] levelArray, int numCollectibles, PlatformInfo fromPlatform)
         {
             return;
         }

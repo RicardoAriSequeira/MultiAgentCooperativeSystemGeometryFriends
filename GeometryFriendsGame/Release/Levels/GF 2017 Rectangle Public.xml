@@ -209,7 +209,7 @@
     <Description />
     <Tips />
     <BallStartingPosition X="-1000" Y="-1000" />
-    <SquareStartingPosition X="1096" Y="248" />
+    <SquareStartingPosition X="152" Y="248" />
     <Collectibles>
       <Collectible X="104" Y="600" />
     </Collectibles>
@@ -222,9 +222,6 @@
     <YellowObstacles />
     <GreenElevators />
     <OrangeElevators />
-    <HighScores>
-      <HighScore name="RandRect" value="13" />
-    </HighScores>
   </Level10>
   <Level11>
     <Description />
