@@ -247,22 +247,34 @@ namespace GeometryFriendsAgents
                     if (nextEdge.HasValue)
                     {
 
+                        //if (nextEdge.Value.movementType == Platform.movementType.STAIR_GAP)
+                        //{
+                        //    if (nextEdge.Value.height < 55 && rectangleInfo.Height > 55)
+                        //    {
+                        //        currentAction = Moves.MORPH_DOWN;
+                        //    }
+
+                        //    else if (nextEdge.Value.height > 190 && rectangleInfo.Height < 190)
+                        //    {
+                        //        currentAction = Moves.MORPH_UP;
+                        //    }
+
+                        //    else
+                        //    {
+                        //        currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                        //    }
+                        //}
+
                         if (nextEdge.Value.movementType == Platform.movementType.STAIR_GAP)
                         {
-                            if (nextEdge.Value.height < 55 && rectangleInfo.Height > 55)
-                            {
-                                currentAction = Moves.MORPH_DOWN;
-                            }
+                            currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                        }
 
-                            else if (nextEdge.Value.height > 190 && rectangleInfo.Height < 190)
-                            {
-                                currentAction = Moves.MORPH_UP;
-                            }
 
-                            else
-                            {
-                                currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
-                            }
+
+                        else if (nextEdge.Value.movementType == Platform.movementType.FALL && nextEdge.Value.velocityX == 0)
+                        {
+                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextEdge.Value.movePoint.x, nextEdge.Value.velocityX, nextEdge.Value.rightMove);
                         }
 
                         else if ((nextEdge.Value.movementType == Platform.movementType.MORPH_DOWN || nextEdge.Value.movementType == Platform.movementType.FALL) && rectangleInfo.Height > nextEdge.Value.height)

@@ -170,16 +170,71 @@ namespace GeometryFriendsAgents
 
         protected override void SetMoveInfoList_StairOrGap(int[,] levelArray, int numCollectibles, PlatformInfo fromPlatform)
         {
+
             foreach (PlatformInfo toPlatform in platformInfoList)
             {
+
                 if (fromPlatform.Equals(toPlatform))
                 {
                     continue;
                 }
 
                 bool rightMove = false;
+                bool hole = false;
                 bool obstacleFlag = false;
                 bool[] collectible_onPath = new bool[numCollectibles];
+
+                if (fromPlatform.height == toPlatform.height)
+                {
+                    // COMING FROM THE LEFT
+                    int hole_size = toPlatform.leftEdge - fromPlatform.rightEdge;
+                    if (50 < hole_size && hole_size < 150)
+                    {
+                        hole = true;
+                        rightMove = true;
+                    }
+
+                    // COMING FROM THE RIGHT
+                    hole_size = fromPlatform.leftEdge - toPlatform.rightEdge;
+                    if (50 < hole_size && hole_size < 150)
+                    {
+                        hole = true;
+                        rightMove = false;
+                    }
+
+                    if (hole)
+                    {
+                        int from = rightMove ? fromPlatform.rightEdge : toPlatform.rightEdge;
+                        int to = rightMove ? toPlatform.leftEdge : fromPlatform.leftEdge;
+
+                        int required_height = GameInfo.RECTANGLE_AREA / (hole_size + 2 * LevelArray.PIXEL_LENGTH);
+
+                        for (int k = from; k <= to; k += LevelArray.PIXEL_LENGTH)
+                        {
+                            List<LevelArray.ArrayPoint> rectanglePixels = GetFormPixels(new LevelArray.Point(k, toPlatform.height - required_height), required_height);
+
+                            if (IsObstacle_onPixels(levelArray, rectanglePixels))
+                            {
+                                obstacleFlag = true;
+                                break;
+                            }
+
+                            collectible_onPath = Utilities.GetOrMatrix(collectible_onPath, GetCollectibles_onPixels(levelArray, rectanglePixels, numCollectibles));
+                        }
+
+                        if (!obstacleFlag)
+                        {
+                            LevelArray.Point movePoint = rightMove ? new LevelArray.Point(fromPlatform.rightEdge, fromPlatform.height) : new LevelArray.Point(fromPlatform.leftEdge, fromPlatform.height);
+                            LevelArray.Point landPoint = rightMove ? new LevelArray.Point(toPlatform.leftEdge, toPlatform.height) : new LevelArray.Point(toPlatform.rightEdge, toPlatform.height);
+                            AddMoveInfoToList(fromPlatform, new MoveInfo(toPlatform, movePoint, landPoint, 0, rightMove, movementType.STAIR_GAP, collectible_onPath, (fromPlatform.height - toPlatform.height) + Math.Abs(movePoint.x - landPoint.x), false, required_height));
+                        }
+                    }
+
+                }
+
+                rightMove = false;
+                obstacleFlag = false;
+                collectible_onPath = new bool[numCollectibles];
 
                 if (IsStairOrGap(fromPlatform, toPlatform, ref rightMove))
                 {
@@ -303,9 +358,7 @@ namespace GeometryFriendsAgents
                     LevelArray.Point movePoint = new LevelArray.Point(fromPlatform.rightEdge + (hole_size / 2) + LevelArray.PIXEL_LENGTH, fromPlatform.height - (min_height/ 2));
                     //LevelArray.Point movePoint = new LevelArray.Point(toPlatform.leftEdge + (rectangle_width / 2) + LevelArray.PIXEL_LENGTH, fromPlatform.height - (rectangle_height / 2));
 
-                    min_height = GameInfo.MAX_RECTANGLE_HEIGHT;
-                    SetMoveInfoList_Fall(levelArray, numCollectibles, fromPlatform, movePoint, 0, true, movementType.FALL);
-                    min_height = GameInfo.MIN_RECTANGLE_HEIGHT;
+                    SetMoveInfoList_Fall(levelArray, numCollectibles, fromPlatform, movePoint, max_height, 0, true, movementType.FALL);
 
                     //movePoint = new LevelArray.Point(fromPlatform.rightEdge, fromPlatform.height);
                     //movePoint = new LevelArray.Point(toPlatform.leftEdge + (rectangle_width / 2) + LevelArray.PIXEL_LENGTH, fromPlatform.height - (rectangle_height / 2));
@@ -328,24 +381,23 @@ namespace GeometryFriendsAgents
 
                 if (50 < hole_size && hole_size < 150)
                 {
-                    int movePoint_X = fromPlatform.leftEdge - (hole_size / 2) - LevelArray.PIXEL_LENGTH;
-                    int movePoint_Y = fromPlatform.height - (GameInfo.MIN_RECTANGLE_HEIGHT / 2);
-                    LevelArray.Point movePoint = new LevelArray.Point(movePoint_X, movePoint_Y);
 
-                    max_height = GameInfo.MIN_RECTANGLE_HEIGHT;
-                    SetMoveInfoList_Fall(levelArray, numCollectibles, fromPlatform, movePoint, 0, false, movementType.FALL);
-                    max_height = GameInfo.MAX_RECTANGLE_HEIGHT;
+                    LevelArray.Point movePoint = new LevelArray.Point(fromPlatform.leftEdge - (hole_size / 2) - LevelArray.PIXEL_LENGTH, fromPlatform.height - (min_height / 2));
 
-                    movePoint = new LevelArray.Point(fromPlatform.leftEdge, fromPlatform.height);
-                    LevelArray.Point landPoint = new LevelArray.Point(toPlatform.rightEdge, toPlatform.height);
+                    //    max_height = GameInfo.MIN_RECTANGLE_HEIGHT;
+                        SetMoveInfoList_Fall(levelArray, numCollectibles, fromPlatform, movePoint, max_height, 0, false, movementType.FALL);
+                    //    max_height = GameInfo.MAX_RECTANGLE_HEIGHT;
 
-                    bool[] collectible_onPath = new bool[numCollectibles];
+                    //    movePoint = new LevelArray.Point(fromPlatform.leftEdge, fromPlatform.height);
+                    //    LevelArray.Point landPoint = new LevelArray.Point(toPlatform.rightEdge, toPlatform.height);
 
-                    /*
-                        * VAI SER PRECISO TRATAR DOS COLLECTIBLES E OBSTACULOS
-                        */
+                    //    bool[] collectible_onPath = new bool[numCollectibles];
 
-                    AddMoveInfoToList(fromPlatform, new MoveInfo(toPlatform, movePoint, landPoint, 0, false, movementType.STAIR_GAP, collectible_onPath, (fromPlatform.height - toPlatform.height) + Math.Abs(movePoint.x - landPoint.x), false, 50));
+                    //    /*
+                    //        * VAI SER PRECISO TRATAR DOS COLLECTIBLES E OBSTACULOS
+                    //        */
+
+                    //    AddMoveInfoToList(fromPlatform, new MoveInfo(toPlatform, movePoint, landPoint, 0, false, movementType.STAIR_GAP, collectible_onPath, (fromPlatform.height - toPlatform.height) + Math.Abs(movePoint.x - landPoint.x), false, 50));
                 }
 
             }

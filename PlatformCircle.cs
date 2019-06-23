@@ -87,20 +87,21 @@ namespace GeometryFriendsAgents
             Parallel.For(0, (to - from) / (LevelArray.PIXEL_LENGTH * 2) + 1, j =>
             {
                 LevelArray.Point movePoint = new LevelArray.Point(from + j * LevelArray.PIXEL_LENGTH * 2, fromPlatform.height - GameInfo.CIRCLE_RADIUS);
-                SetMoveInfoList_Fall(levelArray, numCollectibles, fromPlatform, movePoint, velocityX, true, movementType.JUMP);
-                SetMoveInfoList_Fall(levelArray, numCollectibles, fromPlatform, movePoint, velocityX, false, movementType.JUMP);
+                SetMoveInfoList_Fall(levelArray, numCollectibles, fromPlatform, movePoint, max_height, velocityX, true, movementType.JUMP);
+                SetMoveInfoList_Fall(levelArray, numCollectibles, fromPlatform, movePoint, max_height, velocityX, false, movementType.JUMP);
             });
         }
 
         protected override void SetMoveInfoList_StairOrGap(int[,] levelArray, int numCollectibles, PlatformInfo fromPlatform)
         {
 
-            bool rightMove = false;
-            bool obstacleFlag = false;
-            bool[] collectible_onPath = new bool[numCollectibles];
-
             foreach (PlatformInfo toPlatform in platformInfoList)
             {
+
+                bool rightMove = false;
+                bool obstacleFlag = false;
+                bool[] collectible_onPath = new bool[numCollectibles];
+
                 if (fromPlatform.Equals(toPlatform) || !IsStairOrGap(fromPlatform, toPlatform, ref rightMove))
                 {
                     continue;

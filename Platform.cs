@@ -106,8 +106,22 @@ namespace GeometryFriendsAgents
                 Parallel.For(0, (GameInfo.MAX_VELOCITYX / VELOCITYX_STEP), k =>
                 {
                     SetMoveInfoList_Jump(levelArray, numCollectibles, fromPlatform, VELOCITYX_STEP * k);
-                    SetMoveInfoList_Fall(levelArray, numCollectibles, fromPlatform, new LevelArray.Point(), VELOCITYX_STEP * k, true, movementType.FALL);
-                    SetMoveInfoList_Fall(levelArray, numCollectibles, fromPlatform, new LevelArray.Point(), VELOCITYX_STEP * k, false, movementType.FALL);
+
+                    bool success_fall = false;
+
+                    for (int height = Math.Min(max_height, GameInfo.SQUARE_HEIGHT); height >= min_height && !success_fall; height -= 8)
+                    {
+                        LevelArray.Point movePoint = new LevelArray.Point(fromPlatform.rightEdge + LevelArray.PIXEL_LENGTH, fromPlatform.height - (height / 2));
+                        success_fall = SetMoveInfoList_Fall(levelArray, numCollectibles, fromPlatform, new LevelArray.Point(), height, VELOCITYX_STEP * k, true, movementType.FALL);
+                    }
+
+                    success_fall = false;
+
+                    for (int height = Math.Min(max_height, GameInfo.SQUARE_HEIGHT); height >= min_height && !success_fall; height -= 8)
+                    {
+                        LevelArray.Point movePoint = new LevelArray.Point(fromPlatform.leftEdge - LevelArray.PIXEL_LENGTH, fromPlatform.height - (height / 2));
+                        success_fall = SetMoveInfoList_Fall(levelArray, numCollectibles, fromPlatform, new LevelArray.Point(), height, VELOCITYX_STEP * k, false, movementType.FALL);
+                    }
                 });
             }
         }
@@ -152,75 +166,63 @@ namespace GeometryFriendsAgents
             return;
         }
 
-        protected void SetMoveInfoList_Fall(int[,] levelArray, int numCollectibles, PlatformInfo fromPlatform, LevelArray.Point movePoint, int velocityX, bool rightMove, movementType movementType)
+        protected bool SetMoveInfoList_Fall(int[,] levelArray, int numCollectibles, PlatformInfo fromPlatform, LevelArray.Point movePoint, int height, int velocityX, bool rightMove, movementType movementType)
         {
 
-            for (int height = Math.Min(max_height, GameInfo.SQUARE_HEIGHT); height >= min_height; height -= 8)
+            if (!IsEnoughLengthToAccelerate(fromPlatform, movePoint, velocityX, rightMove))
             {
+                return false;
+            }
 
-                if (movementType == movementType.FALL && !rightMove)
+            bool[] collectible_onPath = new bool[numCollectibles];
+            float pathLength = 0;
+
+            LevelArray.Point collidePoint = movePoint;
+            LevelArray.Point prevCollidePoint;
+
+            collideType collideType = collideType.OTHER;
+            float collideVelocityX = rightMove ? velocityX : -velocityX;
+            float collideVelocityY = (movementType == movementType.JUMP) ? GameInfo.JUMP_VELOCITYY : GameInfo.FALL_VELOCITYY;
+            bool collideCeiling = false;
+
+            do
+            {
+                prevCollidePoint = collidePoint;
+
+                GetPathInfo(levelArray, collidePoint, collideVelocityX, collideVelocityY,
+                    ref collidePoint, ref collideType, ref collideVelocityX, ref collideVelocityY, ref collectible_onPath, ref pathLength, (Math.Min(area / height, height) / 2));
+
+                if (collideType == collideType.CEILING)
                 {
-                    movePoint = new LevelArray.Point(fromPlatform.leftEdge - LevelArray.PIXEL_LENGTH, fromPlatform.height - (height / 2));
+                    collideCeiling = true;
                 }
 
-                if (movementType == movementType.FALL && rightMove)
+                if (prevCollidePoint.Equals(collidePoint))
                 {
-                    movePoint = new LevelArray.Point(fromPlatform.rightEdge + LevelArray.PIXEL_LENGTH, fromPlatform.height - (height / 2));
-                }
-
-                if (!IsEnoughLengthToAccelerate(fromPlatform, movePoint, velocityX, rightMove))
-                {
-                    return;
-                }
-
-                bool[] collectible_onPath = new bool[numCollectibles];
-                float pathLength = 0;
-
-                LevelArray.Point collidePoint = movePoint;
-                LevelArray.Point prevCollidePoint;
-
-                collideType collideType = collideType.OTHER;
-                float collideVelocityX = rightMove ? velocityX : -velocityX;
-                float collideVelocityY = (movementType == movementType.JUMP) ? GameInfo.JUMP_VELOCITYY : GameInfo.FALL_VELOCITYY;
-                bool collideCeiling = false;
-
-                do
-                {
-                    prevCollidePoint = collidePoint;
-
-                    GetPathInfo(levelArray, collidePoint, collideVelocityX, collideVelocityY,
-                        ref collidePoint, ref collideType, ref collideVelocityX, ref collideVelocityY, ref collectible_onPath, ref pathLength, (Math.Min(area / height, height) / 2));
-
-                    if (collideType == collideType.CEILING)
-                    {
-                        collideCeiling = true;
-                    }
-
-                    if (prevCollidePoint.Equals(collidePoint))
-                    {
-                        break;
-                    }
-                }
-                while (!(collideType == collideType.FLOOR));
-
-                if (collideType == collideType.FLOOR)
-                {
-
-                    PlatformInfo? toPlatform = GetPlatform(collidePoint, height);
-
-                    if (toPlatform.HasValue)
-                    {
-                        if (movementType == movementType.FALL)
-                        {
-                            movePoint.x = rightMove ? movePoint.x - LevelArray.PIXEL_LENGTH : movePoint.x + LevelArray.PIXEL_LENGTH;
-                        }
-
-                        AddMoveInfoToList(fromPlatform, new MoveInfo(toPlatform.Value, movePoint, collidePoint, velocityX, rightMove, movementType, collectible_onPath, (int)pathLength, collideCeiling, height));
-
-                        break;
-                    }
+                    break;
                 }
             }
+            while (!(collideType == collideType.FLOOR));
+
+            if (collideType == collideType.FLOOR)
+            {
+
+                PlatformInfo? toPlatform = GetPlatform(collidePoint, height);
+
+                if (toPlatform.HasValue)
+                {
+                    if (movementType == movementType.FALL)
+                    {
+                        movePoint.x = rightMove ? movePoint.x - LevelArray.PIXEL_LENGTH : movePoint.x + LevelArray.PIXEL_LENGTH;
+                    }
+
+                    AddMoveInfoToList(fromPlatform, new MoveInfo(toPlatform.Value, movePoint, collidePoint, velocityX, rightMove, movementType, collectible_onPath, (int)pathLength, collideCeiling, height));
+
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public PlatformInfo? GetPlatform(LevelArray.Point center, float height)
