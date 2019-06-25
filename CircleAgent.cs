@@ -20,15 +20,15 @@ namespace GeometryFriendsAgents
         private SubgoalAStar subgoalAStar;
         private ActionSelector actionSelector;
 
-        private Platform.PlatformInfo? previousPlatform;
-        private Platform.PlatformInfo? currentPlatform;
+        private Platforms.Platform? previousPlatform;
+        private Platforms.Platform? currentPlatform;
         private bool getCollectibleFlag;
         private bool differentPlatformFlag;
 
         private int previousCollectibleNum;
         private int currentCollectibleNum;
 
-        private Platform.MoveInfo? nextEdge;
+        private Platforms.Move? nextEdge;
         private int targetPointX_InAir;
 
         //agent implementation specificiation
@@ -177,7 +177,7 @@ namespace GeometryFriendsAgents
                     {
                         if (-GameInfo.MAX_VELOCITYY <= circleInfo.VelocityY && circleInfo.VelocityY <= GameInfo.MAX_VELOCITYY)
                         {
-                            if (nextEdge.Value.movementType == Platform.movementType.STAIR_GAP)
+                            if (nextEdge.Value.movementType == Platforms.movementType.STAIR_GAP)
                             {
                                 currentAction = nextEdge.Value.rightMove ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
                             }
@@ -198,7 +198,7 @@ namespace GeometryFriendsAgents
                 {
                     if (nextEdge.HasValue)
                     {
-                        if (nextEdge.Value.movementType == Platform.movementType.STAIR_GAP)
+                        if (nextEdge.Value.movementType == Platforms.movementType.STAIR_GAP)
                         {
                             currentAction = nextEdge.Value.rightMove ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
                         }
@@ -236,7 +236,7 @@ namespace GeometryFriendsAgents
                 {
                     targetPointX_InAir = (nextEdge.Value.reachablePlatform.leftEdge + nextEdge.Value.reachablePlatform.rightEdge) / 2;
 
-                    if (nextEdge.Value.movementType == Platform.movementType.JUMP)
+                    if (nextEdge.Value.movementType == Platforms.movementType.JUMP)
                     {
                         currentAction = Moves.JUMP;
                     }

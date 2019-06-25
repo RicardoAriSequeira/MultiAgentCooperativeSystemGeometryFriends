@@ -26,23 +26,19 @@ namespace GeometryFriendsAgents
         private Moves currentAction;
         private List<Moves> possibleMoves;
         private DateTime lastMoveTime;
-        //private long lastMoveTime;
         private Random rnd;
 
-        private PlatformRectangle platform;
+        private PlatformsRectangle platform;
         private LevelArray levelArray;
         private int targetPointX_InAir;
-        private bool getCollectibleFlag;
         private SubgoalAStar subgoalAStar;
-        private int currentCollectibleNum;
-        private bool differentPlatformFlag;
-        private int previousCollectibleNum;
-        private Platform.MoveInfo? nextEdge;
+        private bool[] previousCollectibles;
+        private Platforms.Move? nextEdge;
         private ActionSelector actionSelector;
         private ActionSimulator predictor;
         //private DebugInformation[] debugInfo = null;
-        private Platform.PlatformInfo? currentPlatform;
-        private Platform.PlatformInfo? previousPlatform;
+        private Platforms.Platform? currentPlatform;
+        private Platforms.Platform? previousPlatform;
 
         //Sensors Information
         private CountInformation numbersInfo;
@@ -52,8 +48,6 @@ namespace GeometryFriendsAgents
         private ObstacleRepresentation[] rectanglePlatformsInfo;
         private ObstacleRepresentation[] circlePlatformsInfo;
         private CollectibleRepresentation[] collectiblesInfo;
-
-        //private int nCollectiblesLeft;
 
         private List<AgentMessage> messages;
 
@@ -66,12 +60,11 @@ namespace GeometryFriendsAgents
             implementedAgent = true;
 
             lastMoveTime = DateTime.Now;
-            //lastMoveTime = DateTime.Now.Second;
             currentAction = Moves.NO_ACTION;
             rnd = new Random();
 
             levelArray = new LevelArray();
-            platform = new PlatformRectangle();
+            platform = new PlatformsRectangle();
             subgoalAStar = new SubgoalAStar();
             actionSelector = new ActionSelector();
 
@@ -84,8 +77,6 @@ namespace GeometryFriendsAgents
 
             previousPlatform = null;
             currentPlatform = null;
-            getCollectibleFlag = false;
-            differentPlatformFlag = false;
 
             //messages exchange
             messages = new List<AgentMessage>();
@@ -95,8 +86,6 @@ namespace GeometryFriendsAgents
         public override void Setup(CountInformation nI, RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI, Rectangle area, double timeLimit)
         {
             numbersInfo = nI;
-            currentCollectibleNum = nI.CollectiblesCount;
-            //nCollectiblesLeft = nI.CollectiblesCount;
             rectangleInfo = rI;
             circleInfo = cI;
             obstaclesInfo = oI;
@@ -114,15 +103,14 @@ namespace GeometryFriendsAgents
             levelArray.CreateLevelArray(collectiblesInfo, obstaclesInfo, rectanglePlatformsInfo);
             platform.SetUp(levelArray.GetLevelArray(), levelArray.initialCollectiblesInfo.Length);
 
+            previousCollectibles = levelArray.GetObtainedCollectibles(colI);
+
             //DebugSensorsInfo();
         }
 
         //implements abstract rectangle interface: registers updates from the agent's sensors that it is up to date with the latest environment information
         public override void SensorsUpdated(int nC, RectangleRepresentation rI, CircleRepresentation cI, CollectibleRepresentation[] colI)
         {
-            //nCollectiblesLeft = nC;
-            currentCollectibleNum = nC;
-
             rectangleInfo = rI;
             circleInfo = cI;
             collectiblesInfo = colI;
@@ -174,19 +162,15 @@ namespace GeometryFriendsAgents
 
             if ((DateTime.Now - lastMoveTime).TotalMilliseconds >= 20)
             {
-                IsDifferentPlatform();
-                IsGetCollectible();
+
+                currentPlatform = platform.GetPlatform(new LevelArray.Point((int)rectangleInfo.X, (int)rectangleInfo.Y), rectangleInfo.Height);
 
                 // rectangle on a platform
                 if (currentPlatform.HasValue)
                 {
-                    if (differentPlatformFlag || getCollectibleFlag)
+                    if (IsDifferentPlatform() || IsGetCollectible())
                     {
-                        differentPlatformFlag = false;
-                        getCollectibleFlag = false;
-
                         targetPointX_InAir = (currentPlatform.Value.leftEdge + currentPlatform.Value.rightEdge) / 2;
-
                         Task.Factory.StartNew(SetNextEdge);
                     }
 
@@ -195,14 +179,22 @@ namespace GeometryFriendsAgents
                         if (-GameInfo.MAX_VELOCITYY <= rectangleInfo.VelocityY && rectangleInfo.VelocityY <= GameInfo.MAX_VELOCITYY)
                         {
 
-                            if (nextEdge.Value.movementType == Platform.movementType.STAIR_GAP)
+                            if (nextEdge.Value.movementType == Platforms.movementType.STAIR_GAP || nextEdge.Value.movementType == Platforms.movementType.MORPH_DOWN)
                             {
-                                if (nextEdge.Value.height < 55 && rectangleInfo.Height > 55)
+                                if (rectangleInfo.Height >= nextEdge.Value.height - LevelArray.PIXEL_LENGTH)
                                 {
                                     currentAction = Moves.MORPH_DOWN;
                                 }
 
-                                else if (nextEdge.Value.height > 190 && rectangleInfo.Height < 190)
+                                else
+                                {
+                                    currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                                }
+                            }
+
+                            else if (nextEdge.Value.movementType == Platforms.movementType.MORPH_UP)
+                            {
+                                if (rectangleInfo.Height <= nextEdge.Value.height)
                                 {
                                     currentAction = Moves.MORPH_UP;
                                 }
@@ -213,19 +205,9 @@ namespace GeometryFriendsAgents
                                 }
                             }
 
-                            else if (nextEdge.Value.movementType == Platform.movementType.MORPH_DOWN && rectangleInfo.Height > nextEdge.Value.height)
+                            else if (nextEdge.Value.movementType == Platforms.movementType.FALL && nextEdge.Value.velocityX == 0 && rectangleInfo.Height >= 55)
                             {
                                 currentAction = Moves.MORPH_DOWN;
-                            }
-
-                            else if (nextEdge.Value.movementType == Platform.movementType.FALL && nextEdge.Value.velocityX == 0 && rectangleInfo.Height > 55)
-                            {
-                                currentAction = Moves.MORPH_DOWN;
-                            }
-
-                            else if (nextEdge.Value.movementType == Platform.movementType.MORPH_DOWN && rectangleInfo.Height <= nextEdge.Value.height)
-                            {
-                                currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                             }
 
                             else
@@ -247,44 +229,24 @@ namespace GeometryFriendsAgents
                     if (nextEdge.HasValue)
                     {
 
-                        //if (nextEdge.Value.movementType == Platform.movementType.STAIR_GAP)
-                        //{
-                        //    if (nextEdge.Value.height < 55 && rectangleInfo.Height > 55)
-                        //    {
-                        //        currentAction = Moves.MORPH_DOWN;
-                        //    }
-
-                        //    else if (nextEdge.Value.height > 190 && rectangleInfo.Height < 190)
-                        //    {
-                        //        currentAction = Moves.MORPH_UP;
-                        //    }
-
-                        //    else
-                        //    {
-                        //        currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
-                        //    }
-                        //}
-
-                        if (nextEdge.Value.movementType == Platform.movementType.STAIR_GAP)
+                        if (nextEdge.Value.movementType == Platforms.movementType.STAIR_GAP)
                         {
                             currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                         }
 
-
-
-                        else if (nextEdge.Value.movementType == Platform.movementType.FALL && nextEdge.Value.velocityX == 0)
-                        {
-                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextEdge.Value.movePoint.x, nextEdge.Value.velocityX, nextEdge.Value.rightMove);
-                        }
-
-                        else if ((nextEdge.Value.movementType == Platform.movementType.MORPH_DOWN || nextEdge.Value.movementType == Platform.movementType.FALL) && rectangleInfo.Height > nextEdge.Value.height)
+                        else if ((nextEdge.Value.movementType == Platforms.movementType.MORPH_DOWN ) && rectangleInfo.Height > nextEdge.Value.height)
                         {
                             currentAction = Moves.MORPH_DOWN;
                         }
 
-                        else if ((nextEdge.Value.movementType == Platform.movementType.MORPH_DOWN || nextEdge.Value.movementType == Platform.movementType.FALL) && rectangleInfo.Height <= nextEdge.Value.height)
+                        else if ((nextEdge.Value.movementType == Platforms.movementType.MORPH_DOWN) && rectangleInfo.Height <= nextEdge.Value.height)
                         {
                             currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                        }
+
+                        else if (nextEdge.Value.movementType == Platforms.movementType.FALL && nextEdge.Value.velocityX == 0 && rectangleInfo.Height <= 55)
+                        {
+                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextEdge.Value.movePoint.x, nextEdge.Value.velocityX, nextEdge.Value.rightMove);
                         }
 
                         else
@@ -322,7 +284,12 @@ namespace GeometryFriendsAgents
 
                     targetPointX_InAir = (nextEdge.Value.reachablePlatform.leftEdge + nextEdge.Value.reachablePlatform.rightEdge) / 2;
 
-                    if (nextEdge.Value.movementType == Platform.movementType.COLLECT)
+                    if (nextEdge.Value.movementType == Platforms.movementType.STAIR_GAP)
+                    {
+                        currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                    }
+
+                    if (nextEdge.Value.movementType == Platforms.movementType.COLLECT)
                     {
                         if (rectangleInfo.Height < nextEdge.Value.height)
                         {
@@ -330,12 +297,12 @@ namespace GeometryFriendsAgents
                         }                      
                     }
 
-                    if ((nextEdge.Value.movementType == Platform.movementType.MORPH_DOWN || nextEdge.Value.movementType == Platform.movementType.FALL) && rectangleInfo.Height > nextEdge.Value.height)
+                    if ((nextEdge.Value.movementType == Platforms.movementType.MORPH_DOWN || nextEdge.Value.movementType == Platforms.movementType.FALL) && rectangleInfo.Height > nextEdge.Value.height)
                     {
                         currentAction = Moves.MORPH_DOWN;
                     }
 
-                    if (nextEdge.Value.movementType == Platform.movementType.FALL && nextEdge.Value.velocityX == 0 && rectangleInfo.Height < 190)
+                    if (nextEdge.Value.movementType == Platforms.movementType.FALL && nextEdge.Value.velocityX == 0 && rectangleInfo.Height < 190)
                     {
                         currentAction = Moves.MORPH_UP;
                     }
@@ -344,33 +311,70 @@ namespace GeometryFriendsAgents
             }
         }
 
-        private void IsGetCollectible()
+        private bool IsGetCollectible()
         {
-            if (previousCollectibleNum != currentCollectibleNum)
-            {
-                getCollectibleFlag = true;
+
+            bool[] currentCollectibles = levelArray.GetObtainedCollectibles(collectiblesInfo);
+
+            if (previousCollectibles.SequenceEqual(currentCollectibles)) {
+                return false;
             }
 
-            previousCollectibleNum = currentCollectibleNum;
+
+            for (int previousC = 0; previousC < previousCollectibles.Length; previousC++)
+            {
+
+                if (!previousCollectibles[previousC])
+                {
+
+                    for (int currentC = 0; currentC < currentCollectibles.Length; currentC++)
+                    {
+
+                        if (currentCollectibles[currentC])
+                        {
+
+                            foreach (Platforms.Platform p in platform.platformList)
+                            {
+
+                                foreach (Platforms.Move m in p.moves)
+                                {
+
+                                    m.collectibles_onPath[currentC] = false;
+
+                                }
+
+                            }
+
+                        }
+                    }
+                }
+
+            }
+
+            previousCollectibles = currentCollectibles;
+
+            return true;
         }
 
-        private void IsDifferentPlatform()
+        private bool IsDifferentPlatform()
         {
-            currentPlatform = platform.GetPlatform(new LevelArray.Point((int)rectangleInfo.X, (int)rectangleInfo.Y), rectangleInfo.Height);
 
             if (currentPlatform.HasValue)
             {
                 if (!previousPlatform.HasValue)
                 {
-                    differentPlatformFlag = true;
+                    previousPlatform = currentPlatform;
+                    return true;
                 }
                 else if (currentPlatform.Value.id != previousPlatform.Value.id)
                 {
-                    differentPlatformFlag = true;
+                    previousPlatform = currentPlatform;
+                    return true;
                 }
             }
 
             previousPlatform = currentPlatform;
+            return false;
         }
 
         private void SetNextEdge()

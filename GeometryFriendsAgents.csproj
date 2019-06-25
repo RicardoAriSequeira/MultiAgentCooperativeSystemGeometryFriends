@@ -47,11 +47,11 @@
   <ItemGroup>
     <Compile Include="ActionSelector.cs" />
     <Compile Include="CircleAgent.cs" />
-    <Compile Include="PlatformCircle.cs" />
-    <Compile Include="PlatformRectangle.cs" />
+    <Compile Include="PlatformsCircle.cs" />
+    <Compile Include="PlatformsRectangle.cs" />
     <Compile Include="GameInfo.cs" />
     <Compile Include="LevelArray.cs" />
-    <Compile Include="Platform.cs" />
+    <Compile Include="Platforms.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RectangleAgent.cs" />
     <Compile Include="SubgoalAStar.cs" />

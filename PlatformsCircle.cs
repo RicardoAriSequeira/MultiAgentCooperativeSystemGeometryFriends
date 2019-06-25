@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace GeometryFriendsAgents
 {
-    class PlatformCircle : Platform
+    class PlatformCircle : Platforms
     {
   
         public PlatformCircle() : base()
@@ -14,7 +14,7 @@ namespace GeometryFriendsAgents
             max_height = GameInfo.MAX_CIRCLE_HEIGHT;
         }
 
-        public override int[,] GetPlatformArray(int[,] levelArray)
+        public override int[,] GetPlatformArray()
         {
             int[,] platformArray = new int[levelArray.GetLength(0), levelArray.GetLength(1)];
 
@@ -28,7 +28,7 @@ namespace GeometryFriendsAgents
                     circleCenter.y -= GameInfo.CIRCLE_RADIUS;
                     List<LevelArray.ArrayPoint> circlePixels = GetCirclePixels(circleCenter, GameInfo.CIRCLE_RADIUS);
 
-                    if (!IsObstacle_onPixels(levelArray, circlePixels))
+                    if (!IsObstacle_onPixels(circlePixels))
                     {
                         if (levelArray[y, x - 1] == LevelArray.OBSTACLE || levelArray[y, x] == LevelArray.OBSTACLE)
                         {
@@ -42,9 +42,9 @@ namespace GeometryFriendsAgents
 
         }
 
-        public override void SetPlatformInfoList(int[,] levelArray)
+        public override void SetPlatformInfoList()
         {
-            int[,] platformArray = GetPlatformArray(levelArray);
+            int[,] platformArray = GetPlatformArray();
 
             Parallel.For(0, levelArray.GetLength(0), i =>
             {
@@ -66,9 +66,9 @@ namespace GeometryFriendsAgents
 
                         if (rightEdge >= leftEdge)
                         {
-                            lock (platformInfoList)
+                            lock (platformList)
                             {
-                                platformInfoList.Add(new PlatformInfo(height, leftEdge, rightEdge, new List<MoveInfo>()));
+                                platformList.Add(new Platform(height, leftEdge, rightEdge, new List<Move>(), max_height / LevelArray.PIXEL_LENGTH));
                             }
                         }
 
@@ -80,27 +80,27 @@ namespace GeometryFriendsAgents
             SetPlatformID();
         }
 
-        protected override void SetMoveInfoList_Jump(int[,] levelArray, int numCollectibles, PlatformInfo fromPlatform, int velocityX)
+        protected override void SetMoveInfoList_Jump(Platform fromPlatform, int velocityX)
         {
             int from = fromPlatform.leftEdge + (fromPlatform.leftEdge - GameInfo.LEVEL_ORIGINAL) % (LevelArray.PIXEL_LENGTH * 2);
             int to = fromPlatform.rightEdge - (fromPlatform.rightEdge - GameInfo.LEVEL_ORIGINAL) % (LevelArray.PIXEL_LENGTH * 2);
             Parallel.For(0, (to - from) / (LevelArray.PIXEL_LENGTH * 2) + 1, j =>
             {
                 LevelArray.Point movePoint = new LevelArray.Point(from + j * LevelArray.PIXEL_LENGTH * 2, fromPlatform.height - GameInfo.CIRCLE_RADIUS);
-                SetMoveInfoList_Fall(levelArray, numCollectibles, fromPlatform, movePoint, max_height, velocityX, true, movementType.JUMP);
-                SetMoveInfoList_Fall(levelArray, numCollectibles, fromPlatform, movePoint, max_height, velocityX, false, movementType.JUMP);
+                SetMoveInfoList_Fall(fromPlatform, movePoint, max_height, velocityX, true, movementType.JUMP);
+                SetMoveInfoList_Fall(fromPlatform, movePoint, max_height, velocityX, false, movementType.JUMP);
             });
         }
 
-        protected override void SetMoveInfoList_StairOrGap(int[,] levelArray, int numCollectibles, PlatformInfo fromPlatform)
+        protected override void SetMoveInfoList_StairOrGap(Platform fromPlatform)
         {
 
-            foreach (PlatformInfo toPlatform in platformInfoList)
+            foreach (Platform toPlatform in platformList)
             {
 
                 bool rightMove = false;
                 bool obstacleFlag = false;
-                bool[] collectible_onPath = new bool[numCollectibles];
+                bool[] collectible_onPath = new bool[nCollectibles];
 
                 if (fromPlatform.Equals(toPlatform) || !IsStairOrGap(fromPlatform, toPlatform, ref rightMove))
                 {
@@ -114,13 +114,13 @@ namespace GeometryFriendsAgents
                 {
                     List<LevelArray.ArrayPoint> circlePixels = GetCirclePixels(new LevelArray.Point(k, toPlatform.height - GameInfo.CIRCLE_RADIUS), GameInfo.CIRCLE_RADIUS);
 
-                    if (IsObstacle_onPixels(levelArray, circlePixels))
+                    if (IsObstacle_onPixels(circlePixels))
                     {
                         obstacleFlag = true;
                         break;
                     }
 
-                    collectible_onPath = Utilities.GetOrMatrix(collectible_onPath, GetCollectibles_onPixels(levelArray, circlePixels, numCollectibles));
+                    collectible_onPath = Utilities.GetOrMatrix(collectible_onPath, GetCollectibles_onPixels(circlePixels));
                 }
 
                 if (!obstacleFlag)
@@ -128,7 +128,7 @@ namespace GeometryFriendsAgents
                     LevelArray.Point movePoint = rightMove ? new LevelArray.Point(fromPlatform.rightEdge, fromPlatform.height) : new LevelArray.Point(fromPlatform.leftEdge, fromPlatform.height);
                     LevelArray.Point landPoint = rightMove ? new LevelArray.Point(toPlatform.leftEdge, toPlatform.height) : new LevelArray.Point(toPlatform.rightEdge, toPlatform.height);
 
-                    AddMoveInfoToList(fromPlatform, new MoveInfo(toPlatform, movePoint, landPoint, 0, rightMove, movementType.STAIR_GAP, collectible_onPath, (fromPlatform.height - toPlatform.height) + Math.Abs(movePoint.x - landPoint.x), false));
+                    AddMoveInfoToList(fromPlatform, new Move(toPlatform, movePoint, landPoint, 0, rightMove, movementType.STAIR_GAP, collectible_onPath, (fromPlatform.height - toPlatform.height) + Math.Abs(movePoint.x - landPoint.x), false));
                 }
             }
         }
