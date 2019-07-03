@@ -4,8 +4,11 @@ namespace GeometryFriendsAgents
 {
     public class LevelArray
     {
-        public const int OBSTACLE = -1;
+
         public const int OPEN = 0;
+        public const int BLACK = -1;
+        public const int GREEN = -2;
+        public const int YELLOW = -3;
 
         public const int MARGIN = 5;
         public const int PIXEL_LENGTH = 8;
@@ -80,15 +83,13 @@ namespace GeometryFriendsAgents
             return levelArray;
         }
 
-        public void CreateLevelArray(CollectibleRepresentation[] colI, ObstacleRepresentation[] oI, ObstacleRepresentation[] cPI)
+        public void CreateLevelArray(CollectibleRepresentation[] collectibles, ObstacleRepresentation[] blackObstacles, ObstacleRepresentation[] greenObstacles, ObstacleRepresentation[] yellowObstacles)
         {
-            SetCollectibles(colI);
-
+            SetCollectibles(collectibles);
             SetDefaultObstacles();
-
-            SetObstacles(oI);
-
-            SetObstacles(cPI);
+            SetObstacles(blackObstacles, BLACK);
+            SetObstacles(greenObstacles, GREEN);
+            SetObstacles(greenObstacles, YELLOW);
         }
 
         private void SetDefaultObstacles()
@@ -97,7 +98,7 @@ namespace GeometryFriendsAgents
             {
                 for (int j = 0; j < levelArray.GetLength(1); j++)
                 {
-                    levelArray[i, j] = OBSTACLE;
+                    levelArray[i, j] = BLACK;
                 }
             }
 
@@ -105,7 +106,7 @@ namespace GeometryFriendsAgents
             {
                 for (int j = 0; j <= 3; j++)
                 {
-                    levelArray[i, j] = OBSTACLE;
+                    levelArray[i, j] = BLACK;
                 }
             }
 
@@ -113,7 +114,7 @@ namespace GeometryFriendsAgents
             {
                 for (int j = 154; j < levelArray.GetLength(1); j++)
                 {
-                    levelArray[i, j] = OBSTACLE;
+                    levelArray[i, j] = BLACK;
                 }
             }
 
@@ -121,19 +122,19 @@ namespace GeometryFriendsAgents
             {
                 for (int j = 0; j < levelArray.GetLength(1); j++)
                 {
-                    levelArray[i, j] = OBSTACLE;
+                    levelArray[i, j] = BLACK;
                 }
             }
         }
 
-        private void SetObstacles(ObstacleRepresentation[] oI)
+        private void SetObstacles(ObstacleRepresentation[]obstacles, int obstacleType)
         {
-            foreach (ObstacleRepresentation k in oI)
+            foreach (ObstacleRepresentation o in obstacles)
             {
-                int xPosArray = (int)(k.X - (k.Width / 2) - GameInfo.LEVEL_ORIGINAL) / PIXEL_LENGTH;
-                int yPosArray = (int)(k.Y - (k.Height / 2) - GameInfo.LEVEL_ORIGINAL) / PIXEL_LENGTH;
-                int height = (int)(k.Height / PIXEL_LENGTH);
-                int width = (int)(k.Width / PIXEL_LENGTH);
+                int xPosArray = (int)(o.X - (o.Width / 2) - GameInfo.LEVEL_ORIGINAL) / PIXEL_LENGTH;
+                int yPosArray = (int)(o.Y - (o.Height / 2) - GameInfo.LEVEL_ORIGINAL) / PIXEL_LENGTH;
+                int height = (int)(o.Height / PIXEL_LENGTH);
+                int width = (int)(o.Width / PIXEL_LENGTH);
                 
                 for (int i = yPosArray; i < (yPosArray + height); i++)
                 {
@@ -141,7 +142,7 @@ namespace GeometryFriendsAgents
                     {
                         if (0 <= i && i < levelArray.GetLength(0) && 0 <= j && j < levelArray.GetLength(1))
                         {
-                            levelArray[i, j] = OBSTACLE;
+                            levelArray[i, j] = obstacleType;
                         }
                     }
                 }

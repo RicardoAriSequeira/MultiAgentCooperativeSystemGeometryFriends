@@ -14,13 +14,12 @@ namespace GeometryFriendsAgents
             max_height = GameInfo.MAX_CIRCLE_HEIGHT;
         }
 
-        public override int[,] GetPlatformArray()
+        public override platformType[,] GetPlatformArray()
         {
-            int[,] platformArray = new int[levelArray.GetLength(0), levelArray.GetLength(1)];
+            platformType[,] platformArray = new platformType[levelArray.GetLength(0), levelArray.GetLength(1)];
 
             for (int y = 0; y < levelArray.GetLength(0); y++)
             {
-
                 Parallel.For(0, levelArray.GetLength(1), x =>
                 {
 
@@ -30,9 +29,13 @@ namespace GeometryFriendsAgents
 
                     if (!IsObstacle_onPixels(circlePixels))
                     {
-                        if (levelArray[y, x - 1] == LevelArray.OBSTACLE || levelArray[y, x] == LevelArray.OBSTACLE)
+                        if (levelArray[y, x - 1] == LevelArray.BLACK || levelArray[y, x] == LevelArray.BLACK)
                         {
-                            platformArray[y, x] = LevelArray.OBSTACLE;
+                            platformArray[y, x] = platformType.BLACK;
+                        }
+                        else if (levelArray[y, x - 1] == LevelArray.GREEN || levelArray[y, x] == LevelArray.GREEN)
+                        {
+                            platformArray[y, x] = platformType.GREEN;
                         }
                     }
                 });
@@ -42,37 +45,41 @@ namespace GeometryFriendsAgents
 
         }
 
-        public override void SetPlatformInfoList()
+        public override void SetPlatformList()
         {
-            int[,] platformArray = GetPlatformArray();
+            platformType[,] platformArray = GetPlatformArray();
 
             Parallel.For(0, levelArray.GetLength(0), i =>
             {
-                bool platformFlag = false;
-                int height = 0, leftEdge = 0, rightEdge = 0;
+                platformType currentPlatform = platformType.NO_PLATFORM;
+                int leftEdge = 0;
 
                 for (int j = 0; j < platformArray.GetLength(1); j++)
                 {
-                    if (platformArray[i, j] == LevelArray.OBSTACLE && !platformFlag)
+                    if (currentPlatform == platformType.NO_PLATFORM)
                     {
-                        height = LevelArray.ConvertValue_ArrayPointIntoPoint(i);
-                        leftEdge = LevelArray.ConvertValue_ArrayPointIntoPoint(j);
-                        platformFlag = true;
-                    }
-
-                    if (platformArray[i, j] == LevelArray.OPEN && platformFlag)
-                    {
-                        rightEdge = LevelArray.ConvertValue_ArrayPointIntoPoint(j - 1);
-
-                        if (rightEdge >= leftEdge)
+                        if (platformArray[i, j] == platformType.BLACK || platformArray[i, j] == platformType.GREEN)
                         {
-                            lock (platformList)
-                            {
-                                platformList.Add(new Platform(height, leftEdge, rightEdge, new List<Move>(), max_height / LevelArray.PIXEL_LENGTH));
-                            }
+                            leftEdge = LevelArray.ConvertValue_ArrayPointIntoPoint(j);
+                            currentPlatform = platformArray[i, j];
                         }
+                    }
+                    else
+                    {
+                        if (platformArray[i, j] != currentPlatform)
+                        {
+                            int rightEdge = LevelArray.ConvertValue_ArrayPointIntoPoint(j - 1);
 
-                        platformFlag = false;
+                            if (rightEdge >= leftEdge)
+                            {
+                                lock (platformList)
+                                {
+                                    platformList.Add(new Platform(platformType.BLACK, LevelArray.ConvertValue_ArrayPointIntoPoint(i), leftEdge, rightEdge, new List<Move>(), max_height / LevelArray.PIXEL_LENGTH));
+                                }
+                            }
+
+                            currentPlatform = platformArray[i, j];
+                        }
                     }
                 }
             });
@@ -87,12 +94,12 @@ namespace GeometryFriendsAgents
             Parallel.For(0, (to - from) / (LevelArray.PIXEL_LENGTH * 2) + 1, j =>
             {
                 LevelArray.Point movePoint = new LevelArray.Point(from + j * LevelArray.PIXEL_LENGTH * 2, fromPlatform.height - GameInfo.CIRCLE_RADIUS);
-                SetMoveInfoList_Fall(fromPlatform, movePoint, max_height, velocityX, true, movementType.JUMP);
-                SetMoveInfoList_Fall(fromPlatform, movePoint, max_height, velocityX, false, movementType.JUMP);
+                SetMoves_Fall(fromPlatform, movePoint, max_height, velocityX, true, movementType.JUMP);
+                SetMoves_Fall(fromPlatform, movePoint, max_height, velocityX, false, movementType.JUMP);
             });
         }
 
-        protected override void SetMoveInfoList_StairOrGap(Platform fromPlatform)
+        protected override void SetMoves_StairOrGap(Platform fromPlatform)
         {
 
             foreach (Platform toPlatform in platformList)
@@ -136,6 +143,24 @@ namespace GeometryFriendsAgents
         protected override List<LevelArray.ArrayPoint> GetFormPixels(LevelArray.Point center, int height)
         {
             return GetCirclePixels(center, height/2);
+        }
+
+        protected override bool IsObstacle_onPixels(List<LevelArray.ArrayPoint> checkPixels)
+        {
+            if (checkPixels.Count == 0)
+            {
+                return true;
+            }
+
+            foreach (LevelArray.ArrayPoint i in checkPixels)
+            {
+                if (levelArray[i.yArray, i.xArray] == LevelArray.BLACK || levelArray[i.yArray, i.xArray] == LevelArray.GREEN)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
     }

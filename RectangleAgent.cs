@@ -44,10 +44,10 @@ namespace GeometryFriendsAgents
         private CountInformation numbersInfo;
         private RectangleRepresentation rectangleInfo;
         private CircleRepresentation circleInfo;
-        private ObstacleRepresentation[] obstaclesInfo;
-        private ObstacleRepresentation[] rectanglePlatformsInfo;
-        private ObstacleRepresentation[] circlePlatformsInfo;
-        private CollectibleRepresentation[] collectiblesInfo;
+        private ObstacleRepresentation[] blackObstacles;
+        private ObstacleRepresentation[] greenObstacles;
+        private ObstacleRepresentation[] yellowObstacles;
+        private CollectibleRepresentation[] collectibles;
 
         private List<AgentMessage> messages;
 
@@ -88,10 +88,10 @@ namespace GeometryFriendsAgents
             numbersInfo = nI;
             rectangleInfo = rI;
             circleInfo = cI;
-            obstaclesInfo = oI;
-            rectanglePlatformsInfo = rPI;
-            circlePlatformsInfo = cPI;
-            collectiblesInfo = colI;
+            blackObstacles = oI;
+            greenObstacles = rPI;
+            yellowObstacles = cPI;
+            collectibles = colI;
             this.area = area;
 
             //send a message to the rectangle informing that the circle setup is complete and show how to pass an attachment: a pen object
@@ -100,7 +100,7 @@ namespace GeometryFriendsAgents
             nextEdge = null;
             targetPointX_InAir = (int)circleInfo.X;
 
-            levelArray.CreateLevelArray(collectiblesInfo, obstaclesInfo, rectanglePlatformsInfo);
+            levelArray.CreateLevelArray(collectibles, blackObstacles, greenObstacles, yellowObstacles);
             platform.SetUp(levelArray.GetLevelArray(), levelArray.initialCollectiblesInfo.Length);
 
             previousCollectibles = levelArray.GetObtainedCollectibles(colI);
@@ -113,7 +113,7 @@ namespace GeometryFriendsAgents
         {
             rectangleInfo = rI;
             circleInfo = cI;
-            collectiblesInfo = colI;
+            collectibles = colI;
         }
 
         public override void ActionSimulatorUpdated(ActionSimulator updatedSimulator)
@@ -314,7 +314,7 @@ namespace GeometryFriendsAgents
         private bool IsGetCollectible()
         {
 
-            bool[] currentCollectibles = levelArray.GetObtainedCollectibles(collectiblesInfo);
+            bool[] currentCollectibles = levelArray.GetObtainedCollectibles(collectibles);
 
             if (previousCollectibles.SequenceEqual(currentCollectibles)) {
                 return false;
@@ -382,7 +382,7 @@ namespace GeometryFriendsAgents
             nextEdge = null;
             nextEdge = subgoalAStar.CalculateShortestPath(currentPlatform.Value, new LevelArray.Point((int)rectangleInfo.X, (int)rectangleInfo.Y),
                 Enumerable.Repeat<bool>(true, levelArray.initialCollectiblesInfo.Length).ToArray(),
-                levelArray.GetObtainedCollectibles(collectiblesInfo), levelArray.initialCollectiblesInfo);
+                levelArray.GetObtainedCollectibles(collectibles), levelArray.initialCollectiblesInfo);
         }
 
         //typically used console debugging used in previous implementations of GeometryFriends
@@ -394,22 +394,22 @@ namespace GeometryFriendsAgents
 
             Log.LogInformation("Rectangle Aagent - " + circleInfo.ToString());
 
-            foreach (ObstacleRepresentation i in obstaclesInfo)
+            foreach (ObstacleRepresentation i in blackObstacles)
             {
                 Log.LogInformation("Rectangle Aagent - " + i.ToString("Obstacle"));
             }
 
-            foreach (ObstacleRepresentation i in rectanglePlatformsInfo)
+            foreach (ObstacleRepresentation i in greenObstacles)
             {
                 Log.LogInformation("Rectangle Aagent - " + i.ToString("Rectangle Platform"));
             }
 
-            foreach (ObstacleRepresentation i in circlePlatformsInfo)
+            foreach (ObstacleRepresentation i in yellowObstacles)
             {
                 Log.LogInformation("Rectangle Aagent - " + i.ToString("Circle Platform"));
             }
 
-            foreach (CollectibleRepresentation i in collectiblesInfo)
+            foreach (CollectibleRepresentation i in collectibles)
             {
                 Log.LogInformation("Rectangle Aagent - " + i.ToString());
             }

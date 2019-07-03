@@ -45,10 +45,10 @@ namespace GeometryFriendsAgents
         private CountInformation numbersInfo;
         private RectangleRepresentation rectangleInfo;
         private CircleRepresentation circleInfo;
-        private ObstacleRepresentation[] obstaclesInfo;
-        private ObstacleRepresentation[] rectanglePlatformsInfo;
-        private ObstacleRepresentation[] circlePlatformsInfo;
-        private CollectibleRepresentation[] collectiblesInfo;
+        private ObstacleRepresentation[] blackObstacles;
+        private ObstacleRepresentation[] greenObstacles;
+        private ObstacleRepresentation[] yellowObstacles;
+        private CollectibleRepresentation[] collectibles;
 
         //Area of the game screen
         private Rectangle area;
@@ -88,16 +88,16 @@ namespace GeometryFriendsAgents
             currentCollectibleNum = nI.CollectiblesCount;
             rectangleInfo = rI;
             circleInfo = cI;
-            obstaclesInfo = oI;
-            rectanglePlatformsInfo = rPI;
-            circlePlatformsInfo = cPI;
-            collectiblesInfo = colI;
+            blackObstacles = oI;
+            greenObstacles = rPI;
+            yellowObstacles = cPI;
+            collectibles = colI;
             this.area = area;
 
             nextEdge = null;
             targetPointX_InAir = (int)circleInfo.X;
 
-            levelArray.CreateLevelArray(collectiblesInfo, obstaclesInfo, rectanglePlatformsInfo);
+            levelArray.CreateLevelArray(collectibles, blackObstacles, greenObstacles, yellowObstacles);
             platform.SetUp(levelArray.GetLevelArray(), levelArray.initialCollectiblesInfo.Length);
 
             //DebugSensorsInfo();
@@ -113,7 +113,7 @@ namespace GeometryFriendsAgents
 
             rectangleInfo = rI;
             circleInfo = cI;
-            collectiblesInfo = colI;
+            collectibles = colI;
         }
 
         //implements abstract circle interface: signals if the agent is actually implemented or not
@@ -279,7 +279,7 @@ namespace GeometryFriendsAgents
             nextEdge = null;
             nextEdge = subgoalAStar.CalculateShortestPath(currentPlatform.Value, new LevelArray.Point((int)circleInfo.X, (int)circleInfo.Y),
                 Enumerable.Repeat<bool>(true, levelArray.initialCollectiblesInfo.Length).ToArray(),
-                levelArray.GetObtainedCollectibles(collectiblesInfo), levelArray.initialCollectiblesInfo);
+                levelArray.GetObtainedCollectibles(collectibles), levelArray.initialCollectiblesInfo);
         }
 
         //typically used console debugging used in previous implementations of GeometryFriends
@@ -291,22 +291,22 @@ namespace GeometryFriendsAgents
 
             Console.WriteLine("Circle Agent - " + circleInfo.ToString());
 
-            foreach (ObstacleRepresentation i in obstaclesInfo)
+            foreach (ObstacleRepresentation i in blackObstacles)
             {
                 Console.WriteLine("Circle Agent - " + i.ToString("Obstacle"));
             }
 
-            foreach (ObstacleRepresentation i in rectanglePlatformsInfo)
+            foreach (ObstacleRepresentation i in greenObstacles)
             {
                 Console.WriteLine("Circle Agent - " + i.ToString("Rectangle Platform"));
             }
 
-            foreach (ObstacleRepresentation i in circlePlatformsInfo)
+            foreach (ObstacleRepresentation i in yellowObstacles)
             {
                 Console.WriteLine("Circle Agent - " + i.ToString("Circle Platform"));
             }
 
-            foreach (CollectibleRepresentation i in collectiblesInfo)
+            foreach (CollectibleRepresentation i in collectibles)
             {
                 Console.WriteLine("Circle Agent - " + i.ToString());
             }
