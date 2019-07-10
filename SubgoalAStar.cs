@@ -13,14 +13,14 @@ namespace GeometryFriendsAgents
 
         public struct State
         {
-            public Platforms.Platform currentPlatform;
-            public LevelArray.Point currentPoint;
+            public Graph.Platform currentPlatform;
+            public LevelRepresentation.Point currentPoint;
             public bool[] obtainedCollectibles;
             public int numObtainedCollectibles;
             public int totalCost;
-            public List<Platforms.Move> moveHistory;
+            public List<Graph.Move> moveHistory;
 
-            public State(Platforms.Platform currentPlatform, LevelArray.Point currentPoint, bool[] obtainedCollectibles, int numObtainedCollectibles, int totalCost, List<Platforms.Move> moveHistory)
+            public State(Graph.Platform currentPlatform, LevelRepresentation.Point currentPoint, bool[] obtainedCollectibles, int numObtainedCollectibles, int totalCost, List<Graph.Move> moveHistory)
             {
                 this.currentPlatform = currentPlatform;
                 this.currentPoint = currentPoint;
@@ -38,13 +38,13 @@ namespace GeometryFriendsAgents
             sw = new Stopwatch();
         }
 
-        public Platforms.Move? CalculateShortestPath(Platforms.Platform currentPlatform, LevelArray.Point currentPoint, bool[] goalCollectibles, bool[] obtainedCollectibles, CollectibleRepresentation[] initialCollectibles)
+        public Graph.Move? CalculateShortestPath(Graph.Platform currentPlatform, LevelRepresentation.Point currentPoint, bool[] goalCollectibles, bool[] obtainedCollectibles, CollectibleRepresentation[] initialCollectibles)
         {
             sw.Restart();
 
             List<State> openList = new List<State>();
             List<State> closedList = new List<State>();
-            openList.Add(new State(currentPlatform, currentPoint, obtainedCollectibles, 0, 0, new List<Platforms.Move>()));
+            openList.Add(new State(currentPlatform, currentPoint, obtainedCollectibles, 0, 0, new List<Graph.Move>()));
             bool[] reachableCollectibles = new bool[initialCollectibles.Length];
             int numReachableCollectibles = 0;
 
@@ -129,9 +129,9 @@ namespace GeometryFriendsAgents
 
             
             int totalCost;
-            List<Platforms.Move> moveHistory;
+            List<Graph.Move> moveHistory;
 
-            foreach (Platforms.Move i in targetState.currentPlatform.moves)
+            foreach (Graph.Move i in targetState.currentPlatform.moves)
             {
                 bool[] obtainedCollectibles = new bool[targetState.obtainedCollectibles.Length];
                 int numObtainedCollectibles = targetState.numObtainedCollectibles;
@@ -153,7 +153,7 @@ namespace GeometryFriendsAgents
                 }
 
                 totalCost = targetState.totalCost + CalculateDistance(targetState.currentPoint, i.movePoint) + i.pathLength;
-                moveHistory = new List<Platforms.Move>(targetState.moveHistory);
+                moveHistory = new List<Graph.Move>(targetState.moveHistory);
                 moveHistory.Add(i);
 
                 connectedStates.Add(new State(i.reachablePlatform, i.landPoint, obtainedCollectibles, numObtainedCollectibles, totalCost, moveHistory));
@@ -162,7 +162,7 @@ namespace GeometryFriendsAgents
             return connectedStates;
         }
 
-        private int CalculateDistance(LevelArray.Point p1, LevelArray.Point p2)
+        private int CalculateDistance(LevelRepresentation.Point p1, LevelRepresentation.Point p2)
         {
             return (int)Math.Sqrt(Math.Pow(p1.x - p2.x, 2) + Math.Pow(p1.y - p2.y, 2));
         }

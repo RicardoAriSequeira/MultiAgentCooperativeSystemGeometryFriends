@@ -1,111 +1,76 @@
-﻿using GeometryFriends;
-using GeometryFriends.AI;
-using GeometryFriends.AI.ActionSimulation;
-using GeometryFriends.AI.Communication;
-using GeometryFriends.AI.Debug;
-using GeometryFriends.AI.Interfaces;
-using GeometryFriends.AI.Perceptions.Information;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
+﻿using System;
 using System.Linq;
+using System.Drawing;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+
+using GeometryFriends;
+using GeometryFriends.AI;
+using GeometryFriends.AI.Interfaces;
+using GeometryFriends.AI.Communication;
+using GeometryFriends.AI.Perceptions.Information;
 
 namespace GeometryFriendsAgents
 {
     /// <summary>
-    /// A rectangle agent implementation for the GeometryFriends game that demonstrates simple random action selection.
+    /// A rectangle agent implementation for the GeometryFriends game that demonstrates prediction and history keeping capabilities.
     /// </summary>
     public class RectangleAgent : AbstractRectangleAgent
     {
-        //agent implementation specificiation
-        private bool implementedAgent;
-        private string agentName = "IST Rectangle";
-
-        //auxiliary variables for agent action
-        private Moves currentAction;
-        private List<Moves> possibleMoves;
-        private DateTime lastMoveTime;
-        private Random rnd;
-
-        private PlatformsRectangle platform;
-        private LevelArray levelArray;
-        private int targetPointX_InAir;
-        private SubgoalAStar subgoalAStar;
-        private bool[] previousCollectibles;
-        private Platforms.Move? nextEdge;
-        private ActionSelector actionSelector;
-        private ActionSimulator predictor;
-        //private DebugInformation[] debugInfo = null;
-        private Platforms.Platform? currentPlatform;
-        private Platforms.Platform? previousPlatform;
-
-        //Sensors Information
-        private CountInformation numbersInfo;
-        private RectangleRepresentation rectangleInfo;
+        // Sensors Information
+        private LevelRepresentation levelInfo;
         private CircleRepresentation circleInfo;
-        private ObstacleRepresentation[] blackObstacles;
-        private ObstacleRepresentation[] greenObstacles;
-        private ObstacleRepresentation[] yellowObstacles;
-        private CollectibleRepresentation[] collectibles;
+        private RectangleRepresentation rectangleInfo;
 
+        // Graph
+        private GraphRectangle graph;
+
+        // Search Algorithm
+        private SubgoalAStar subgoalAStar;
+
+        // Reinforcement Learning
+        private ActionSelector actionSelector;
+
+        // Messages
         private List<AgentMessage> messages;
 
-        //Area of the game screen
-        protected Rectangle area;
+        // Auxiliary
+        private Moves currentAction;
+        private Graph.Move? nextEdge;
+        private DateTime lastMoveTime;
+        private int targetPointX_InAir;
+        private bool[] previousCollectibles;
+        private Graph.Platform? previousPlatform, currentPlatform;
 
         public RectangleAgent()
         {
-            //Change flag if agent is not to be used
-            implementedAgent = true;
-
+            nextEdge = null;
+            currentPlatform = null;
+            previousPlatform = null;
             lastMoveTime = DateTime.Now;
             currentAction = Moves.NO_ACTION;
-            rnd = new Random();
 
-            levelArray = new LevelArray();
-            platform = new PlatformsRectangle();
+            graph = new GraphRectangle();
             subgoalAStar = new SubgoalAStar();
-            actionSelector = new ActionSelector();
-
-            //prepare the possible moves  
-            possibleMoves = new List<Moves>();
-            possibleMoves.Add(Moves.MOVE_LEFT);
-            possibleMoves.Add(Moves.MOVE_RIGHT);
-            possibleMoves.Add(Moves.MORPH_UP);
-            possibleMoves.Add(Moves.MORPH_DOWN);
-
-            previousPlatform = null;
-            currentPlatform = null;
-
-            //messages exchange
             messages = new List<AgentMessage>();
+            actionSelector = new ActionSelector();
+            levelInfo = new LevelRepresentation();
         }
 
         //implements abstract rectangle interface: used to setup the initial information so that the agent has basic knowledge about the level
         public override void Setup(CountInformation nI, RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI, Rectangle area, double timeLimit)
         {
-            numbersInfo = nI;
-            rectangleInfo = rI;
+            // Create Level Array
+            levelInfo.CreateLevelArray(colI, oI, rPI, cPI, LevelRepresentation.YELLOW);
+
+            // Create Graph
+            graph.SetupGraph(levelInfo.GetLevelArray(), colI.Length);
+
+            // Initial Information
             circleInfo = cI;
-            blackObstacles = oI;
-            greenObstacles = rPI;
-            yellowObstacles = cPI;
-            collectibles = colI;
-            this.area = area;
-
-            //send a message to the rectangle informing that the circle setup is complete and show how to pass an attachment: a pen object
-            //messages.Add(new AgentMessage("Setup complete, testing to send an object as an attachment.", new Pen(Color.BlanchedAlmond)));
-
-            nextEdge = null;
-            targetPointX_InAir = (int)circleInfo.X;
-
-            levelArray.CreateLevelArray(collectibles, blackObstacles, greenObstacles, yellowObstacles);
-            platform.SetUp(levelArray.GetLevelArray(), levelArray.initialCollectiblesInfo.Length);
-
-            previousCollectibles = levelArray.GetObtainedCollectibles(colI);
-
-            //DebugSensorsInfo();
+            rectangleInfo = rI;
+            targetPointX_InAir = (int)rectangleInfo.X;
+            previousCollectibles = levelInfo.GetObtainedCollectibles();
         }
 
         //implements abstract rectangle interface: registers updates from the agent's sensors that it is up to date with the latest environment information
@@ -113,41 +78,19 @@ namespace GeometryFriendsAgents
         {
             rectangleInfo = rI;
             circleInfo = cI;
-            collectibles = colI;
-        }
-
-        public override void ActionSimulatorUpdated(ActionSimulator updatedSimulator)
-        {
-            predictor = updatedSimulator;
+            levelInfo.collectibles = colI;
         }
 
         //implements abstract rectangle interface: signals if the agent is actually implemented or not
         public override bool ImplementedAgent()
         {
-            return implementedAgent;
+            return true;
         }
 
         //implements abstract rectangle interface: provides the name of the agent to the agents manager in GeometryFriends
         public override string AgentName()
         {
-            return agentName;
-        }
-
-        //simple algorithm for choosing a random action for the rectangle agent
-        private void RandomAction()
-        {
-            /*
-             Rectangle Actions
-             MOVE_LEFT = 5
-             MOVE_RIGHT = 6
-             MORPH_UP = 7
-             MORPH_DOWN = 8
-            */
-
-            currentAction = possibleMoves[rnd.Next(possibleMoves.Count)];
-
-            //send a message to the circle agent telling what action it chose
-            messages.Add(new AgentMessage("Going to :" + currentAction));
+            return "IST Rectangle";
         }
 
         //implements abstract rectangle interface: GeometryFriends agents manager gets the current action intended to be actuated in the enviroment for this agent
@@ -163,7 +106,7 @@ namespace GeometryFriendsAgents
             if ((DateTime.Now - lastMoveTime).TotalMilliseconds >= 20)
             {
 
-                currentPlatform = platform.GetPlatform(new LevelArray.Point((int)rectangleInfo.X, (int)rectangleInfo.Y), rectangleInfo.Height);
+                currentPlatform = graph.GetPlatform(new LevelRepresentation.Point((int)rectangleInfo.X, (int)rectangleInfo.Y), rectangleInfo.Height);
 
                 // rectangle on a platform
                 if (currentPlatform.HasValue)
@@ -179,9 +122,9 @@ namespace GeometryFriendsAgents
                         if (-GameInfo.MAX_VELOCITYY <= rectangleInfo.VelocityY && rectangleInfo.VelocityY <= GameInfo.MAX_VELOCITYY)
                         {
 
-                            if (nextEdge.Value.movementType == Platforms.movementType.STAIR_GAP || nextEdge.Value.movementType == Platforms.movementType.MORPH_DOWN)
+                            if (nextEdge.Value.movementType == Graph.movementType.STAIR_GAP || nextEdge.Value.movementType == Graph.movementType.MORPH_DOWN)
                             {
-                                if (rectangleInfo.Height >= nextEdge.Value.height - LevelArray.PIXEL_LENGTH)
+                                if (rectangleInfo.Height >= nextEdge.Value.height - LevelRepresentation.PIXEL_LENGTH)
                                 {
                                     currentAction = Moves.MORPH_DOWN;
                                 }
@@ -192,7 +135,7 @@ namespace GeometryFriendsAgents
                                 }
                             }
 
-                            else if (nextEdge.Value.movementType == Platforms.movementType.MORPH_UP)
+                            else if (nextEdge.Value.movementType == Graph.movementType.MORPH_UP)
                             {
                                 if (rectangleInfo.Height <= nextEdge.Value.height)
                                 {
@@ -205,7 +148,7 @@ namespace GeometryFriendsAgents
                                 }
                             }
 
-                            else if (nextEdge.Value.movementType == Platforms.movementType.FALL && nextEdge.Value.velocityX == 0 && rectangleInfo.Height >= 55)
+                            else if (nextEdge.Value.movementType == Graph.movementType.FALL && nextEdge.Value.velocityX == 0 && rectangleInfo.Height >= 55)
                             {
                                 currentAction = Moves.MORPH_DOWN;
                             }
@@ -229,22 +172,22 @@ namespace GeometryFriendsAgents
                     if (nextEdge.HasValue)
                     {
 
-                        if (nextEdge.Value.movementType == Platforms.movementType.STAIR_GAP)
+                        if (nextEdge.Value.movementType == Graph.movementType.STAIR_GAP)
                         {
                             currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                         }
 
-                        else if ((nextEdge.Value.movementType == Platforms.movementType.MORPH_DOWN ) && rectangleInfo.Height > nextEdge.Value.height)
+                        else if ((nextEdge.Value.movementType == Graph.movementType.MORPH_DOWN ) && rectangleInfo.Height > nextEdge.Value.height)
                         {
                             currentAction = Moves.MORPH_DOWN;
                         }
 
-                        else if ((nextEdge.Value.movementType == Platforms.movementType.MORPH_DOWN) && rectangleInfo.Height <= nextEdge.Value.height)
+                        else if ((nextEdge.Value.movementType == Graph.movementType.MORPH_DOWN) && rectangleInfo.Height <= nextEdge.Value.height)
                         {
                             currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                         }
 
-                        else if (nextEdge.Value.movementType == Platforms.movementType.FALL && nextEdge.Value.velocityX == 0 && rectangleInfo.Height <= 55)
+                        else if (nextEdge.Value.movementType == Graph.movementType.FALL && nextEdge.Value.velocityX == 0 && rectangleInfo.Height <= 55)
                         {
                             currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextEdge.Value.movePoint.x, nextEdge.Value.velocityX, nextEdge.Value.rightMove);
                         }
@@ -269,7 +212,6 @@ namespace GeometryFriendsAgents
                 }
 
                 lastMoveTime = DateTime.Now;
-                //DebugSensorsInfo();
             }
 
             if (nextEdge.HasValue)
@@ -284,12 +226,12 @@ namespace GeometryFriendsAgents
 
                     targetPointX_InAir = (nextEdge.Value.reachablePlatform.leftEdge + nextEdge.Value.reachablePlatform.rightEdge) / 2;
 
-                    if (nextEdge.Value.movementType == Platforms.movementType.STAIR_GAP)
+                    if (nextEdge.Value.movementType == Graph.movementType.STAIR_GAP)
                     {
                         currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                     }
 
-                    if (nextEdge.Value.movementType == Platforms.movementType.COLLECT)
+                    if (nextEdge.Value.movementType == Graph.movementType.COLLECT)
                     {
                         if (rectangleInfo.Height < nextEdge.Value.height)
                         {
@@ -297,12 +239,12 @@ namespace GeometryFriendsAgents
                         }                      
                     }
 
-                    if ((nextEdge.Value.movementType == Platforms.movementType.MORPH_DOWN || nextEdge.Value.movementType == Platforms.movementType.FALL) && rectangleInfo.Height > nextEdge.Value.height)
+                    if ((nextEdge.Value.movementType == Graph.movementType.MORPH_DOWN || nextEdge.Value.movementType == Graph.movementType.FALL) && rectangleInfo.Height > nextEdge.Value.height)
                     {
                         currentAction = Moves.MORPH_DOWN;
                     }
 
-                    if (nextEdge.Value.movementType == Platforms.movementType.FALL && nextEdge.Value.velocityX == 0 && rectangleInfo.Height < 190)
+                    if (nextEdge.Value.movementType == Graph.movementType.FALL && nextEdge.Value.velocityX == 0 && rectangleInfo.Height < 190)
                     {
                         currentAction = Moves.MORPH_UP;
                     }
@@ -314,7 +256,7 @@ namespace GeometryFriendsAgents
         private bool IsGetCollectible()
         {
 
-            bool[] currentCollectibles = levelArray.GetObtainedCollectibles(collectibles);
+            bool[] currentCollectibles = levelInfo.GetObtainedCollectibles();
 
             if (previousCollectibles.SequenceEqual(currentCollectibles)) {
                 return false;
@@ -333,10 +275,10 @@ namespace GeometryFriendsAgents
                         if (currentCollectibles[currentC])
                         {
 
-                            foreach (Platforms.Platform p in platform.platformList)
+                            foreach (Graph.Platform p in graph.platforms)
                             {
 
-                                foreach (Platforms.Move m in p.moves)
+                                foreach (Graph.Move m in p.moves)
                                 {
 
                                     m.collectibles_onPath[currentC] = false;
@@ -380,39 +322,9 @@ namespace GeometryFriendsAgents
         private void SetNextEdge()
         {
             nextEdge = null;
-            nextEdge = subgoalAStar.CalculateShortestPath(currentPlatform.Value, new LevelArray.Point((int)rectangleInfo.X, (int)rectangleInfo.Y),
-                Enumerable.Repeat<bool>(true, levelArray.initialCollectiblesInfo.Length).ToArray(),
-                levelArray.GetObtainedCollectibles(collectibles), levelArray.initialCollectiblesInfo);
-        }
-
-        //typically used console debugging used in previous implementations of GeometryFriends
-        protected void DebugSensorsInfo()
-        {
-            Log.LogInformation("Rectangle Aagent - " + numbersInfo.ToString());
-
-            Log.LogInformation("Rectangle Aagent - " + rectangleInfo.ToString());
-
-            Log.LogInformation("Rectangle Aagent - " + circleInfo.ToString());
-
-            foreach (ObstacleRepresentation i in blackObstacles)
-            {
-                Log.LogInformation("Rectangle Aagent - " + i.ToString("Obstacle"));
-            }
-
-            foreach (ObstacleRepresentation i in greenObstacles)
-            {
-                Log.LogInformation("Rectangle Aagent - " + i.ToString("Rectangle Platform"));
-            }
-
-            foreach (ObstacleRepresentation i in yellowObstacles)
-            {
-                Log.LogInformation("Rectangle Aagent - " + i.ToString("Circle Platform"));
-            }
-
-            foreach (CollectibleRepresentation i in collectibles)
-            {
-                Log.LogInformation("Rectangle Aagent - " + i.ToString());
-            }
+            nextEdge = subgoalAStar.CalculateShortestPath(currentPlatform.Value, new LevelRepresentation.Point((int)rectangleInfo.X, (int)rectangleInfo.Y),
+                Enumerable.Repeat<bool>(true, levelInfo.initialCollectibles.Length).ToArray(),
+                levelInfo.GetObtainedCollectibles(), levelInfo.initialCollectibles);
         }
 
         //implements abstract rectangle interface: signals the agent the end of the current level

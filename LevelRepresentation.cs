@@ -2,7 +2,7 @@
 
 namespace GeometryFriendsAgents
 {
-    public class LevelArray
+    public class LevelRepresentation
     {
 
         public const int OPEN = 0;
@@ -16,8 +16,12 @@ namespace GeometryFriendsAgents
 
         public int[,] levelArray = new int[GameInfo.LEVEL_HEIGHT / PIXEL_LENGTH, GameInfo.LEVEL_WIDTH / PIXEL_LENGTH];
         
-        public CollectibleRepresentation[] initialCollectiblesInfo;
-        
+        public ObstacleRepresentation[] blackObstacles;
+        public ObstacleRepresentation[] greenObstacles;
+        public ObstacleRepresentation[] yellowObstacles;
+        public CollectibleRepresentation[] collectibles;
+        public CollectibleRepresentation[] initialCollectibles;
+
         public struct ArrayPoint
         {
             public int xArray;
@@ -41,7 +45,6 @@ namespace GeometryFriendsAgents
                 this.y = y;
             }
         }
-
 
         public static ArrayPoint ConvertPointIntoArrayPoint(Point value, bool xNegative, bool yNegative)
         {
@@ -83,13 +86,21 @@ namespace GeometryFriendsAgents
             return levelArray;
         }
 
-        public void CreateLevelArray(CollectibleRepresentation[] collectibles, ObstacleRepresentation[] blackObstacles, ObstacleRepresentation[] greenObstacles, ObstacleRepresentation[] yellowObstacles)
+        public void CreateLevelArray(CollectibleRepresentation[] col, ObstacleRepresentation[] black, ObstacleRepresentation[] green, ObstacleRepresentation[] yellow, int obstacleColour)
         {
+            ObstacleRepresentation[] obstacles = (obstacleColour == YELLOW) ? yellow : green;
+
+            this.blackObstacles = black;
+            this.greenObstacles = green;
+            this.yellowObstacles = yellow;
+
+            this.collectibles = col;
+            this.initialCollectibles = col;
+
             SetCollectibles(collectibles);
             SetDefaultObstacles();
             SetObstacles(blackObstacles, BLACK);
-            SetObstacles(greenObstacles, GREEN);
-            SetObstacles(greenObstacles, YELLOW);
+            SetObstacles(obstacles, obstacleColour);
         }
 
         private void SetDefaultObstacles()
@@ -151,26 +162,12 @@ namespace GeometryFriendsAgents
 
         private void SetCollectibles(CollectibleRepresentation[] colI)
         {
-            initialCollectiblesInfo = colI;
+            initialCollectibles = colI;
 
             for(int i = 0; i < colI.Length; i++)
             {
                 int xPosArray = (int)(colI[i].X - GameInfo.LEVEL_ORIGINAL) / PIXEL_LENGTH;
                 int yPosArray = (int)(colI[i].Y - GameInfo.LEVEL_ORIGINAL) / PIXEL_LENGTH;
-
-                /*
-                for (j = 0; j <= 3; j++)
-                {
-                    for (k = 0; k <= 3 - j; k++)
-                    {
-                        levelArray[yPosArray - 1 - j, xPosArray - 1 - k] = collectibleID;
-                        levelArray[yPosArray - 1 - j, xPosArray + k] = collectibleID;
-
-                        levelArray[yPosArray + j, xPosArray - 1 - k] = collectibleID;
-                        levelArray[yPosArray + j, xPosArray + k] = collectibleID;
-                    }
-                }
-                */
 
                 for (int j = 0; j < COLLECTIBLE_SIZE.Length; j++)
                 {
@@ -182,20 +179,20 @@ namespace GeometryFriendsAgents
             }
         }
 
-        public bool[] GetObtainedCollectibles(CollectibleRepresentation[] currentCollectiblesInfo)
+        public bool[] GetObtainedCollectibles()
         {
-            bool[] obtainedCollectibles = new bool[initialCollectiblesInfo.Length];
+            bool[] obtainedCollectibles = new bool[initialCollectibles.Length];
 
             for (int i = 0; i < obtainedCollectibles.Length; i++)
             {
                 obtainedCollectibles[i] = true;
             }
 
-            foreach (CollectibleRepresentation i in currentCollectiblesInfo)
+            foreach (CollectibleRepresentation i in collectibles)
             {
-                for (int j = 0; j < initialCollectiblesInfo.Length; j++)
+                for (int j = 0; j < initialCollectibles.Length; j++)
                 {
-                    if (i.Equals(initialCollectiblesInfo[j]))
+                    if (i.Equals(initialCollectibles[j]))
                     {
                         obtainedCollectibles[j] = false;
                     }

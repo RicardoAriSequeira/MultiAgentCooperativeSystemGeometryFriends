@@ -155,16 +155,20 @@ namespace GeometryFriendsAgents
 
         public int GetStateNum(CircleRepresentation cI, int targetPointX, bool rightMove)
         {
-            int discretizedVelocityX = (int)((rightMove ? cI.VelocityX : -cI.VelocityX) + 200) / DISCRETIZATION_VELOCITYX;
+
+
+            int discretizedVelocityX = (int)((rightMove ? cI.VelocityX : -cI.VelocityX) + GameInfo.MAX_VELOCITYX) / DISCRETIZATION_VELOCITYX;
 
             if (discretizedVelocityX < 0)
             {
                 discretizedVelocityX = 0;
             }
-            else if (GameInfo.MAX_VELOCITYX * 2 / DISCRETIZATION_VELOCITYX <= discretizedVelocityX)
+            else if (discretizedVelocityX >= GameInfo.MAX_VELOCITYX * 2 / DISCRETIZATION_VELOCITYX)
             {
                 discretizedVelocityX = GameInfo.MAX_VELOCITYX * 2 / DISCRETIZATION_VELOCITYX - 1;
             }
+
+
 
             int discretizedDistanceX = (int)((rightMove ? cI.X - targetPointX : targetPointX - cI.X) + MAX_DISTANCEX) / DISCRETIZATION_DISTANCEX;
 
@@ -176,6 +180,8 @@ namespace GeometryFriendsAgents
             {
                 discretizedDistanceX = MAX_DISTANCEX * 2 / DISCRETIZATION_DISTANCEX - 1;
             }
+
+
 
             return discretizedVelocityX + discretizedDistanceX * (GameInfo.MAX_VELOCITYX * 2 / DISCRETIZATION_VELOCITYX);          
         }

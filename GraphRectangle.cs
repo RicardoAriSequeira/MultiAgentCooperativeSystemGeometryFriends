@@ -4,17 +4,17 @@ using System.Threading.Tasks;
 
 namespace GeometryFriendsAgents
 {
-    class PlatformsRectangle : Platforms
+    class GraphRectangle : Graph
     {
 
-        public PlatformsRectangle() : base()
+        public GraphRectangle() : base()
         {
             area = GameInfo.RECTANGLE_AREA;
             min_height = GameInfo.MIN_RECTANGLE_HEIGHT;
             max_height = GameInfo.MAX_RECTANGLE_HEIGHT;
         }
 
-        public override platformType[,] GetPlatformArray()
+        public platformType[,] GetPlatformArray()
         {
             platformType[,] platformArray = new platformType[levelArray.GetLength(0), levelArray.GetLength(1)];
 
@@ -23,19 +23,19 @@ namespace GeometryFriendsAgents
                 Parallel.For(0, levelArray.GetLength(1), x =>
                 {
 
-                    if (levelArray[y, x] == LevelArray.BLACK || levelArray[y, x] == LevelArray.YELLOW)
+                    if (levelArray[y, x] == LevelRepresentation.BLACK || levelArray[y, x] == LevelRepresentation.YELLOW)
                     {
 
                         // RECTANGLE WITH HEIGHT 100
-                        LevelArray.Point rectangleCenter = LevelArray.ConvertArrayPointIntoPoint(new LevelArray.ArrayPoint(x, y));
+                        LevelRepresentation.Point rectangleCenter = LevelRepresentation.ConvertArrayPointIntoPoint(new LevelRepresentation.ArrayPoint(x, y));
                         rectangleCenter.y -= GameInfo.SQUARE_HEIGHT / 2;
-                        List<LevelArray.ArrayPoint> rectanglePixels = GetFormPixels(rectangleCenter, GameInfo.SQUARE_HEIGHT);
+                        List<LevelRepresentation.ArrayPoint> rectanglePixels = GetFormPixels(rectangleCenter, GameInfo.SQUARE_HEIGHT);
 
                         if (IsObstacle_onPixels(rectanglePixels))
                         {
 
                             // RECTANGLE WITH HEIGHT 50
-                            rectangleCenter = LevelArray.ConvertArrayPointIntoPoint(new LevelArray.ArrayPoint(x, y));
+                            rectangleCenter = LevelRepresentation.ConvertArrayPointIntoPoint(new LevelRepresentation.ArrayPoint(x, y));
                             rectangleCenter.y -= GameInfo.MIN_RECTANGLE_HEIGHT / 2;
                             rectanglePixels = GetFormPixels(rectangleCenter, GameInfo.MIN_RECTANGLE_HEIGHT);
 
@@ -43,7 +43,7 @@ namespace GeometryFriendsAgents
                             {
 
                                 // RECTANGLE WITH HEIGHT 200
-                                rectangleCenter = LevelArray.ConvertArrayPointIntoPoint(new LevelArray.ArrayPoint(x, y));
+                                rectangleCenter = LevelRepresentation.ConvertArrayPointIntoPoint(new LevelRepresentation.ArrayPoint(x, y));
                                 rectangleCenter.y -= GameInfo.MAX_RECTANGLE_HEIGHT / 2;
                                 rectanglePixels = GetFormPixels(rectangleCenter, GameInfo.MAX_RECTANGLE_HEIGHT);
 
@@ -54,7 +54,7 @@ namespace GeometryFriendsAgents
                             }
                         }
 
-                        platformArray[y, x] = levelArray[y, x] == LevelArray.BLACK? platformType.BLACK : platformType.YELLOW;
+                        platformArray[y, x] = (levelArray[y, x] == LevelRepresentation.BLACK)? platformType.BLACK : platformType.YELLOW;
                     }
 
                 });
@@ -64,15 +64,15 @@ namespace GeometryFriendsAgents
 
         }
 
-        public override void SetPlatformList()
+        public override void SetupPlatforms()
         {
             platformType[,] platformArray = GetPlatformArray();
 
             Parallel.For(0, platformArray.GetLength(0), y =>
             {
 
-                int min_height_pixels = min_height / LevelArray.PIXEL_LENGTH;
-                int max_height_pixels = Math.Min((max_height / LevelArray.PIXEL_LENGTH), y + LevelArray.MARGIN + min_height_pixels);
+                int min_height_pixels = min_height / LevelRepresentation.PIXEL_LENGTH;
+                int max_height_pixels = Math.Min((max_height / LevelRepresentation.PIXEL_LENGTH), y + LevelRepresentation.MARGIN + min_height_pixels);
 
                 int leftEdge = 0, allowedHeight = max_height_pixels, gap_size = 0;
                 platformType currentPlatform = platformType.NO_PLATFORM;
@@ -87,16 +87,16 @@ namespace GeometryFriendsAgents
 
                             if (7 <= gap_size && gap_size <= 19)
                             {
-                                int rightEdge = LevelArray.ConvertValue_ArrayPointIntoPoint(x - 1);
+                                int rightEdge = LevelRepresentation.ConvertValue_ArrayPointIntoPoint(x - 1);
 
                                 if (rightEdge >= leftEdge)
                                 {
 
-                                    int gap_allowed_height = (area / (Math.Min((gap_size + 8) * LevelArray.PIXEL_LENGTH, max_height))) / LevelArray.PIXEL_LENGTH;
+                                    int gap_allowed_height = (area / (Math.Min((gap_size + 8) * LevelRepresentation.PIXEL_LENGTH, max_height))) / LevelRepresentation.PIXEL_LENGTH;
 
-                                    lock (platformList)
+                                    lock (platforms)
                                     {
-                                        platformList.Add(new Platform(platformType.GAP, LevelArray.ConvertValue_ArrayPointIntoPoint(y), leftEdge, rightEdge, new List<Move>(), gap_allowed_height));
+                                        platforms.Add(new Platform(platformType.GAP, LevelRepresentation.ConvertValue_ArrayPointIntoPoint(y), leftEdge, rightEdge, new List<Move>(), gap_allowed_height));
                                     }
                                 }
                             }
@@ -106,17 +106,17 @@ namespace GeometryFriendsAgents
 
                             for (int h = min_height_pixels; h <= max_height_pixels; h++)
                             {
-                                if (levelArray[y - h, x] == LevelArray.BLACK || levelArray[y - h, x] == LevelArray.YELLOW)
+                                if (levelArray[y - h, x] == LevelRepresentation.BLACK || levelArray[y - h, x] == LevelRepresentation.YELLOW)
                                 {
                                     allowedHeight = h;
                                     break;
                                 }
                             }
 
-                            leftEdge = LevelArray.ConvertValue_ArrayPointIntoPoint(x);
+                            leftEdge = LevelRepresentation.ConvertValue_ArrayPointIntoPoint(x);
                         }
 
-                        else if (levelArray[y,x] == LevelArray.GREEN || levelArray[y,x] == LevelArray.OPEN)
+                        else if (levelArray[y,x] == LevelRepresentation.GREEN || levelArray[y,x] == LevelRepresentation.OPEN)
                         {
                             gap_size++;
                         }
@@ -126,48 +126,48 @@ namespace GeometryFriendsAgents
                     {
                         if (platformArray[y, x] != currentPlatform)
                         {
-                            int rightEdge = LevelArray.ConvertValue_ArrayPointIntoPoint(x - 1);
+                            int rightEdge = LevelRepresentation.ConvertValue_ArrayPointIntoPoint(x - 1);
 
                             if (rightEdge >= leftEdge)
                             {
-                                lock (platformList)
+                                lock (platforms)
                                 {
-                                    platformList.Add(new Platform(currentPlatform, LevelArray.ConvertValue_ArrayPointIntoPoint(y), leftEdge, rightEdge, new List<Move>(), allowedHeight));
+                                    platforms.Add(new Platform(currentPlatform, LevelRepresentation.ConvertValue_ArrayPointIntoPoint(y), leftEdge, rightEdge, new List<Move>(), allowedHeight));
                                 }
                             }
 
                             allowedHeight = max_height_pixels;
                             currentPlatform = platformArray[y, x];
-                            leftEdge = LevelArray.ConvertValue_ArrayPointIntoPoint(x);
+                            leftEdge = LevelRepresentation.ConvertValue_ArrayPointIntoPoint(x);
 
                         }
 
-                        if (platformArray[y, x] != platformType.NO_PLATFORM && y > LevelArray.MARGIN + min_height_pixels)
+                        if (platformArray[y, x] != platformType.NO_PLATFORM && y > LevelRepresentation.MARGIN + min_height_pixels)
                         {
 
                             for (int h = min_height_pixels; h <= max_height_pixels; h++)
                             {
 
-                                if (levelArray[y - h, x] == LevelArray.BLACK ||
-                                    levelArray[y - h, x] == LevelArray.YELLOW ||
-                                    (h == max_height_pixels && allowedHeight != max_height_pixels && levelArray[y - h, x] == LevelArray.OPEN))
+                                if (levelArray[y - h, x] == LevelRepresentation.BLACK ||
+                                    levelArray[y - h, x] == LevelRepresentation.YELLOW ||
+                                    (h == max_height_pixels && allowedHeight != max_height_pixels && levelArray[y - h, x] == LevelRepresentation.OPEN))
                                 {
 
                                     if (h != allowedHeight)
                                     {
 
-                                        int rightEdge = LevelArray.ConvertValue_ArrayPointIntoPoint(x - 1);
+                                        int rightEdge = LevelRepresentation.ConvertValue_ArrayPointIntoPoint(x - 1);
 
                                         if (rightEdge >= leftEdge)
                                         {
-                                            lock (platformList)
+                                            lock (platforms)
                                             {
-                                                platformList.Add(new Platform(currentPlatform, LevelArray.ConvertValue_ArrayPointIntoPoint(y), leftEdge, rightEdge, new List<Move>(), allowedHeight));
+                                                platforms.Add(new Platform(currentPlatform, LevelRepresentation.ConvertValue_ArrayPointIntoPoint(y), leftEdge, rightEdge, new List<Move>(), allowedHeight));
                                             }
                                         }
 
                                         allowedHeight = h;
-                                        leftEdge = LevelArray.ConvertValue_ArrayPointIntoPoint(x - 1);
+                                        leftEdge = LevelRepresentation.ConvertValue_ArrayPointIntoPoint(x - 1);
 
                                     }
 
@@ -186,7 +186,7 @@ namespace GeometryFriendsAgents
         protected override void SetMoves_StairOrGap(Platform fromPlatform)
         {
 
-            foreach (Platform toPlatform in platformList)
+            foreach (Platform toPlatform in platforms)
             {
 
                 if (fromPlatform.Equals(toPlatform))
@@ -209,9 +209,9 @@ namespace GeometryFriendsAgents
                     int from = rightMove ? fromPlatform.rightEdge : toPlatform.rightEdge;
                     int to = rightMove ? toPlatform.leftEdge : fromPlatform.leftEdge;
 
-                    for (int k = from; k <= to; k += LevelArray.PIXEL_LENGTH)
+                    for (int k = from; k <= to; k += LevelRepresentation.PIXEL_LENGTH)
                     {
-                        List<LevelArray.ArrayPoint> rectanglePixels = GetFormPixels(new LevelArray.Point(k, toPlatform.height - GameInfo.SQUARE_HEIGHT), GameInfo.SQUARE_HEIGHT);
+                        List<LevelRepresentation.ArrayPoint> rectanglePixels = GetFormPixels(new LevelRepresentation.Point(k, toPlatform.height - GameInfo.SQUARE_HEIGHT), GameInfo.SQUARE_HEIGHT);
 
                         if (IsObstacle_onPixels(rectanglePixels))
                         {
@@ -224,9 +224,9 @@ namespace GeometryFriendsAgents
 
                     if (!obstacleFlag)
                     {
-                        LevelArray.Point movePoint = rightMove ? new LevelArray.Point(fromPlatform.rightEdge, fromPlatform.height) : new LevelArray.Point(fromPlatform.leftEdge, fromPlatform.height);
-                        LevelArray.Point landPoint = rightMove ? new LevelArray.Point(toPlatform.leftEdge, toPlatform.height) : new LevelArray.Point(toPlatform.rightEdge, toPlatform.height);
-                        //AddMoveInfoToList(fromPlatform, new Move(toPlatform, movePoint, landPoint, 0, rightMove, movementType.STAIR_GAP, collectible_onPath, (fromPlatform.height - toPlatform.height) + Math.Abs(movePoint.x - landPoint.x), false));
+                        LevelRepresentation.Point movePoint = rightMove ? new LevelRepresentation.Point(fromPlatform.rightEdge, fromPlatform.height) : new LevelRepresentation.Point(fromPlatform.leftEdge, fromPlatform.height);
+                        LevelRepresentation.Point landPoint = rightMove ? new LevelRepresentation.Point(toPlatform.leftEdge, toPlatform.height) : new LevelRepresentation.Point(toPlatform.rightEdge, toPlatform.height);
+                        AddMoveInfoToList(fromPlatform, new Move(toPlatform, movePoint, landPoint, 0, rightMove, movementType.STAIR_GAP, collectible_onPath, (fromPlatform.height - toPlatform.height) + Math.Abs(movePoint.x - landPoint.x), false));
                     }
                 }
 
@@ -239,7 +239,7 @@ namespace GeometryFriendsAgents
 
         private void SetMoves_Gap(Platform fromPlatform, Platform toPlatform)
         {
-            foreach (Platform gap in platformList)
+            foreach (Platform gap in platforms)
             {
                 if (gap.type != platformType.GAP)
                 {
@@ -247,19 +247,19 @@ namespace GeometryFriendsAgents
                 }
 
                 int gap_size = (gap.rightEdge - gap.leftEdge);
-                int fall_height = GameInfo.RECTANGLE_AREA / Math.Min(gap_size - (2 * LevelArray.PIXEL_LENGTH), GameInfo.MIN_RECTANGLE_HEIGHT);
-                LevelArray.Point movePoint = new LevelArray.Point(gap.leftEdge + (gap_size / 2), gap.height - (fall_height / 2));
+                int fall_height = GameInfo.RECTANGLE_AREA / Math.Min(gap_size - (2 * LevelRepresentation.PIXEL_LENGTH), GameInfo.MIN_RECTANGLE_HEIGHT);
+                LevelRepresentation.Point movePoint = new LevelRepresentation.Point(gap.leftEdge + (gap_size / 2), gap.height - (fall_height / 2));
 
                 float pathLength = 0;
-                LevelArray.Point currentCenter = movePoint;
+                LevelRepresentation.Point currentCenter = movePoint;
                 bool[] collectible_onPath = new bool[nCollectibles];
 
                 for (int i = 1; true; i++)
                 {
                     float currentTime = i * TIME_STEP;
-                    LevelArray.Point previousCenter = currentCenter;
+                    LevelRepresentation.Point previousCenter = currentCenter;
                     currentCenter = GetCurrentCenter(movePoint, 0, GameInfo.FALL_VELOCITYY, currentTime);
-                    List<LevelArray.ArrayPoint> pixels = GetFormPixels(currentCenter, fall_height);
+                    List<LevelRepresentation.ArrayPoint> pixels = GetFormPixels(currentCenter, fall_height);
 
                     if ((currentCenter.y > movePoint.y + 16) && IsObstacle_onPixels(pixels))
                     {
@@ -290,7 +290,7 @@ namespace GeometryFriendsAgents
                     }
                 }
 
-                foreach (Platform platform in platformList)
+                foreach (Platform platform in platforms)
                 {
                     if (platform.Equals(gap) || platform.height != gap.height)
                     {
@@ -301,8 +301,8 @@ namespace GeometryFriendsAgents
                     {
                         collectible_onPath = new bool[nCollectibles];
                         int rectangleWidth = GameInfo.RECTANGLE_AREA / gap.allowedHeight;
-                        movePoint = new LevelArray.Point(gap.rightEdge - (rectangleWidth / 2), gap.height - (gap.allowedHeight / 2));
-                        LevelArray.Point landPoint = new LevelArray.Point(platform.leftEdge + (rectangleWidth / 2), platform.height - (platform.allowedHeight / 2));
+                        movePoint = new LevelRepresentation.Point(gap.rightEdge - (rectangleWidth / 2), gap.height - (gap.allowedHeight / 2));
+                        LevelRepresentation.Point landPoint = new LevelRepresentation.Point(platform.leftEdge + (rectangleWidth / 2), platform.height - (platform.allowedHeight / 2));
                         AddMoveInfoToList(gap, new Move(platform, movePoint, landPoint, 0, true, movementType.STAIR_GAP, collectible_onPath, (gap.height - platform.height) + Math.Abs(movePoint.x - landPoint.x), false, gap.allowedHeight));
                         AddMoveInfoToList(platform, new Move(gap, landPoint, movePoint, 0, false, movementType.STAIR_GAP, collectible_onPath, (platform.height - gap.height) + Math.Abs(landPoint.x - movePoint.x), false, gap.allowedHeight));
                     }
@@ -311,8 +311,8 @@ namespace GeometryFriendsAgents
                     {
                         collectible_onPath = new bool[nCollectibles];
                         int rectangleWidth = GameInfo.RECTANGLE_AREA / gap.allowedHeight;
-                        movePoint = new LevelArray.Point(gap.leftEdge + (rectangleWidth / 2), gap.height - (gap.allowedHeight / 2));
-                        LevelArray.Point landPoint = new LevelArray.Point(platform.rightEdge - (rectangleWidth / 2), platform.height - (platform.allowedHeight / 2));
+                        movePoint = new LevelRepresentation.Point(gap.leftEdge + (rectangleWidth / 2), gap.height - (gap.allowedHeight / 2));
+                        LevelRepresentation.Point landPoint = new LevelRepresentation.Point(platform.rightEdge - (rectangleWidth / 2), platform.height - (platform.allowedHeight / 2));
                         AddMoveInfoToList(gap, new Move(platform, movePoint, landPoint, 0, false, movementType.STAIR_GAP, collectible_onPath, (gap.height - platform.height) + Math.Abs(movePoint.x - landPoint.x), false, gap.allowedHeight));
                         AddMoveInfoToList(platform, new Move(gap, landPoint, movePoint, 0, true, movementType.STAIR_GAP, collectible_onPath, (platform.height - gap.height) + Math.Abs(landPoint.x - movePoint.x), false, gap.allowedHeight));
                     }
@@ -328,14 +328,14 @@ namespace GeometryFriendsAgents
             {
                 if (toPlatform.leftEdge - 33 <= fromPlatform.rightEdge && fromPlatform.rightEdge <= toPlatform.leftEdge)
                 {
-                    LevelArray.Point movePoint = new LevelArray.Point(fromPlatform.rightEdge, fromPlatform.height);
-                    LevelArray.Point landPoint = new LevelArray.Point(toPlatform.leftEdge, toPlatform.height);
+                    LevelRepresentation.Point movePoint = new LevelRepresentation.Point(fromPlatform.rightEdge, fromPlatform.height);
+                    LevelRepresentation.Point landPoint = new LevelRepresentation.Point(toPlatform.leftEdge, toPlatform.height);
                     AddMoveInfoToList(fromPlatform, new Move(toPlatform, movePoint, landPoint, 50, true, movementType.MORPH_UP, new bool[nCollectibles], (fromPlatform.height - toPlatform.height) + Math.Abs(movePoint.x - landPoint.x), false, 190));
                 }
                 else if (toPlatform.rightEdge <= fromPlatform.leftEdge && fromPlatform.leftEdge <= toPlatform.rightEdge + 33)
                 {
-                    LevelArray.Point movePoint = new LevelArray.Point(fromPlatform.leftEdge, fromPlatform.height);
-                    LevelArray.Point landPoint = new LevelArray.Point(toPlatform.rightEdge, toPlatform.height);
+                    LevelRepresentation.Point movePoint = new LevelRepresentation.Point(fromPlatform.leftEdge, fromPlatform.height);
+                    LevelRepresentation.Point landPoint = new LevelRepresentation.Point(toPlatform.rightEdge, toPlatform.height);
                     AddMoveInfoToList(fromPlatform, new Move(toPlatform, movePoint, landPoint, 50, false, movementType.MORPH_UP, new bool[nCollectibles], (fromPlatform.height - toPlatform.height) + Math.Abs(movePoint.x - landPoint.x), false, 190));
                 }
             }
@@ -343,7 +343,7 @@ namespace GeometryFriendsAgents
 
         protected override void SetMoves_Morph(Platform fromPlatform)
         {
-            foreach (Platform toPlatform in platformList)
+            foreach (Platform toPlatform in platforms)
             {
                 if (fromPlatform.Equals(toPlatform) ||
                     fromPlatform.height != toPlatform.height)
@@ -370,12 +370,12 @@ namespace GeometryFriendsAgents
                 int to = rightMove ? toPlatform.leftEdge : fromPlatform.leftEdge;
                 bool[] collectible_onPath = new bool[nCollectibles];
 
-                LevelArray.Point movePoint = rightMove ? new LevelArray.Point(fromPlatform.rightEdge - 100, fromPlatform.height - (toPlatform.allowedHeight / 2)) : new LevelArray.Point(fromPlatform.leftEdge + 100, fromPlatform.height - (toPlatform.allowedHeight / 2));
-                LevelArray.Point landPoint = rightMove ? new LevelArray.Point(toPlatform.rightEdge + 100, toPlatform.height - (toPlatform.allowedHeight / 2)) : new LevelArray.Point(toPlatform.leftEdge - 100, toPlatform.height - (toPlatform.allowedHeight / 2));
+                LevelRepresentation.Point movePoint = rightMove ? new LevelRepresentation.Point(fromPlatform.rightEdge - 100, fromPlatform.height - (toPlatform.allowedHeight / 2)) : new LevelRepresentation.Point(fromPlatform.leftEdge + 100, fromPlatform.height - (toPlatform.allowedHeight / 2));
+                LevelRepresentation.Point landPoint = rightMove ? new LevelRepresentation.Point(toPlatform.rightEdge + 100, toPlatform.height - (toPlatform.allowedHeight / 2)) : new LevelRepresentation.Point(toPlatform.leftEdge - 100, toPlatform.height - (toPlatform.allowedHeight / 2));
 
-                for (int k = from; k <= to; k += LevelArray.PIXEL_LENGTH)
+                for (int k = from; k <= to; k += LevelRepresentation.PIXEL_LENGTH)
                 {
-                    List<LevelArray.ArrayPoint> rectanglePixels = GetFormPixels(new LevelArray.Point(k, toPlatform.height - (toPlatform.allowedHeight / 2)), toPlatform.allowedHeight);       
+                    List<LevelRepresentation.ArrayPoint> rectanglePixels = GetFormPixels(new LevelRepresentation.Point(k, toPlatform.height - (toPlatform.allowedHeight / 2)), toPlatform.allowedHeight);       
                     collectible_onPath = collectible_onPath = Utilities.GetOrMatrix(collectible_onPath, GetCollectibles_onPixels(rectanglePixels));
                 }
 
@@ -384,24 +384,24 @@ namespace GeometryFriendsAgents
             }
         }
 
-        protected override List<LevelArray.ArrayPoint> GetFormPixels(LevelArray.Point center, int height)
+        protected override List<LevelRepresentation.ArrayPoint> GetFormPixels(LevelRepresentation.Point center, int height)
         {
-            LevelArray.ArrayPoint rectangleCenterArray = LevelArray.ConvertPointIntoArrayPoint(center, false, false);
+            LevelRepresentation.ArrayPoint rectangleCenterArray = LevelRepresentation.ConvertPointIntoArrayPoint(center, false, false);
 
-            int rectangleHighestY = LevelArray.ConvertValue_PointIntoArrayPoint(center.y - (height/2), false);
-            int rectangleLowestY = LevelArray.ConvertValue_PointIntoArrayPoint(center.y + (height/2), true);
+            int rectangleHighestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint(center.y - (height/2), false);
+            int rectangleLowestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint(center.y + (height/2), true);
 
             float rectangleWidth = GameInfo.RECTANGLE_AREA / height;
-            int rectangleLeftX = LevelArray.ConvertValue_PointIntoArrayPoint((int)(center.x - (rectangleWidth / 2)), false);
-            int rectangleRightX = LevelArray.ConvertValue_PointIntoArrayPoint((int)(center.x + (rectangleWidth / 2)), true);
+            int rectangleLeftX = LevelRepresentation.ConvertValue_PointIntoArrayPoint((int)(center.x - (rectangleWidth / 2)), false);
+            int rectangleRightX = LevelRepresentation.ConvertValue_PointIntoArrayPoint((int)(center.x + (rectangleWidth / 2)), true);
 
-            List<LevelArray.ArrayPoint> rectanglePixels = new List<LevelArray.ArrayPoint>();
+            List<LevelRepresentation.ArrayPoint> rectanglePixels = new List<LevelRepresentation.ArrayPoint>();
 
             for (int i = rectangleHighestY; i <= rectangleLowestY; i++)
             {
                 for (int j = rectangleLeftX; j <= rectangleRightX; j++)
                 {
-                    rectanglePixels.Add(new LevelArray.ArrayPoint(j, i));
+                    rectanglePixels.Add(new LevelRepresentation.ArrayPoint(j, i));
                 }
             }
 
@@ -411,14 +411,14 @@ namespace GeometryFriendsAgents
         private bool CheckEmptyGap(Platform fromPlatform, Platform toPlatform)
         {
 
-            int from = LevelArray.ConvertValue_PointIntoArrayPoint(fromPlatform.rightEdge, false) + 1;
-            int to = LevelArray.ConvertValue_PointIntoArrayPoint(toPlatform.leftEdge, true);
+            int from = LevelRepresentation.ConvertValue_PointIntoArrayPoint(fromPlatform.rightEdge, false) + 1;
+            int to = LevelRepresentation.ConvertValue_PointIntoArrayPoint(toPlatform.leftEdge, true);
            
-            int y = LevelArray.ConvertValue_PointIntoArrayPoint(fromPlatform.height, false);
+            int y = LevelRepresentation.ConvertValue_PointIntoArrayPoint(fromPlatform.height, false);
 
             for (int i = from; i <= to; i++)
             {
-                if (levelArray[y, i] == LevelArray.BLACK)
+                if (levelArray[y, i] == LevelRepresentation.BLACK)
                 {
                     return false;
                 }
@@ -427,7 +427,7 @@ namespace GeometryFriendsAgents
             return true;
         }
 
-        private List<Platform> PlatformsBelow(LevelArray.Point center, int height)
+        private List<Platform> PlatformsBelow(LevelRepresentation.Point center, int height)
         {
 
             List<Platform> platforms = new List<Platform>();
@@ -436,7 +436,7 @@ namespace GeometryFriendsAgents
             int rectangleLeftX = center.x - (rectangleWidth / 2);
             int rectangleRightX = center.x + (rectangleWidth / 2);
 
-            foreach (Platform i in platformList)
+            foreach (Platform i in platforms)
             {
                 if (i.leftEdge <= rectangleLeftX && rectangleLeftX <= i.rightEdge && 0 <= (i.height - center.y) && (i.height - center.y) <= height)
                 {
@@ -451,16 +451,16 @@ namespace GeometryFriendsAgents
             return platforms;
         }
 
-        protected override bool IsObstacle_onPixels(List<LevelArray.ArrayPoint> checkPixels)
+        protected override bool IsObstacle_onPixels(List<LevelRepresentation.ArrayPoint> checkPixels)
         {
             if (checkPixels.Count == 0)
             {
                 return true;
             }
 
-            foreach (LevelArray.ArrayPoint i in checkPixels)
+            foreach (LevelRepresentation.ArrayPoint i in checkPixels)
             {
-                if (levelArray[i.yArray, i.xArray] == LevelArray.BLACK || levelArray[i.yArray, i.xArray] == LevelArray.YELLOW)
+                if (levelArray[i.yArray, i.xArray] == LevelRepresentation.BLACK || levelArray[i.yArray, i.xArray] == LevelRepresentation.YELLOW)
                 {
                     return true;
                 }

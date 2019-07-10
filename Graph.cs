@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace GeometryFriendsAgents
 {
-    public abstract class Platforms
+    public abstract class Graph
     {
         public enum collideType
         {
@@ -34,7 +34,7 @@ namespace GeometryFriendsAgents
         protected int[,] levelArray;
         protected int area, min_height, max_height, nCollectibles;
 
-        public List<Platform> platformList;
+        public List<Platform> platforms;
 
         public struct Platform
         {
@@ -54,15 +54,15 @@ namespace GeometryFriendsAgents
                 this.height = height;
                 this.leftEdge = leftEdge;
                 this.rightEdge = rightEdge;
-                this.allowedHeight = allowedHeight * LevelArray.PIXEL_LENGTH;
+                this.allowedHeight = allowedHeight * LevelRepresentation.PIXEL_LENGTH;
             }
         }
 
         public struct Move
         {
             public Platform reachablePlatform;
-            public LevelArray.Point movePoint;
-            public LevelArray.Point landPoint;
+            public LevelRepresentation.Point movePoint;
+            public LevelRepresentation.Point landPoint;
             public int velocityX;
             public bool rightMove;
             public movementType movementType;
@@ -72,7 +72,7 @@ namespace GeometryFriendsAgents
             public int height;
 
 
-            public Move(Platform reachablePlatform, LevelArray.Point movePoint, LevelArray.Point landPoint, int velocityX, bool rightMove, movementType movementType, bool[] collectibles_onPath, int pathLength, bool collideCeiling, int height = GameInfo.SQUARE_HEIGHT)
+            public Move(Platform reachablePlatform, LevelRepresentation.Point movePoint, LevelRepresentation.Point landPoint, int velocityX, bool rightMove, movementType movementType, bool[] collectibles_onPath, int pathLength, bool collideCeiling, int height = GameInfo.SQUARE_HEIGHT)
             {
                 this.reachablePlatform = reachablePlatform;
                 this.movePoint = movePoint;
@@ -87,26 +87,21 @@ namespace GeometryFriendsAgents
             }
         }
 
-        public Platforms()
+        public void SetupGraph(int[,] levelArray, int nCollectibles)
         {
-            platformList = new List<Platform>();
-        }
-
-        public void SetUp(int[,] levelArray, int nCollectibles)
-        {
+            this.platforms = new List<Platform>();
             this.levelArray = levelArray;
             this.nCollectibles = nCollectibles;
-            SetPlatformList();
-            SetMoves();
+
+            SetupPlatforms();
+            SetupMoves();
         }
 
-        public abstract void SetPlatformList();
+        public abstract void SetupPlatforms();
 
-        public abstract platformType[,] GetPlatformArray();
-
-        public void SetMoves()
+        public void SetupMoves()
         {
-            foreach (Platform fromPlatform in platformList)
+            foreach (Platform fromPlatform in platforms)
             {
                 SetMoves_Morph(fromPlatform);
                 SetMoves_Collect(fromPlatform);
@@ -118,19 +113,17 @@ namespace GeometryFriendsAgents
 
                     bool success_fall = false;
 
-                    //for (int height = Math.Min(max_height, GameInfo.SQUARE_HEIGHT); height >= min_height && !success_fall; height -= 8)
                     for (int height = Math.Min(max_height, GameInfo.SQUARE_HEIGHT); height >= Math.Min(max_height, GameInfo.SQUARE_HEIGHT) && !success_fall; height -= 8)
                     {
-                        LevelArray.Point movePoint = new LevelArray.Point(fromPlatform.rightEdge + LevelArray.PIXEL_LENGTH, fromPlatform.height - (height / 2));
+                        LevelRepresentation.Point movePoint = new LevelRepresentation.Point(fromPlatform.rightEdge + LevelRepresentation.PIXEL_LENGTH, fromPlatform.height - (height / 2));
                         success_fall = SetMoves_Fall(fromPlatform, movePoint, height, VELOCITYX_STEP * k, true, movementType.FALL);
                     }
 
                     success_fall = false;
 
-                    //for (int height = Math.Min(max_height, GameInfo.SQUARE_HEIGHT); height >= min_height && !success_fall; height -= 8)
                     for (int height = Math.Min(max_height, GameInfo.SQUARE_HEIGHT); height >= Math.Min(max_height, GameInfo.SQUARE_HEIGHT) && !success_fall; height -= 8)
                     {
-                        LevelArray.Point movePoint = new LevelArray.Point(fromPlatform.leftEdge - LevelArray.PIXEL_LENGTH, fromPlatform.height - (height / 2));
+                        LevelRepresentation.Point movePoint = new LevelRepresentation.Point(fromPlatform.leftEdge - LevelRepresentation.PIXEL_LENGTH, fromPlatform.height - (height / 2));
                         success_fall = SetMoves_Fall(fromPlatform, movePoint, height, VELOCITYX_STEP * k, false, movementType.FALL);
                     }
                 });
@@ -140,20 +133,20 @@ namespace GeometryFriendsAgents
         protected void SetMoves_Collect(Platform fromPlatform)
         {
 
-            int from = fromPlatform.leftEdge + (fromPlatform.leftEdge - GameInfo.LEVEL_ORIGINAL) % (LevelArray.PIXEL_LENGTH * 2);
-            int to = fromPlatform.rightEdge - (fromPlatform.rightEdge - GameInfo.LEVEL_ORIGINAL) % (LevelArray.PIXEL_LENGTH * 2);
+            int from = fromPlatform.leftEdge + (fromPlatform.leftEdge - GameInfo.LEVEL_ORIGINAL) % (LevelRepresentation.PIXEL_LENGTH * 2);
+            int to = fromPlatform.rightEdge - (fromPlatform.rightEdge - GameInfo.LEVEL_ORIGINAL) % (LevelRepresentation.PIXEL_LENGTH * 2);
 
-            Parallel.For(0, (to - from) / (LevelArray.PIXEL_LENGTH * 2) + 1, j =>
+            Parallel.For(0, (to - from) / (LevelRepresentation.PIXEL_LENGTH * 2) + 1, j =>
             {
                 for (int height = min_height; height <= max_height; height += 8)
                 {
-                    LevelArray.Point movePoint = new LevelArray.Point(from + j * LevelArray.PIXEL_LENGTH * 2, fromPlatform.height - (height / 2));
-                    List<LevelArray.ArrayPoint> pixels = GetFormPixels(movePoint, height);
+                    LevelRepresentation.Point movePoint = new LevelRepresentation.Point(from + j * LevelRepresentation.PIXEL_LENGTH * 2, fromPlatform.height - (height / 2));
+                    List<LevelRepresentation.ArrayPoint> pixels = GetFormPixels(movePoint, height);
 
                     if (!IsObstacle_onPixels(pixels))
                     {
                         bool[] collectible_onPath = GetCollectibles_onPixels(pixels);
-                        AddMoveInfoToList(fromPlatform, new Platforms.Move(fromPlatform, movePoint, movePoint, 0, true, movementType.COLLECT, collectible_onPath, 0, false, height));
+                        AddMoveInfoToList(fromPlatform, new Graph.Move(fromPlatform, movePoint, movePoint, 0, true, movementType.COLLECT, collectible_onPath, 0, false, height));
                     }
                 }
             });
@@ -177,7 +170,7 @@ namespace GeometryFriendsAgents
             return;
         }
 
-        protected bool SetMoves_Fall(Platform fromPlatform, LevelArray.Point movePoint, int height, int velocityX, bool rightMove, movementType movementType)
+        protected bool SetMoves_Fall(Platform fromPlatform, LevelRepresentation.Point movePoint, int height, int velocityX, bool rightMove, movementType movementType)
         {
 
             if (!IsEnoughLengthToAccelerate(fromPlatform, movePoint, velocityX, rightMove))
@@ -188,8 +181,8 @@ namespace GeometryFriendsAgents
             bool[] collectible_onPath = new bool[nCollectibles];
             float pathLength = 0;
 
-            LevelArray.Point collidePoint = movePoint;
-            LevelArray.Point prevCollidePoint;
+            LevelRepresentation.Point collidePoint = movePoint;
+            LevelRepresentation.Point prevCollidePoint;
 
             collideType collideType = collideType.OTHER;
             float collideVelocityX = rightMove ? velocityX : -velocityX;
@@ -223,7 +216,7 @@ namespace GeometryFriendsAgents
                 {
                     if (movementType == movementType.FALL)
                     {
-                        movePoint.x = rightMove ? movePoint.x - LevelArray.PIXEL_LENGTH : movePoint.x + LevelArray.PIXEL_LENGTH;
+                        movePoint.x = rightMove ? movePoint.x - LevelRepresentation.PIXEL_LENGTH : movePoint.x + LevelRepresentation.PIXEL_LENGTH;
                     }
 
                     AddMoveInfoToList(fromPlatform, new Move(toPlatform.Value, movePoint, collidePoint, velocityX, rightMove, movementType, collectible_onPath, (int)pathLength, collideCeiling, height));
@@ -235,32 +228,30 @@ namespace GeometryFriendsAgents
             return false;
         }
 
-        public Platform? GetPlatform(LevelArray.Point center, float height)
+        public Platform? GetPlatform(LevelRepresentation.Point center, float height)
         {
-            foreach (Platform i in platformList)
+            foreach (Platform i in platforms)
             {
-                //if (i.leftEdge <= center.x && center.x <= i.rightEdge && 0 <= (i.height - center.y) && (i.height - center.y) <= height)
                 if (i.leftEdge <= center.x && center.x <= i.rightEdge && (i.height - center.y >= (height / 2) - 8) && (i.height - center.y <= (height/2) + 8))
                 {
                     return i;
                 }
             }
-
             return null;
         }
 
         public void SetPlatformID()
         {
-            platformList.Sort((a, b) => {
+            platforms.Sort((a, b) => {
                 int result = a.height - b.height;
                 return result != 0 ? result : a.leftEdge - b.leftEdge;
             });
 
-            Parallel.For(0, platformList.Count, i =>
+            Parallel.For(0, platforms.Count, i =>
             {
-               Platform tempPlatfom = platformList[i];
+               Platform tempPlatfom = platforms[i];
                tempPlatfom.id = i + 1;
-                platformList[i] = tempPlatfom;
+                platforms[i] = tempPlatfom;
             });
         }
 
@@ -287,7 +278,7 @@ namespace GeometryFriendsAgents
             return false;
         }
 
-        protected bool IsEnoughLengthToAccelerate(Platform fromPlatform, LevelArray.Point movePoint, int velocityX, bool rightMove)
+        protected bool IsEnoughLengthToAccelerate(Platform fromPlatform, LevelRepresentation.Point movePoint, int velocityX, bool rightMove)
         {
             int neededLengthToAccelerate;
 
@@ -311,22 +302,22 @@ namespace GeometryFriendsAgents
             return true;
         }
 
-        protected collideType GetCollideType(LevelArray.Point center, bool ascent, bool rightMove, int radius)
+        protected collideType GetCollideType(LevelRepresentation.Point center, bool ascent, bool rightMove, int radius)
         {
-            LevelArray.ArrayPoint centerArray = LevelArray.ConvertPointIntoArrayPoint(center, false, false);
-            int highestY = LevelArray.ConvertValue_PointIntoArrayPoint(center.y - radius, false);
-            int lowestY = LevelArray.ConvertValue_PointIntoArrayPoint(center.y + radius, true);
+            LevelRepresentation.ArrayPoint centerArray = LevelRepresentation.ConvertPointIntoArrayPoint(center, false, false);
+            int highestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint(center.y - radius, false);
+            int lowestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint(center.y + radius, true);
 
             if (!ascent)
             {
-                if (levelArray[lowestY, centerArray.xArray] == LevelArray.BLACK)
+                if (levelArray[lowestY, centerArray.xArray] == LevelRepresentation.BLACK)
                 {
                     return collideType.FLOOR;
                 }
             }
             else
             {
-                if (levelArray[highestY, centerArray.xArray] == LevelArray.BLACK)
+                if (levelArray[highestY, centerArray.xArray] == LevelRepresentation.BLACK)
                 {
                     return collideType.CEILING;
                 }
@@ -335,15 +326,15 @@ namespace GeometryFriendsAgents
             return collideType.OTHER;
         }
 
-        protected abstract bool IsObstacle_onPixels(List<LevelArray.ArrayPoint> checkPixels);
+        protected abstract bool IsObstacle_onPixels(List<LevelRepresentation.ArrayPoint> checkPixels);
 
-        protected bool[] GetCollectibles_onPixels(List<LevelArray.ArrayPoint> checkPixels)
+        protected bool[] GetCollectibles_onPixels(List<LevelRepresentation.ArrayPoint> checkPixels)
         {
             bool[] collectible_onPath = new bool[nCollectibles];
 
-            foreach (LevelArray.ArrayPoint i in checkPixels)
+            foreach (LevelRepresentation.ArrayPoint i in checkPixels)
             {
-                if (!(levelArray[i.yArray, i.xArray] == LevelArray.BLACK || levelArray[i.yArray, i.xArray] == LevelArray.OPEN))
+                if (!(levelArray[i.yArray, i.xArray] == LevelRepresentation.BLACK || levelArray[i.yArray, i.xArray] == LevelRepresentation.OPEN))
                 {
                     collectible_onPath[levelArray[i.yArray, i.xArray] - 1] = true;
                 }
@@ -354,7 +345,7 @@ namespace GeometryFriendsAgents
 
         protected void AddMoveInfoToList(Platform fromPlatform, Move mI)
         {
-            lock (platformList)
+            lock (platforms)
             {
                 List<Move> moveInfoToRemove = new List<Move>();
 
@@ -546,11 +537,11 @@ namespace GeometryFriendsAgents
             return priorityHighestFlag;
         }
 
-        protected void GetPathInfo(LevelArray.Point movePoint, float velocityX, float velocityY,
-            ref LevelArray.Point collidePoint, ref collideType collideType, ref float collideVelocityX, ref float collideVelocityY, ref bool[] collectible_onPath, ref float pathLength, int radius)
+        protected void GetPathInfo(LevelRepresentation.Point movePoint, float velocityX, float velocityY,
+            ref LevelRepresentation.Point collidePoint, ref collideType collideType, ref float collideVelocityX, ref float collideVelocityY, ref bool[] collectible_onPath, ref float pathLength, int radius)
         {
-            LevelArray.Point previousCenter;
-            LevelArray.Point currentCenter = movePoint;
+            LevelRepresentation.Point previousCenter;
+            LevelRepresentation.Point currentCenter = movePoint;
 
             for (int i = 1; true; i++)
             {
@@ -558,7 +549,7 @@ namespace GeometryFriendsAgents
 
                 previousCenter = currentCenter;
                 currentCenter = GetCurrentCenter(movePoint, velocityX, velocityY, currentTime);
-                List<LevelArray.ArrayPoint> pixels = GetCirclePixels(currentCenter, radius);
+                List<LevelRepresentation.ArrayPoint> pixels = GetCirclePixels(currentCenter, radius);
 
                 if (IsObstacle_onPixels(pixels))
                 {
@@ -585,23 +576,23 @@ namespace GeometryFriendsAgents
             }
         }
 
-        protected LevelArray.Point GetCurrentCenter(LevelArray.Point movePoint, float velocityX, float velocityY, float currentTime)
+        protected LevelRepresentation.Point GetCurrentCenter(LevelRepresentation.Point movePoint, float velocityX, float velocityY, float currentTime)
         {
             float distanceX = velocityX * currentTime;
             float distanceY = -velocityY * currentTime + GameInfo.GRAVITY * (float)Math.Pow(currentTime, 2) / 2;
 
-            return new LevelArray.Point((int)(movePoint.x + distanceX), (int)(movePoint.y + distanceY));
+            return new LevelRepresentation.Point((int)(movePoint.x + distanceX), (int)(movePoint.y + distanceY));
         }
 
-        protected abstract List<LevelArray.ArrayPoint> GetFormPixels(LevelArray.Point center, int height);
+        protected abstract List<LevelRepresentation.ArrayPoint> GetFormPixels(LevelRepresentation.Point center, int height);
 
-        protected List<LevelArray.ArrayPoint> GetCirclePixels(LevelArray.Point circleCenter, int radius)
+        protected List<LevelRepresentation.ArrayPoint> GetCirclePixels(LevelRepresentation.Point circleCenter, int radius)
         {
-            List<LevelArray.ArrayPoint> circlePixels = new List<LevelArray.ArrayPoint>();
+            List<LevelRepresentation.ArrayPoint> circlePixels = new List<LevelRepresentation.ArrayPoint>();
 
-            LevelArray.ArrayPoint circleCenterArray = LevelArray.ConvertPointIntoArrayPoint(circleCenter, false, false);
-            int circleHighestY = LevelArray.ConvertValue_PointIntoArrayPoint(circleCenter.y - radius, false);
-            int circleLowestY = LevelArray.ConvertValue_PointIntoArrayPoint(circleCenter.y + radius, true);
+            LevelRepresentation.ArrayPoint circleCenterArray = LevelRepresentation.ConvertPointIntoArrayPoint(circleCenter, false, false);
+            int circleHighestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint(circleCenter.y - radius, false);
+            int circleLowestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint(circleCenter.y + radius, true);
 
 
             for (int i = circleHighestY; i <= circleLowestY; i++)
@@ -610,23 +601,23 @@ namespace GeometryFriendsAgents
 
                 if (i < circleCenterArray.yArray)
                 {
-                    circleWidth = (float)Math.Sqrt(Math.Pow(radius, 2) - Math.Pow(LevelArray.ConvertValue_ArrayPointIntoPoint(i + 1) - circleCenter.y, 2));
+                    circleWidth = (float)Math.Sqrt(Math.Pow(radius, 2) - Math.Pow(LevelRepresentation.ConvertValue_ArrayPointIntoPoint(i + 1) - circleCenter.y, 2));
                 }
                 else if (i > circleCenterArray.yArray)
                 {
-                    circleWidth = (float)Math.Sqrt(Math.Pow(radius, 2) - Math.Pow(LevelArray.ConvertValue_ArrayPointIntoPoint(i) - circleCenter.y, 2));
+                    circleWidth = (float)Math.Sqrt(Math.Pow(radius, 2) - Math.Pow(LevelRepresentation.ConvertValue_ArrayPointIntoPoint(i) - circleCenter.y, 2));
                 }
                 else
                 {
                     circleWidth = radius;
                 }
 
-                int circleLeftX = LevelArray.ConvertValue_PointIntoArrayPoint((int)(circleCenter.x - circleWidth), false);
-                int circleRightX = LevelArray.ConvertValue_PointIntoArrayPoint((int)(circleCenter.x + circleWidth), true);
+                int circleLeftX = LevelRepresentation.ConvertValue_PointIntoArrayPoint((int)(circleCenter.x - circleWidth), false);
+                int circleRightX = LevelRepresentation.ConvertValue_PointIntoArrayPoint((int)(circleCenter.x + circleWidth), true);
 
                 for (int j = circleLeftX; j <= circleRightX; j++)
                 {
-                    circlePixels.Add(new LevelArray.ArrayPoint(j, i));
+                    circlePixels.Add(new LevelRepresentation.ArrayPoint(j, i));
                 }
             }
 
