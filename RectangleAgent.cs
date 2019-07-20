@@ -32,6 +32,7 @@ namespace GeometryFriendsAgents
         private ActionSelector actionSelector;
 
         // Messages
+        private bool cooperation = false;
         private List<AgentMessage> messages;
 
         // Auxiliary
@@ -52,9 +53,11 @@ namespace GeometryFriendsAgents
 
             graph = new GraphRectangle();
             subgoalAStar = new SubgoalAStar();
-            messages = new List<AgentMessage>();
             actionSelector = new ActionSelector();
             levelInfo = new LevelRepresentation();
+
+            messages = new List<AgentMessage>();
+            messages.Add(new AgentMessage(GameInfo.IST_RECTANGLE_PLAYING));
         }
 
         //implements abstract rectangle interface: used to setup the initial information so that the agent has basic knowledge about the level
@@ -65,6 +68,7 @@ namespace GeometryFriendsAgents
 
             // Create Graph
             graph.SetupGraph(levelInfo.GetLevelArray(), colI.Length);
+            messages.Add(new AgentMessage(GameInfo.IST_RECTANGLE_GRAPH_COMPLETED, graph));
 
             // Initial Information
             circleInfo = cI;
@@ -122,7 +126,14 @@ namespace GeometryFriendsAgents
                         if (-GameInfo.MAX_VELOCITYY <= rectangleInfo.VelocityY && rectangleInfo.VelocityY <= GameInfo.MAX_VELOCITYY)
                         {
 
-                            if (nextEdge.Value.movementType == Graph.movementType.STAIR_GAP || nextEdge.Value.movementType == Graph.movementType.MORPH_DOWN)
+                            if (nextEdge.Value.movementType == Graph.movementType.GAP &&
+                                rectangleInfo.Height > Math.Max((GameInfo.RECTANGLE_AREA / nextEdge.Value.height) - 1, GameInfo.MIN_RECTANGLE_HEIGHT + 3))
+                            {
+                                currentAction = Moves.MORPH_DOWN;
+                            }
+
+                            else if (nextEdge.Value.movementType == Graph.movementType.STAIR_GAP || 
+                                nextEdge.Value.movementType == Graph.movementType.MORPH_DOWN)
                             {
                                 if (rectangleInfo.Height >= nextEdge.Value.height - LevelRepresentation.PIXEL_LENGTH)
                                 {
@@ -137,7 +148,7 @@ namespace GeometryFriendsAgents
 
                             else if (nextEdge.Value.movementType == Graph.movementType.MORPH_UP)
                             {
-                                if (rectangleInfo.Height <= nextEdge.Value.height)
+                                if (rectangleInfo.Height < Math.Min(nextEdge.Value.height + LevelRepresentation.PIXEL_LENGTH, GameInfo.MAX_RECTANGLE_HEIGHT))
                                 {
                                     currentAction = Moves.MORPH_UP;
                                 }
@@ -146,11 +157,6 @@ namespace GeometryFriendsAgents
                                 {
                                     currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                                 }
-                            }
-
-                            else if (nextEdge.Value.movementType == Graph.movementType.FALL && nextEdge.Value.velocityX == 0 && rectangleInfo.Height >= 55)
-                            {
-                                currentAction = Moves.MORPH_DOWN;
                             }
 
                             else
@@ -187,9 +193,27 @@ namespace GeometryFriendsAgents
                             currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                         }
 
-                        else if (nextEdge.Value.movementType == Graph.movementType.FALL && nextEdge.Value.velocityX == 0 && rectangleInfo.Height <= 55)
+                        else if (nextEdge.Value.movementType == Graph.movementType.GAP)
                         {
                             currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextEdge.Value.movePoint.x, nextEdge.Value.velocityX, nextEdge.Value.rightMove);
+                        }
+
+                        else if (nextEdge.Value.movementType == Graph.movementType.FALL && nextEdge.Value.velocityX == 0 && rectangleInfo.Height <= nextEdge.Value.height)
+                        {
+                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextEdge.Value.movePoint.x, nextEdge.Value.velocityX, nextEdge.Value.rightMove);
+                        }
+
+                        else if (nextEdge.Value.movementType == Graph.movementType.MORPH_UP)
+                        {
+                            if (rectangleInfo.Height < Math.Min(nextEdge.Value.height + LevelRepresentation.PIXEL_LENGTH, GameInfo.MAX_RECTANGLE_HEIGHT))
+                            {
+                                currentAction = Moves.MORPH_UP;
+                            }
+
+                            else
+                            {
+                                currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                            }
                         }
 
                         else
@@ -231,7 +255,8 @@ namespace GeometryFriendsAgents
                         currentAction = nextEdge.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                     }
 
-                    if (nextEdge.Value.movementType == Graph.movementType.COLLECT)
+                    if (nextEdge.Value.movementType == Graph.movementType.COLLECT ||
+                        nextEdge.Value.movementType == Graph.movementType.GAP)
                     {
                         if (rectangleInfo.Height < nextEdge.Value.height)
                         {
@@ -308,7 +333,7 @@ namespace GeometryFriendsAgents
                     previousPlatform = currentPlatform;
                     return true;
                 }
-                else if (currentPlatform.Value.id != previousPlatform.Value.id)
+                else if (currentPlatform.Value.id != previousPlatform.Value.id &&currentPlatform.Value.type != Graph.platformType.GAP)
                 {
                     previousPlatform = currentPlatform;
                     return true;
@@ -346,16 +371,71 @@ namespace GeometryFriendsAgents
         {
             foreach (AgentMessage item in newMessages)
             {
-                Log.LogInformation("Rectangle: received message from circle: " + item.Message);
-                if (item.Attachment != null)
+                //Log.LogInformation("Rectangle: received message from circle: " + item.Message);
+                //if (item.Attachment != null)
+                //{
+                //    Log.LogInformation("Received message has attachment: " + item.Attachment.ToString());
+                //    if (item.Attachment.GetType() == typeof(Pen))
+                //    {
+                //        Log.LogInformation("The attachment is a pen, let's see its color: " + ((Pen)item.Attachment).Color.ToString());
+                //    }
+                //}
+
+                if (item.Message.Equals(GameInfo.IST_CIRCLE_PLAYING))
                 {
-                    Log.LogInformation("Received message has attachment: " + item.Attachment.ToString());
-                    if (item.Attachment.GetType() == typeof(Pen))
-                    {
-                        Log.LogInformation("The attachment is a pen, let's see its color: " + ((Pen)item.Attachment).Color.ToString());
-                    }
+                    this.cooperation = true;
+                }
+
+                else if (item.Message.Equals(GameInfo.IST_CIRCLE_GRAPH_COMPLETED))
+                {
+                    continue;
+                }
+
+            }
+
+            return;
+        }
+
+        public static List<LevelRepresentation.ArrayPoint> GetFormPixels(LevelRepresentation.Point center, int height)
+        {
+            LevelRepresentation.ArrayPoint rectangleCenterArray = LevelRepresentation.ConvertPointIntoArrayPoint(center, false, false);
+
+            int rectangleHighestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint(center.y - (height / 2), false);
+            int rectangleLowestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint(center.y + (height / 2), true);
+
+            float rectangleWidth = GameInfo.RECTANGLE_AREA / height;
+            int rectangleLeftX = LevelRepresentation.ConvertValue_PointIntoArrayPoint((int)(center.x - (rectangleWidth / 2)), false);
+            int rectangleRightX = LevelRepresentation.ConvertValue_PointIntoArrayPoint((int)(center.x + (rectangleWidth / 2)), true);
+
+            List<LevelRepresentation.ArrayPoint> rectanglePixels = new List<LevelRepresentation.ArrayPoint>();
+
+            for (int i = rectangleHighestY; i <= rectangleLowestY; i++)
+            {
+                for (int j = rectangleLeftX; j <= rectangleRightX; j++)
+                {
+                    rectanglePixels.Add(new LevelRepresentation.ArrayPoint(j, i));
                 }
             }
+
+            return rectanglePixels;
+        }
+
+        public static bool IsObstacle_onPixels(int[,] levelArray, List<LevelRepresentation.ArrayPoint> checkPixels)
+        {
+            if (checkPixels.Count == 0)
+            {
+                return true;
+            }
+
+            foreach (LevelRepresentation.ArrayPoint i in checkPixels)
+            {
+                if (levelArray[i.yArray, i.xArray] == LevelRepresentation.BLACK || levelArray[i.yArray, i.xArray] == LevelRepresentation.YELLOW)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

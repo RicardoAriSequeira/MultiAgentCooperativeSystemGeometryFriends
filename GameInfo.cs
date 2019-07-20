@@ -22,5 +22,11 @@
         public const int LEVEL_WIDTH = 1272;
         public const int LEVEL_HEIGHT = 776;
         public const int LEVEL_ORIGINAL = 8;
+
+        public const string IST_CIRCLE_PLAYING = "IST Circle Playing";
+        public const string IST_RECTANGLE_PLAYING = "IST Rectangle Playing";
+
+        public const string IST_CIRCLE_GRAPH_COMPLETED = "IST Circle Graph Completed";
+        public const string IST_RECTANGLE_GRAPH_COMPLETED = "IST Rectangle Graph Completed";
     }
 }

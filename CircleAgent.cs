@@ -31,6 +31,7 @@ namespace GeometryFriendsAgents
         private ActionSelector actionSelector;
 
         // Messages
+        private bool cooperation = false;
         private List<AgentMessage> messages;
 
         // Auxiliary Variables
@@ -51,9 +52,11 @@ namespace GeometryFriendsAgents
 
             graph = new GraphCircle();
             subgoalAStar = new SubgoalAStar();
-            messages = new List<AgentMessage>();
             actionSelector = new ActionSelector();
             levelInfo = new LevelRepresentation();
+
+            messages = new List<AgentMessage>();
+            messages.Add(new AgentMessage(GameInfo.IST_CIRCLE_PLAYING));
         }
 
         //implements abstract circle interface: used to setup the initial information so that the agent has basic knowledge about the level
@@ -64,6 +67,7 @@ namespace GeometryFriendsAgents
 
             // Create Graph
             graph.SetupGraph(levelInfo.GetLevelArray(), colI.Length);
+            messages.Add(new AgentMessage(GameInfo.IST_CIRCLE_GRAPH_COMPLETED, graph));
 
             // Initial Information
             circleInfo = cI;
@@ -266,6 +270,61 @@ namespace GeometryFriendsAgents
         public override void EndGame(int collectiblesCaught, int timeElapsed)
         {
             Console.WriteLine("CIRCLE - Collectibles caught = {0}, Time elapsed - {1}", collectiblesCaught, timeElapsed);
+        }
+
+        public override List<GeometryFriends.AI.Communication.AgentMessage> GetAgentMessages()
+        {
+            List<AgentMessage> toSent = new List<AgentMessage>(messages);
+            messages.Clear();
+            return toSent;
+        }
+
+        //implememts abstract agent interface: receives messages from the circle agent
+        public override void HandleAgentMessages(List<GeometryFriends.AI.Communication.AgentMessage> newMessages)
+        {
+            foreach (AgentMessage item in newMessages)
+            {
+                //Log.LogInformation("Rectangle: received message from circle: " + item.Message);
+                //if (item.Attachment != null)
+                //{
+                //    Log.LogInformation("Received message has attachment: " + item.Attachment.ToString());
+                //    if (item.Attachment.GetType() == typeof(Pen))
+                //    {
+                //        Log.LogInformation("The attachment is a pen, let's see its color: " + ((Pen)item.Attachment).Color.ToString());
+                //    }
+                //}
+
+                if (item.Message.Equals(GameInfo.IST_RECTANGLE_PLAYING))
+                {
+                    this.cooperation = true;
+                }
+
+                else if (item.Message.Equals(GameInfo.IST_RECTANGLE_GRAPH_COMPLETED))
+                {
+                    continue;
+                }
+
+            }
+
+            return;
+        }
+
+        public static bool IsObstacle_onPixels(int[,] levelArray, List<LevelRepresentation.ArrayPoint> checkPixels)
+        {
+            if (checkPixels.Count == 0)
+            {
+                return true;
+            }
+
+            foreach (LevelRepresentation.ArrayPoint i in checkPixels)
+            {
+                if (levelArray[i.yArray, i.xArray] == LevelRepresentation.BLACK || levelArray[i.yArray, i.xArray] == LevelRepresentation.GREEN)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
