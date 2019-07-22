@@ -25,56 +25,20 @@ namespace GeometryFriendsAgents
             platforms = PlatformIdentification.SetPlatformsID(platforms);
         }
 
-        protected override void SetupMoves_Jump(Platform fromPlatform, int velocityX)
+        public override void SetupMoves()
         {
-            int from = fromPlatform.leftEdge + (fromPlatform.leftEdge - GameInfo.LEVEL_ORIGINAL) % (LevelRepresentation.PIXEL_LENGTH * 2);
-            int to = fromPlatform.rightEdge - (fromPlatform.rightEdge - GameInfo.LEVEL_ORIGINAL) % (LevelRepresentation.PIXEL_LENGTH * 2);
-            Parallel.For(0, (to - from) / (LevelRepresentation.PIXEL_LENGTH * 2) + 1, j =>
-            {
-                LevelRepresentation.Point movePoint = new LevelRepresentation.Point(from + j * LevelRepresentation.PIXEL_LENGTH * 2, fromPlatform.height - GameInfo.CIRCLE_RADIUS);
-                MoveIdentification.Fall(this, fromPlatform, movePoint, MAX_HEIGHT, velocityX, true, movementType.JUMP);
-                MoveIdentification.Fall(this, fromPlatform, movePoint, MAX_HEIGHT, velocityX, false, movementType.JUMP);
-            });
-        }
-
-        protected override void SetupMoves_StairOrGap(Platform fromPlatform)
-        {
-
-            foreach (Platform toPlatform in platforms)
+            foreach (Platform fromPlatform in platforms)
             {
 
-                bool rightMove = false;
-                bool obstacleFlag = false;
-                bool[] collectible_onPath = new bool[nCollectibles];
+                MoveIdentification.StairOrGap_Circle(this, fromPlatform);
 
-                if (fromPlatform.Equals(toPlatform) || !IsStairOrGap(fromPlatform, toPlatform, ref rightMove))
+                if (fromPlatform.type != platformType.GAP)
                 {
-                    continue;
+                    MoveIdentification.Fall(this, fromPlatform);
+                    MoveIdentification.Jump(this, fromPlatform);
+                    MoveIdentification.Collect(this, fromPlatform);
                 }
 
-                int from = rightMove ? fromPlatform.rightEdge : toPlatform.rightEdge;
-                int to = rightMove ? toPlatform.leftEdge : fromPlatform.leftEdge;
-
-                for (int k = from; k <= to; k += LevelRepresentation.PIXEL_LENGTH)
-                {
-                    List<LevelRepresentation.ArrayPoint> circlePixels = GetCirclePixels(new LevelRepresentation.Point(k, toPlatform.height - GameInfo.CIRCLE_RADIUS), GameInfo.CIRCLE_RADIUS);
-
-                    if (IsObstacle_onPixels(circlePixels))
-                    {
-                        obstacleFlag = true;
-                        break;
-                    }
-
-                    collectible_onPath = Utilities.GetOrMatrix(collectible_onPath, GetCollectibles_onPixels(circlePixels));
-                }
-
-                if (!obstacleFlag)
-                {
-                    LevelRepresentation.Point movePoint = rightMove ? new LevelRepresentation.Point(fromPlatform.rightEdge, fromPlatform.height) : new LevelRepresentation.Point(fromPlatform.leftEdge, fromPlatform.height);
-                    LevelRepresentation.Point landPoint = rightMove ? new LevelRepresentation.Point(toPlatform.leftEdge, toPlatform.height) : new LevelRepresentation.Point(toPlatform.rightEdge, toPlatform.height);
-
-                    AddMove(fromPlatform, new Move(toPlatform, movePoint, landPoint, 0, rightMove, movementType.STAIR_GAP, collectible_onPath, (fromPlatform.height - toPlatform.height) + Math.Abs(movePoint.x - landPoint.x), false));
-                }
             }
         }
 

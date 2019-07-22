@@ -25,7 +25,7 @@ namespace GeometryFriendsAgents
 
         public const int VELOCITYX_STEP = 20;
 
-        protected const float TIME_STEP = 0.01f;
+        public const float TIME_STEP = 0.01f;
 
         protected int[] LENGTH_TO_ACCELERATE = new int[10] { 1, 5, 13, 20, 31, 49, 70, 95, 128, 166 };
 
@@ -99,63 +99,9 @@ namespace GeometryFriendsAgents
         }
 
         public abstract void SetupPlatforms();
-
-        public void SetupMoves()
-        {
-            foreach (Platform fromPlatform in platforms)
-            {
-
-                SetupMoves_StairOrGap(fromPlatform);
-
-                if (fromPlatform.type == platformType.GAP)
-                {
-                    continue;
-                }
-
-                SetupMoves_Morph(fromPlatform);
-                MoveIdentification.Collect(this, fromPlatform);
-
-                Parallel.For(0, (GameInfo.MAX_VELOCITYX / VELOCITYX_STEP), k =>
-                {
-                    SetupMoves_Jump(fromPlatform, VELOCITYX_STEP * k);
-
-                    bool success_fall = false;
-
-                    for (int height = Math.Min(MAX_HEIGHT, GameInfo.SQUARE_HEIGHT); height >= Math.Min(MAX_HEIGHT, GameInfo.SQUARE_HEIGHT) && !success_fall; height -= 8)
-                    {
-                        LevelRepresentation.Point movePoint = new LevelRepresentation.Point(fromPlatform.rightEdge + LevelRepresentation.PIXEL_LENGTH, fromPlatform.height - (height / 2));
-                        success_fall = MoveIdentification.Fall(this, fromPlatform, movePoint, height, VELOCITYX_STEP * k, true, movementType.FALL);
-                    }
-
-                    success_fall = false;
-
-                    for (int height = Math.Min(MAX_HEIGHT, GameInfo.SQUARE_HEIGHT); height >= Math.Min(MAX_HEIGHT, GameInfo.SQUARE_HEIGHT) && !success_fall; height -= 8)
-                    {
-                        LevelRepresentation.Point movePoint = new LevelRepresentation.Point(fromPlatform.leftEdge - LevelRepresentation.PIXEL_LENGTH, fromPlatform.height - (height / 2));
-                        success_fall = MoveIdentification.Fall(this, fromPlatform, movePoint, height, VELOCITYX_STEP * k, false, movementType.FALL);
-                    }
-                });
-            }
-        }
-
-        protected abstract void SetupMoves_StairOrGap(Platform fromPlatform);
+        public abstract void SetupMoves();
         public abstract bool IsObstacle_onPixels(List<LevelRepresentation.ArrayPoint> checkPixels);
         public abstract List<LevelRepresentation.ArrayPoint> GetFormPixels(LevelRepresentation.Point center, int height);
-
-        protected virtual void SetupMoves_Morph(Platform fromPlatform)
-        {
-            return;
-        }
-
-        protected virtual void SetupMoves_Jump(Platform fromPlatform, int velocityX)
-        {
-            return;
-        }
-
-        protected virtual void SetupMoves_GapFall(Platform fromPlatform)
-        {
-            return;
-        }
 
         public Platform? GetPlatform(LevelRepresentation.Point center, float height)
         {
@@ -169,7 +115,7 @@ namespace GeometryFriendsAgents
             return null;
         }
 
-        protected bool IsStairOrGap(Platform fromPlatform, Platform toPlatform, ref bool rightMove)
+        public bool IsStairOrGap(Platform fromPlatform, Platform toPlatform, ref bool rightMove)
         {
             if (0 <= toPlatform.leftEdge - fromPlatform.rightEdge && toPlatform.leftEdge - fromPlatform.rightEdge <= STAIR_MAXWIDTH)
             {
@@ -488,7 +434,7 @@ namespace GeometryFriendsAgents
             }
         }
 
-        protected LevelRepresentation.Point GetCurrentCenter(LevelRepresentation.Point movePoint, float velocityX, float velocityY, float currentTime)
+        public static LevelRepresentation.Point GetCurrentCenter(LevelRepresentation.Point movePoint, float velocityX, float velocityY, float currentTime)
         {
             float distanceX = velocityX * currentTime;
             float distanceY = -velocityY * currentTime + GameInfo.GRAVITY * (float)Math.Pow(currentTime, 2) / 2;
