@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GeometryFriends.AI.Perceptions.Information;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -38,6 +39,19 @@ namespace GeometryFriendsAgents
                     MoveIdentification.Collect(this, fromPlatform);
                 }
 
+            }
+        }
+
+        public void SetPossibleCollectibles(RectangleRepresentation initial_rI)
+        {
+
+            bool[] platformsChecked = new bool[platforms.Count];
+
+            Platform? platform = GetPlatform(new LevelRepresentation.Point((int)initial_rI.X, (int)initial_rI.Y), GameInfo.SQUARE_HEIGHT);
+
+            if (platform.HasValue)
+            {
+                platformsChecked = CheckCollectiblesPlatform(platformsChecked, platform.Value);
             }
         }
 
@@ -106,6 +120,31 @@ namespace GeometryFriendsAgents
             }
 
             return platforms;
+        }
+
+        protected override collideType GetCollideType(LevelRepresentation.Point center, bool ascent, bool rightMove, int radius)
+        {
+            LevelRepresentation.ArrayPoint centerArray = LevelRepresentation.ConvertPointIntoArrayPoint(center, false, false);
+            int highestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint(center.y - radius, false);
+            int lowestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint(center.y + radius, true);
+
+            if (!ascent)
+            {
+                if (levelArray[lowestY, centerArray.xArray] == LevelRepresentation.BLACK || levelArray[lowestY, centerArray.xArray] == LevelRepresentation.YELLOW)
+                {
+                    return collideType.FLOOR;
+                }
+
+            }
+            else
+            {
+                if (levelArray[highestY, centerArray.xArray] == LevelRepresentation.BLACK || levelArray[lowestY, centerArray.xArray] == LevelRepresentation.YELLOW)
+                {
+                    return collideType.CEILING;
+                }
+            }
+
+            return collideType.OTHER;
         }
 
         public override bool IsObstacle_onPixels(List<LevelRepresentation.ArrayPoint> checkPixels)

@@ -53,6 +53,21 @@ namespace GeometryFriendsAgents
             return returnMatrix;
         }
 
+        public static bool[] GetXorMatrix(bool[] matrix1, bool[] matrix2)
+        {
+            bool[] returnMatrix = new bool[matrix1.Length];
+
+            if (matrix1.Length == matrix2.Length)
+            {
+                for (int i = 0; i < matrix1.Length; i++)
+                {
+                    returnMatrix[i] = matrix1[i] ^ matrix2[i];
+                }
+            }
+
+            return returnMatrix;
+        }
+
         private static bool IsSameMatrix(bool[] matrix1, bool[] matrix2)
         {
             for (int i = 0; i < matrix1.Length; i++)

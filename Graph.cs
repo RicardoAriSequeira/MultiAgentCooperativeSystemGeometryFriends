@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GeometryFriends.AI.Perceptions.Information;
+using System;
 using System.Collections.Generic;
 
 using System.Threading.Tasks;
@@ -10,17 +11,17 @@ namespace GeometryFriendsAgents
 
         public enum collideType
         {
-            CEILING, FLOOR, OTHER
+            CEILING, FLOOR, COOPERATION, OTHER
         };
 
         public enum movementType
         {
-            COLLECT, MORPH_UP, MORPH_DOWN, STAIR_GAP, FALL, JUMP, GAP
+            COLLECT, COOPERATION, MORPH_UP, MORPH_DOWN, STAIR_GAP, FALL, JUMP, GAP
         };
 
         public enum platformType
         {
-            NO_PLATFORM, BLACK, GREEN, YELLOW, GAP
+            NO_PLATFORM, BLACK, GREEN, YELLOW, GAP, COOPERATION
         };
 
         public const int VELOCITYX_STEP = 20;
@@ -36,6 +37,7 @@ namespace GeometryFriendsAgents
         public int AREA, MIN_HEIGHT, MAX_HEIGHT, nCollectibles;
 
         public List<Platform> platforms;
+        public bool[] possibleCollectibles;
 
         public struct Platform
         {
@@ -47,9 +49,9 @@ namespace GeometryFriendsAgents
             public List<Move> moves;
             public platformType type;
 
-            public Platform(platformType type, int height, int leftEdge, int rightEdge, List<Move> moves, int allowedHeight)
+            public Platform(platformType type, int height, int leftEdge, int rightEdge, List<Move> moves, int allowedHeight, int id = 0)
             {
-                this.id = 0;
+                this.id = id;
                 this.type = type;
                 this.moves = moves;
                 this.height = height;
@@ -66,21 +68,21 @@ namespace GeometryFriendsAgents
             public LevelRepresentation.Point landPoint;
             public int velocityX;
             public bool rightMove;
-            public movementType movementType;
+            public movementType type;
             public bool[] collectibles_onPath;
             public int pathLength;
             public bool collideCeiling;
             public int height;
 
 
-            public Move(Platform reachablePlatform, LevelRepresentation.Point movePoint, LevelRepresentation.Point landPoint, int velocityX, bool rightMove, movementType movementType, bool[] collectibles_onPath, int pathLength, bool collideCeiling, int height = GameInfo.SQUARE_HEIGHT)
+            public Move(Platform reachablePlatform, LevelRepresentation.Point movePoint, LevelRepresentation.Point landPoint, int velocityX, bool rightMove, movementType type, bool[] collectibles_onPath, int pathLength, bool collideCeiling, int height = GameInfo.SQUARE_HEIGHT)
             {
                 this.reachablePlatform = reachablePlatform;
                 this.movePoint = movePoint;
                 this.landPoint = landPoint;
                 this.velocityX = velocityX;
                 this.rightMove = rightMove;
-                this.movementType = movementType;
+                this.type = type;
                 this.collectibles_onPath = collectibles_onPath;
                 this.pathLength = pathLength;
                 this.collideCeiling = collideCeiling;
@@ -93,6 +95,7 @@ namespace GeometryFriendsAgents
             this.platforms = new List<Platform>();
             this.levelArray = levelArray;
             this.nCollectibles = nCollectibles;
+            this.possibleCollectibles = new bool[nCollectibles];
 
             SetupPlatforms();
             SetupMoves();
@@ -102,9 +105,16 @@ namespace GeometryFriendsAgents
         public abstract void SetupMoves();
         public abstract bool IsObstacle_onPixels(List<LevelRepresentation.ArrayPoint> checkPixels);
         public abstract List<LevelRepresentation.ArrayPoint> GetFormPixels(LevelRepresentation.Point center, int height);
+        protected abstract collideType GetCollideType(LevelRepresentation.Point center, bool ascent, bool rightMove, int radius);
 
-        public Platform? GetPlatform(LevelRepresentation.Point center, float height)
+        public Platform? GetPlatform(LevelRepresentation.Point center, float height, int velocityY = 0)
         {
+
+            if (Math.Abs(velocityY) > 20)
+            {
+                return null;
+            }
+
             foreach (Platform i in platforms)
             {
                 if (i.leftEdge <= center.x && center.x <= i.rightEdge && (i.height - center.y >= (height / 2) - 8) && (i.height - center.y <= (height/2) + 8))
@@ -162,37 +172,14 @@ namespace GeometryFriendsAgents
             return true;
         }
 
-        protected collideType GetCollideType(LevelRepresentation.Point center, bool ascent, bool rightMove, int radius)
-        {
-            LevelRepresentation.ArrayPoint centerArray = LevelRepresentation.ConvertPointIntoArrayPoint(center, false, false);
-            int highestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint(center.y - radius, false);
-            int lowestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint(center.y + radius, true);
-
-            if (!ascent)
-            {
-                if (levelArray[lowestY, centerArray.xArray] == LevelRepresentation.BLACK)
-                {
-                    return collideType.FLOOR;
-                }
-            }
-            else
-            {
-                if (levelArray[highestY, centerArray.xArray] == LevelRepresentation.BLACK)
-                {
-                    return collideType.CEILING;
-                }
-            }         
-
-            return collideType.OTHER;
-        }
-
         public bool[] GetCollectibles_onPixels(List<LevelRepresentation.ArrayPoint> checkPixels)
         {
             bool[] collectible_onPath = new bool[nCollectibles];
 
             foreach (LevelRepresentation.ArrayPoint i in checkPixels)
             {
-                if (!(levelArray[i.yArray, i.xArray] == LevelRepresentation.BLACK || levelArray[i.yArray, i.xArray] == LevelRepresentation.OPEN))
+                //if (!(levelArray[i.yArray, i.xArray] == LevelRepresentation.BLACK || levelArray[i.yArray, i.xArray] == LevelRepresentation.OPEN))
+                if (levelArray[i.yArray, i.xArray] > 0)
                 {
                     collectible_onPath[levelArray[i.yArray, i.xArray] - 1] = true;
                 }
@@ -244,15 +231,15 @@ namespace GeometryFriendsAgents
                 if (trueNum == Utilities.numTrue.MORETRUE)
                 {
                     // actions have higher priority than no actions
-                    if (mI.movementType != movementType.COLLECT && i.movementType == movementType.COLLECT)
+                    if (mI.type != movementType.COLLECT && i.type == movementType.COLLECT)
                     {
                         continue;
                     }
 
                     // comparison between no action movements
-                    else if (mI.movementType != movementType.COLLECT && i.movementType != movementType.COLLECT)
+                    else if (mI.type != movementType.COLLECT && i.type != movementType.COLLECT)
                     {
-                        if (mI.movementType > i.movementType)
+                        if (mI.type > i.type)
                         {
                             continue;
                         }
@@ -269,13 +256,13 @@ namespace GeometryFriendsAgents
 
                 if (trueNum == Utilities.numTrue.LESSTRUE)
                 {
-                    if (mI.movementType == movementType.COLLECT && i.movementType != movementType.COLLECT)
+                    if (mI.type == movementType.COLLECT && i.type != movementType.COLLECT)
                     {
                         continue;
                     }
-                    else if (mI.movementType != movementType.COLLECT && i.movementType != movementType.COLLECT)
+                    else if (mI.type != movementType.COLLECT && i.type != movementType.COLLECT)
                     {
-                        if (mI.movementType < i.movementType)
+                        if (mI.type < i.type)
                         {
                             continue;
                         }
@@ -297,7 +284,7 @@ namespace GeometryFriendsAgents
 
                 if (trueNum == Utilities.numTrue.SAMETRUE)
                 {
-                    if (mI.movementType == movementType.COLLECT && i.movementType == movementType.COLLECT)
+                    if (mI.type == movementType.COLLECT && i.type == movementType.COLLECT)
                     {
                         int middlePos = (mI.reachablePlatform.rightEdge + mI.reachablePlatform.leftEdge) / 2;
 
@@ -318,29 +305,29 @@ namespace GeometryFriendsAgents
                         continue;
                     }
 
-                    if (mI.movementType == movementType.COLLECT && i.movementType != movementType.COLLECT)
+                    if (mI.type == movementType.COLLECT && i.type != movementType.COLLECT)
                     {
                         moveInfoToRemove.Add(i);
                         continue;
                     }
 
-                    if (mI.movementType != movementType.COLLECT && i.movementType == movementType.COLLECT)
+                    if (mI.type != movementType.COLLECT && i.type == movementType.COLLECT)
                     {
                         priorityHighestFlag = false;
                         continue;
                     }
 
-                    if (mI.movementType != movementType.COLLECT && i.movementType != movementType.COLLECT)
+                    if (mI.type != movementType.COLLECT && i.type != movementType.COLLECT)
                     {
-                        if (mI.rightMove == i.rightMove || ((mI.movementType == movementType.JUMP && i.movementType == movementType.JUMP) && (mI.velocityX == 0 || i.velocityX == 0)))
+                        if (mI.rightMove == i.rightMove || ((mI.type == movementType.JUMP && i.type == movementType.JUMP) && (mI.velocityX == 0 || i.velocityX == 0)))
                         {
-                            if (mI.movementType > i.movementType)
+                            if (mI.type > i.type)
                             {
                                 priorityHighestFlag = false;
                                 continue;
                             }
 
-                            if (mI.movementType < i.movementType)
+                            if (mI.type < i.type)
                             {
                                 moveInfoToRemove.Add(i);
                                 continue;
@@ -409,16 +396,39 @@ namespace GeometryFriendsAgents
                 currentCenter = GetCurrentCenter(movePoint, velocityX, velocityY, currentTime);
                 List<LevelRepresentation.ArrayPoint> pixels = GetCirclePixels(currentCenter, radius);
 
+
+                
+
+                LevelRepresentation.ArrayPoint centerArray = LevelRepresentation.ConvertPointIntoArrayPoint(currentCenter, false, false);
+                int lowestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint(currentCenter.y + radius, true);
+                bool ascent = velocityY - GameInfo.GRAVITY * (i - 1) * TIME_STEP >= 0;
+
+                if (!ascent)
+                {
+                    if (levelArray[lowestY, centerArray.xArray] == LevelRepresentation.COOPERATION)
+                    {
+                        collidePoint = previousCenter;
+                        collideType = collideType.COOPERATION;
+                        collideVelocityX = 0;
+                        collideVelocityY = 0;
+                        return;
+                    }
+                }
+
+
+
+
                 if (IsObstacle_onPixels(pixels))
                 {
                     collidePoint = previousCenter;
                     collideType = GetCollideType(currentCenter, velocityY - GameInfo.GRAVITY * (i - 1) * TIME_STEP >= 0, velocityX > 0, radius);
 
-                     if (collideType == collideType.CEILING)
+                    if (collideType == collideType.CEILING)
                     {
                         collideVelocityX = velocityX / 3;
                         collideVelocityY = -(velocityY - GameInfo.GRAVITY * (i - 1) * TIME_STEP) / 3;
                     }
+
                     else
                     {
                         collideVelocityX = 0;
@@ -426,6 +436,7 @@ namespace GeometryFriendsAgents
                     }
 
                     return;
+
                 }
 
                 collectible_onPath = Utilities.GetOrMatrix(collectible_onPath, GetCollectibles_onPixels(pixels));
@@ -480,5 +491,35 @@ namespace GeometryFriendsAgents
             return circlePixels;
         }
 
+        protected bool[] CheckCollectiblesPlatform(bool[] platformsChecked, Platform p, bool cooperation = false)
+        {
+            
+            if (p.type != platformType.COOPERATION || cooperation)
+            {
+                platformsChecked[p.id - 1] = true;
+
+                foreach (Move m in p.moves)
+                {
+
+                    if (m.reachablePlatform.type != platformType.COOPERATION || m.reachablePlatform.id == p.id)
+                    {
+                        possibleCollectibles = Utilities.GetOrMatrix(possibleCollectibles, m.collectibles_onPath);
+
+                        if (!platformsChecked[m.reachablePlatform.id - 1])
+                        {
+                            platformsChecked = CheckCollectiblesPlatform(platformsChecked, m.reachablePlatform);
+                        }
+                    }
+                    
+                }
+            }
+
+            return platformsChecked;
+        }
+
+        public static Move CopyMove(Move m)
+        {
+            return new Move(m.reachablePlatform, m.movePoint, m.landPoint, m.velocityX, m.rightMove, m.type, m.collectibles_onPath, m.pathLength, m.collideCeiling, m.height);
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using GeometryFriends.AI.Perceptions.Information;
+using System.Collections.Generic;
 
 namespace GeometryFriendsAgents
 {
@@ -9,6 +10,7 @@ namespace GeometryFriendsAgents
         public const int BLACK = -1;
         public const int GREEN = -2;
         public const int YELLOW = -3;
+        public const int COOPERATION = -4;
 
         public const int MARGIN = 5;
         public const int PIXEL_LENGTH = 8;
@@ -88,7 +90,7 @@ namespace GeometryFriendsAgents
 
         public void CreateLevelArray(CollectibleRepresentation[] col, ObstacleRepresentation[] black, ObstacleRepresentation[] green, ObstacleRepresentation[] yellow, int obstacleColour)
         {
-            ObstacleRepresentation[] obstacles = (obstacleColour == YELLOW) ? yellow : green;
+            //ObstacleRepresentation[] obstacles = (obstacleColour == YELLOW) ? yellow : green;
 
             this.blackObstacles = black;
             this.greenObstacles = green;
@@ -100,7 +102,9 @@ namespace GeometryFriendsAgents
             SetCollectibles(collectibles);
             SetDefaultObstacles();
             SetObstacles(blackObstacles, BLACK);
-            SetObstacles(obstacles, obstacleColour);
+            //SetObstacles(obstacles, obstacleColour);
+            SetObstacles(greenObstacles, GREEN);
+            SetObstacles(yellowObstacles, YELLOW);
         }
 
         private void SetDefaultObstacles()
@@ -177,6 +181,41 @@ namespace GeometryFriendsAgents
                     }
                 }
             }
+        }
+
+        public static int[,] SetCooperation(int[,] levelArray, List<Graph.Platform> platforms)
+        {
+            foreach (Graph.Platform p in platforms)
+            {
+
+                if (p.type == Graph.platformType.COOPERATION)
+                {
+                    int platformWidth = p.rightEdge - p.leftEdge;
+                    int platformHeight = GameInfo.MIN_RECTANGLE_HEIGHT;
+
+
+                    int x0 = p.leftEdge / PIXEL_LENGTH;
+                    int y0 = p.height / PIXEL_LENGTH;
+                    int height = platformHeight / PIXEL_LENGTH;
+                    int width = platformWidth / PIXEL_LENGTH;
+
+                    int i = y0;
+
+                    //for (int i = y0; i <= (y0 + height); i++)
+                    //{
+                        for (int j = x0; j <= (x0 + width); j++)
+                        {
+                            if (0 <= i && i < levelArray.GetLength(0) && 0 <= j && j < levelArray.GetLength(1))
+                            {
+                                levelArray[i, j] = COOPERATION;
+                            }
+                        }
+                    //}
+                }
+             
+            }
+
+            return levelArray;
         }
 
         public bool[] GetObtainedCollectibles()

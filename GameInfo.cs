@@ -25,8 +25,13 @@
 
         public const string IST_CIRCLE_PLAYING = "IST Circle Playing";
         public const string IST_RECTANGLE_PLAYING = "IST Rectangle Playing";
+        public const string AWAITING_COOPERATION = "Awaiting Cooperation";
+        public const string COOPERATING = "Cooperating";
+        public const string CIRCLE_ACTION = "Action from Circle";
 
-        public const string IST_CIRCLE_GRAPH_COMPLETED = "IST Circle Graph Completed";
-        public const string IST_RECTANGLE_GRAPH_COMPLETED = "IST Rectangle Graph Completed";
+        public enum CooperationStatus
+        {
+            SINGLE_MODE, NOT_COOPERATING, AWAITING, COOPERATING, NOT_PROCESSED, PROCESSED
+        }
     }
 }

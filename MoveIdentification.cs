@@ -13,12 +13,35 @@ namespace GeometryFriendsAgents
             {
                 int from = fromPlatform.leftEdge + (fromPlatform.leftEdge - GameInfo.LEVEL_ORIGINAL) % (LevelRepresentation.PIXEL_LENGTH * 2);
                 int to = fromPlatform.rightEdge - (fromPlatform.rightEdge - GameInfo.LEVEL_ORIGINAL) % (LevelRepresentation.PIXEL_LENGTH * 2);
-                Parallel.For(0, (to - from) / (LevelRepresentation.PIXEL_LENGTH * 2) + 1, j =>
+                
+                if (fromPlatform.type == Graph.platformType.COOPERATION)
                 {
-                    LevelRepresentation.Point movePoint = new LevelRepresentation.Point(from + j * LevelRepresentation.PIXEL_LENGTH * 2, fromPlatform.height - GameInfo.CIRCLE_RADIUS);
-                    Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, Graph.VELOCITYX_STEP * k, true, Graph.movementType.JUMP);
-                    Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, Graph.VELOCITYX_STEP * k, false, Graph.movementType.JUMP);
-                });
+                    Parallel.For(0, (to - from) / (LevelRepresentation.PIXEL_LENGTH) + 1, j =>
+                    {
+                        LevelRepresentation.Point movePoint = new LevelRepresentation.Point(from + j * LevelRepresentation.PIXEL_LENGTH, fromPlatform.height - GameInfo.CIRCLE_RADIUS);
+                        Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, Graph.VELOCITYX_STEP * k, true, Graph.movementType.JUMP);
+                        Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, Graph.VELOCITYX_STEP * k, false, Graph.movementType.JUMP);
+
+                        movePoint = new LevelRepresentation.Point(from + j * LevelRepresentation.PIXEL_LENGTH, fromPlatform.height - 50 - GameInfo.CIRCLE_RADIUS);
+                        Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, Graph.VELOCITYX_STEP * k, true, Graph.movementType.JUMP);
+                        Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, Graph.VELOCITYX_STEP * k, false, Graph.movementType.JUMP);
+
+                        movePoint = new LevelRepresentation.Point(from + j * LevelRepresentation.PIXEL_LENGTH, fromPlatform.height - 150 - GameInfo.CIRCLE_RADIUS);
+                        Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, Graph.VELOCITYX_STEP * k, true, Graph.movementType.JUMP);
+                        Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, Graph.VELOCITYX_STEP * k, false, Graph.movementType.JUMP);
+                    });
+                }
+
+                else
+                {
+                    Parallel.For(0, (to - from) / (LevelRepresentation.PIXEL_LENGTH * 2) + 1, j =>
+                    {
+                        LevelRepresentation.Point movePoint = new LevelRepresentation.Point(from + j * LevelRepresentation.PIXEL_LENGTH * 2, fromPlatform.height - GameInfo.CIRCLE_RADIUS);
+                        Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, Graph.VELOCITYX_STEP * k, true, Graph.movementType.JUMP);
+                        Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, Graph.VELOCITYX_STEP * k, false, Graph.movementType.JUMP);
+                    });
+                }
+
             });
         }
 
@@ -316,6 +339,7 @@ namespace GeometryFriendsAgents
             float collideVelocityX = rightMove ? velocityX : -velocityX;
             float collideVelocityY = (movementType == Graph.movementType.JUMP) ? GameInfo.JUMP_VELOCITYY : GameInfo.FALL_VELOCITYY;
             bool collideCeiling = false;
+            //bool cooperation = true;
 
             do
             {
@@ -326,6 +350,31 @@ namespace GeometryFriendsAgents
                 if (collideType == Graph.collideType.CEILING)
                 {
                     collideCeiling = true;
+                }
+
+                //if (cooperation && collideType == Graph.collideType.COOPERATION)
+                if (collideType == Graph.collideType.COOPERATION)
+                {
+                    Graph.Platform? toPlatform = graph.GetPlatform(collidePoint, height);
+
+                    if (toPlatform.HasValue)
+                    {
+                        if (movementType == Graph.movementType.FALL)
+                        {
+                            movePoint.x = rightMove ? movePoint.x - LevelRepresentation.PIXEL_LENGTH : movePoint.x + LevelRepresentation.PIXEL_LENGTH;
+                        }
+
+                        int distance_to_land = Math.Abs(collidePoint.x - movePoint.x);
+
+                        if (distance_to_land >= 140 || fromPlatform.id == toPlatform.Value.id)
+                        {
+                            graph.AddMove(fromPlatform, new Graph.Move(toPlatform.Value, movePoint, collidePoint, velocityX, rightMove, movementType, collectible_onPath, (int)pathLength, collideCeiling, height));
+                        }
+
+                        //cooperation = true;
+
+                    }
+
                 }
 
                 if (prevCollidePoint.Equals(collidePoint))

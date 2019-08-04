@@ -258,33 +258,13 @@ namespace GeometryFriendsAgents
 
         public static List<Graph.Platform> JoinPlatforms(List<Graph.Platform> platforms1, List<Graph.Platform> platforms2)
         {
-
-            foreach (Graph.Platform p2 in platforms2)
+            foreach (Graph.Platform p in platforms2)
             {
-
-                bool repeatedPlatform = false;
-
-                foreach (Graph.Platform p1 in platforms1)
-                {
-                    if (p2.type == p1.type &&
-                        p2.height == p1.height &&
-                        (p2.leftEdge >= p1.leftEdge - LevelRepresentation.PIXEL_LENGTH) &&
-                        (p2.leftEdge <= p1.leftEdge + LevelRepresentation.PIXEL_LENGTH) &&
-                        (p2.rightEdge >= p1.rightEdge - LevelRepresentation.PIXEL_LENGTH) &&
-                        (p2.rightEdge <= p1.rightEdge + LevelRepresentation.PIXEL_LENGTH))
-                    {
-                        repeatedPlatform = true;
-                        break;
-                    }
-                }
-
-                if (!repeatedPlatform)
-                {
-                    platforms1.Add(p2);
-                }
+                platforms1.Add(new Graph.Platform(Graph.platformType.COOPERATION, p.height - GameInfo.MIN_RECTANGLE_HEIGHT, p.leftEdge, p.rightEdge, p.moves, p.allowedHeight, p.id));
             }
 
             return platforms1;
+
         }
 
         public static List<Graph.Platform> SetPlatformsID(List<Graph.Platform> platforms)
@@ -302,6 +282,37 @@ namespace GeometryFriendsAgents
             });
 
             return platforms;
+        }
+
+        public static List<Graph.Platform> DeleteCooperationPlatforms(List<Graph.Platform> platforms)
+        {
+
+            foreach (Graph.Platform p in platforms)
+            {
+                foreach (Graph.Move m in p.moves)
+                {
+                    if (m.reachablePlatform.type == Graph.platformType.COOPERATION)
+                    {
+                        var itemToRemove = p.moves.Single(r => r.type == m.type &&
+                                                                r.reachablePlatform.id == m.reachablePlatform.id &&
+                                                                r.movePoint.x == m.movePoint.x &&
+                                                                r.movePoint.y == m.movePoint.y);
+                        p.moves.Remove(itemToRemove);
+                    }
+                }
+            }
+
+            foreach (Graph.Platform p in platforms)
+            {
+                if (p.type == Graph.platformType.COOPERATION)
+                {
+                    var itemToRemove = platforms.Single(r => r.id == p.id && r.type == p.type);
+                    platforms.Remove(itemToRemove);
+                }
+            }
+
+            return platforms;
+
         }
 
     }

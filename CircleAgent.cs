@@ -31,12 +31,12 @@ namespace GeometryFriendsAgents
         private ActionSelector actionSelector;
 
         // Messages
-        private bool cooperation = false;
+        private GameInfo.CooperationStatus cooperation;
         private List<AgentMessage> messages;
 
         // Auxiliary Variables
         private Moves currentAction;
-        private Graph.Move? nextEdge;
+        private Graph.Move? nextMove;
         private DateTime lastMoveTime;
         private int targetPointX_InAir;
         private bool[] previousCollectibles;
@@ -44,11 +44,12 @@ namespace GeometryFriendsAgents
 
         public CircleAgent()
         {
-            nextEdge = null;
+            nextMove = null;
             currentPlatform = null;
             previousPlatform = null;
             lastMoveTime = DateTime.Now;
             currentAction = Moves.NO_ACTION;
+            cooperation = GameInfo.CooperationStatus.SINGLE_MODE;
 
             graph = new GraphCircle();
             subgoalAStar = new SubgoalAStar();
@@ -67,7 +68,7 @@ namespace GeometryFriendsAgents
 
             // Create Graph
             graph.SetupGraph(levelInfo.GetLevelArray(), colI.Length);
-            messages.Add(new AgentMessage(GameInfo.IST_CIRCLE_GRAPH_COMPLETED, graph));
+            graph.SetPossibleCollectibles(cI);
 
             // Initial Information
             circleInfo = cI;
@@ -109,10 +110,17 @@ namespace GeometryFriendsAgents
         public override void Update(TimeSpan elapsedGameTime)
         {
 
+            if (cooperation == GameInfo.CooperationStatus.SINGLE_MODE)
+            {
+                graph.DeleteCooperationPlatforms();
+                cooperation = GameInfo.CooperationStatus.NOT_COOPERATING;
+            }
+
+
             if ((DateTime.Now - lastMoveTime).TotalMilliseconds >= 20)
             {
 
-                currentPlatform = graph.GetPlatform(new LevelRepresentation.Point((int)circleInfo.X, (int)circleInfo.Y), GameInfo.MAX_CIRCLE_HEIGHT);
+                currentPlatform = graph.GetPlatform(new LevelRepresentation.Point((int)circleInfo.X, (int)circleInfo.Y), GameInfo.MAX_CIRCLE_HEIGHT, (int)circleInfo.VelocityY);
 
                 if (currentPlatform.HasValue)
                 {
@@ -122,37 +130,52 @@ namespace GeometryFriendsAgents
                         Task.Factory.StartNew(SetNextEdge);
                     }
 
-                    if (nextEdge.HasValue)
+                    if (nextMove.HasValue)
                     {
-                        if (-GameInfo.MAX_VELOCITYY <= circleInfo.VelocityY && circleInfo.VelocityY <= GameInfo.MAX_VELOCITYY)
+
+                        if (nextMove.Value.reachablePlatform.type == Graph.platformType.COOPERATION && cooperation != GameInfo.CooperationStatus.COOPERATING)
                         {
-                            if (nextEdge.Value.movementType == Graph.movementType.STAIR_GAP)
+                            currentAction = Cooperate((Graph.Move)nextMove);
+                        }
+
+                        else if (-GameInfo.MAX_VELOCITYY <= circleInfo.VelocityY && circleInfo.VelocityY <= GameInfo.MAX_VELOCITYY)
+                        {
+                            if (nextMove.Value.type == Graph.movementType.STAIR_GAP)
                             {
-                                currentAction = nextEdge.Value.rightMove ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
+                                currentAction = nextMove.Value.rightMove ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
                             }
                             else
                             {
-                                currentAction = actionSelector.GetCurrentAction(circleInfo, nextEdge.Value.movePoint.x, nextEdge.Value.velocityX, nextEdge.Value.rightMove);
+                                currentAction = actionSelector.GetCurrentAction(circleInfo, nextMove.Value.movePoint.x, nextMove.Value.velocityX, nextMove.Value.rightMove);
                             }
                         }
                         else
                         {
                             currentAction = actionSelector.GetCurrentAction(circleInfo, targetPointX_InAir, 0, true);
                         }
+
+                        //if (cooperation == GameInfo.CooperationStatus.COOPERATING && currentPlatform.Value.type == Graph.platformType.COOPERATION)
+                        //{
+                        //    messages.Add(new AgentMessage(GameInfo.CIRCLE_ACTION, currentAction));
+                        //}
                     }
                 }
 
                 else
                 {
-                    if (nextEdge.HasValue)
+                    if (nextMove.HasValue)
                     {
-                        if (nextEdge.Value.movementType == Graph.movementType.STAIR_GAP)
+                        if (nextMove.Value.reachablePlatform.type == Graph.platformType.COOPERATION && cooperation != GameInfo.CooperationStatus.COOPERATING)
                         {
-                            currentAction = nextEdge.Value.rightMove ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
+                            currentAction = Cooperate((Graph.Move)nextMove);
+                        }
+                        else if (nextMove.Value.type == Graph.movementType.STAIR_GAP)
+                        {
+                            currentAction = nextMove.Value.rightMove ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
                         }
                         else
                         {
-                            if (nextEdge.Value.collideCeiling && circleInfo.VelocityY < 0)
+                            if (nextMove.Value.collideCeiling && circleInfo.VelocityY < 0)
                             {
                                 currentAction = Moves.NO_ACTION;
                             }
@@ -164,7 +187,7 @@ namespace GeometryFriendsAgents
                     }
                 }
 
-                if (!nextEdge.HasValue)
+                if (!nextMove.HasValue)
                 {
                     currentAction = actionSelector.GetCurrentAction(circleInfo, (int)circleInfo.X, 0, false);
                 }
@@ -172,21 +195,28 @@ namespace GeometryFriendsAgents
                 lastMoveTime = DateTime.Now;
             }
 
-            if (nextEdge.HasValue)
+            if (nextMove.HasValue)
             {
-                if (!actionSelector.IsGoal(circleInfo, nextEdge.Value.movePoint.x, nextEdge.Value.velocityX, nextEdge.Value.rightMove))
+
+                if (!actionSelector.IsGoal(circleInfo, nextMove.Value.movePoint.x, nextMove.Value.velocityX, nextMove.Value.rightMove))
                 {
                     return;
                 }
 
                 if (-GameInfo.MAX_VELOCITYY <= circleInfo.VelocityY && circleInfo.VelocityY <= GameInfo.MAX_VELOCITYY)
                 {
-                    targetPointX_InAir = (nextEdge.Value.reachablePlatform.leftEdge + nextEdge.Value.reachablePlatform.rightEdge) / 2;
+                    targetPointX_InAir = (nextMove.Value.reachablePlatform.leftEdge + nextMove.Value.reachablePlatform.rightEdge) / 2;
 
-                    if (nextEdge.Value.movementType == Graph.movementType.JUMP)
+                    if (nextMove.Value.type == Graph.movementType.JUMP)
                     {
                         currentAction = Moves.JUMP;
                     }
+
+                    if (cooperation == GameInfo.CooperationStatus.COOPERATING)
+                    {
+                        cooperation = GameInfo.CooperationStatus.NOT_COOPERATING;
+                    }
+
                 }
             }
         }
@@ -260,10 +290,27 @@ namespace GeometryFriendsAgents
 
         private void SetNextEdge()
         {
-            nextEdge = null;
-            nextEdge = subgoalAStar.CalculateShortestPath(currentPlatform.Value, new LevelRepresentation.Point((int)circleInfo.X, (int)circleInfo.Y),
+            nextMove = null;
+            nextMove = subgoalAStar.CalculateShortestPath(currentPlatform.Value, new LevelRepresentation.Point((int)circleInfo.X, (int)circleInfo.Y),
                 Enumerable.Repeat<bool>(true, levelInfo.initialCollectibles.Length).ToArray(),
                 levelInfo.GetObtainedCollectibles(), levelInfo.initialCollectibles);
+        }
+
+        private Moves Cooperate(Graph.Move nextMove)
+        {
+
+            Moves action = Moves.NO_ACTION;
+
+            if (cooperation == GameInfo.CooperationStatus.NOT_COOPERATING)
+            {
+                Graph.Move manipulatedMove = Graph.CopyMove(nextMove);
+                manipulatedMove.collectibles_onPath = graph.GetCollectiblesFromCooperation(nextMove);
+                messages.Add(new AgentMessage(GameInfo.AWAITING_COOPERATION, manipulatedMove));
+                cooperation = GameInfo.CooperationStatus.AWAITING;
+            }
+
+            return action;
+
         }
 
         //implements abstract circle interface: signals the agent the end of the current level
@@ -284,24 +331,15 @@ namespace GeometryFriendsAgents
         {
             foreach (AgentMessage item in newMessages)
             {
-                //Log.LogInformation("Rectangle: received message from circle: " + item.Message);
-                //if (item.Attachment != null)
-                //{
-                //    Log.LogInformation("Received message has attachment: " + item.Attachment.ToString());
-                //    if (item.Attachment.GetType() == typeof(Pen))
-                //    {
-                //        Log.LogInformation("The attachment is a pen, let's see its color: " + ((Pen)item.Attachment).Color.ToString());
-                //    }
-                //}
 
                 if (item.Message.Equals(GameInfo.IST_RECTANGLE_PLAYING))
                 {
-                    this.cooperation = true;
+                    cooperation = GameInfo.CooperationStatus.NOT_COOPERATING;
                 }
 
-                else if (item.Message.Equals(GameInfo.IST_RECTANGLE_GRAPH_COMPLETED))
+                if (item.Message.Equals(GameInfo.COOPERATING))
                 {
-                    continue;
+                    cooperation = GameInfo.CooperationStatus.COOPERATING;
                 }
 
             }
@@ -326,6 +364,7 @@ namespace GeometryFriendsAgents
 
             return false;
         }
+
     }
 }
 

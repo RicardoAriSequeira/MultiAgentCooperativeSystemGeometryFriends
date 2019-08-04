@@ -1,12 +1,16 @@
-﻿using System;
+﻿using GeometryFriends.AI.Perceptions.Information;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace GeometryFriendsAgents
 {
     class GraphCircle : Graph
     {
-  
+
+        bool[] platformsChecked;
+
         public GraphCircle() : base()
         {
             this.AREA = GameInfo.CIRCLE_AREA;
@@ -16,13 +20,12 @@ namespace GeometryFriendsAgents
 
         public override void SetupPlatforms()
         {
-            platforms = PlatformIdentification.SetPlatforms_Circle(levelArray);
-            //List<Platform> platformsCircle = PlatformIdentification.SetPlatformsAsCircle(levelArray);
-            //List<Platform> platformsRectangle = PlatformIdentification.SetPlatformsAsRectangle(levelArray);
-
-            //platforms = PlatformIdentification.JoinPlatforms(platformsCircle, platformsRectangle);
-
+            List<Platform> platformsCircle = PlatformIdentification.SetPlatforms_Circle(levelArray);
+            List<Platform> platformsRectangle = PlatformIdentification.SetPlatforms_Rectangle(levelArray);
+            platforms = PlatformIdentification.JoinPlatforms(platformsCircle, platformsRectangle);
             platforms = PlatformIdentification.SetPlatformsID(platforms);
+            levelArray = LevelRepresentation.SetCooperation(levelArray, platforms);
+            platformsChecked = new bool[platforms.Count];
         }
 
         public override void SetupMoves()
@@ -39,6 +42,17 @@ namespace GeometryFriendsAgents
                     MoveIdentification.Collect(this, fromPlatform);
                 }
 
+            }
+        }
+
+        public void SetPossibleCollectibles(CircleRepresentation initial_cI)
+        {
+
+            Platform? platform = GetPlatform(new LevelRepresentation.Point((int)initial_cI.X, (int)initial_cI.Y), GameInfo.MAX_CIRCLE_HEIGHT);
+
+            if (platform.HasValue)
+            {
+                platformsChecked = CheckCollectiblesPlatform(platformsChecked, platform.Value);
             }
         }
 
@@ -63,6 +77,75 @@ namespace GeometryFriendsAgents
             }
 
             return false;
+        }
+
+        protected override collideType GetCollideType(LevelRepresentation.Point center, bool ascent, bool rightMove, int radius)
+        {
+            LevelRepresentation.ArrayPoint centerArray = LevelRepresentation.ConvertPointIntoArrayPoint(center, false, false);
+            int highestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint(center.y - radius, false);
+            int lowestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint(center.y + radius, true);
+
+            if (!ascent)
+            {
+                if (levelArray[lowestY, centerArray.xArray] == LevelRepresentation.BLACK || levelArray[lowestY, centerArray.xArray] == LevelRepresentation.GREEN)
+                {
+                    return collideType.FLOOR;
+                }
+            }
+            else
+            {
+                if (levelArray[highestY, centerArray.xArray] == LevelRepresentation.BLACK || levelArray[lowestY, centerArray.xArray] == LevelRepresentation.GREEN)
+                {
+                    return collideType.CEILING;
+                }
+            }
+
+            return collideType.OTHER;
+        }
+
+        public void DeleteCooperationPlatforms()
+        {
+
+            foreach (Platform p in platforms)
+            {
+                foreach (Move m in p.moves)
+                {
+                    if (m.reachablePlatform.type == Graph.platformType.COOPERATION)
+                    {
+                        var itemToRemove = p.moves.Single(r => r.type == m.type &&
+                                                                r.reachablePlatform.id == m.reachablePlatform.id &&
+                                                                r.movePoint.x == m.movePoint.x &&
+                                                                r.movePoint.y == m.movePoint.y);
+                        p.moves.Remove(itemToRemove);
+                    }
+                }
+            }
+
+            foreach (Platform p in platforms)
+            {
+                if (p.type == Graph.platformType.COOPERATION)
+                {
+                    var itemToRemove = platforms.Single(r => r.id == p.id && r.type == p.type);
+                    platforms.Remove(itemToRemove);
+                }
+            }
+
+        }
+
+        public bool[] GetCollectiblesFromCooperation(Move cooperationMove)
+        {
+            bool[] collectiblesWithoutCooperation = new bool[nCollectibles];
+            Array.Copy(possibleCollectibles, collectiblesWithoutCooperation, possibleCollectibles.Length);
+
+            bool[] collectibles = cooperationMove.collectibles_onPath;
+
+            platformsChecked = CheckCollectiblesPlatform(platformsChecked, cooperationMove.reachablePlatform, true);
+
+            collectibles = Utilities.GetOrMatrix(collectibles, Utilities.GetXorMatrix(collectiblesWithoutCooperation, possibleCollectibles));
+
+            Array.Copy(collectiblesWithoutCooperation, possibleCollectibles, possibleCollectibles.Length);
+
+            return collectibles;
         }
 
     }
