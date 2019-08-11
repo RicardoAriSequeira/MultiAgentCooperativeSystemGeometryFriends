@@ -122,6 +122,11 @@ namespace GeometryFriendsAgents
 
                 currentPlatform = graph.GetPlatform(new LevelRepresentation.Point((int)circleInfo.X, (int)circleInfo.Y), GameInfo.MAX_CIRCLE_HEIGHT, (int)circleInfo.VelocityY);
 
+                if (!currentPlatform.HasValue && cooperation == GameInfo.CooperationStatus.COOPERATING)
+                {
+                    currentPlatform = previousPlatform;
+                }
+
                 if (currentPlatform.HasValue)
                 {
                     if (IsDifferentPlatform() || IsGetCollectible())
@@ -290,6 +295,7 @@ namespace GeometryFriendsAgents
 
         private void SetNextEdge()
         {
+            cooperation = GameInfo.CooperationStatus.NOT_COOPERATING;
             nextMove = null;
             nextMove = subgoalAStar.CalculateShortestPath(currentPlatform.Value, new LevelRepresentation.Point((int)circleInfo.X, (int)circleInfo.Y),
                 Enumerable.Repeat<bool>(true, levelInfo.initialCollectibles.Length).ToArray(),

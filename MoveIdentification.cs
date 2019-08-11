@@ -339,7 +339,6 @@ namespace GeometryFriendsAgents
             float collideVelocityX = rightMove ? velocityX : -velocityX;
             float collideVelocityY = (movementType == Graph.movementType.JUMP) ? GameInfo.JUMP_VELOCITYY : GameInfo.FALL_VELOCITYY;
             bool collideCeiling = false;
-            //bool cooperation = true;
 
             do
             {
@@ -352,7 +351,6 @@ namespace GeometryFriendsAgents
                     collideCeiling = true;
                 }
 
-                //if (cooperation && collideType == Graph.collideType.COOPERATION)
                 if (collideType == Graph.collideType.COOPERATION)
                 {
                     Graph.Platform? toPlatform = graph.GetPlatform(collidePoint, height);
@@ -370,8 +368,6 @@ namespace GeometryFriendsAgents
                         {
                             graph.AddMove(fromPlatform, new Graph.Move(toPlatform.Value, movePoint, collidePoint, velocityX, rightMove, movementType, collectible_onPath, (int)pathLength, collideCeiling, height));
                         }
-
-                        //cooperation = true;
 
                     }
 

@@ -326,7 +326,9 @@ namespace GeometryFriendsAgents
                         }                      
                     }
 
-                    if ((nextMove.Value.type == Graph.movementType.MORPH_DOWN || nextMove.Value.type == Graph.movementType.FALL || nextMove.Value.type == Graph.movementType.COOPERATION) &&
+                    if ((nextMove.Value.type == Graph.movementType.MORPH_DOWN ||
+                         nextMove.Value.type == Graph.movementType.FALL ||
+                         nextMove.Value.type == Graph.movementType.COOPERATION) &&
                         rectangleInfo.Height > nextMove.Value.height)
                     {
                         currentAction = Moves.MORPH_DOWN;
@@ -442,7 +444,7 @@ namespace GeometryFriendsAgents
         }
 
         //implememts abstract agent interface: receives messages from the circle agent
-        public override void HandleAgentMessages(List<GeometryFriends.AI.Communication.AgentMessage> newMessages)
+        public override void HandleAgentMessages(List<AgentMessage> newMessages)
         {
             foreach (AgentMessage item in newMessages)
             {
@@ -462,9 +464,9 @@ namespace GeometryFriendsAgents
 
                     if (fromPlatform.HasValue)
                     {
-                        //int required_height = fromPlatform.Value.height - (circleMove.movePoint.y + GameInfo.CIRCLE_RADIUS);
-                        //Graph.Move newMove = new Graph.Move((Graph.Platform)fromPlatform, movePoint, movePoint, 0, true, Graph.movementType.COOPERATION, collectibles_onPath, 0, false, required_height);
-                        Graph.Move newMove = new Graph.Move((Graph.Platform)fromPlatform, movePoint, movePoint, 0, true, Graph.movementType.COOPERATION, collectibles_onPath, 0, false, GameInfo.MIN_RECTANGLE_HEIGHT);
+                        int required_height = fromPlatform.Value.height - (circleMove.movePoint.y + GameInfo.CIRCLE_RADIUS);
+                        Graph.Move newMove = new Graph.Move((Graph.Platform)fromPlatform, movePoint, movePoint, 0, true, Graph.movementType.COOPERATION, collectibles_onPath, 0, false, required_height);
+                        //Graph.Move newMove = new Graph.Move((Graph.Platform)fromPlatform, movePoint, movePoint, 0, true, Graph.movementType.COOPERATION, collectibles_onPath, 0, false, GameInfo.MIN_RECTANGLE_HEIGHT);
                         graph.AddMove((Graph.Platform)fromPlatform, newMove);
                     }
 
