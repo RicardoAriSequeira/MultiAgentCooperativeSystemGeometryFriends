@@ -1,16 +1,16 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.539
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeometryFriendsAgents", "GeometryFriendsAgents.csproj", "{6F45AB29-7874-4B3D-8073-B2D5F0C1A35F}"
 EndProject
 Project("{911E67C6-3D85-4FCE-B560-20A9C3E3FF48}") = "GeometryFriends", "GeometryFriendsGame\Release\GeometryFriends.exe", "{5CCDB623-B4B3-4076-9025-4CDF0971F0BC}"
 	ProjectSection(DebuggerProjectSystem) = preProject
 		PortSupplier = 00000000-0000-0000-0000-000000000000
-		Executable = C:\Users\Ricardo\Desktop\GeometryFriends\geometryfriendsgame\release\GeometryFriends.exe
+		Executable = D:\Ricardo\Desktop\GeometryFriends\GeometryFriendsGame\Release\GeometryFriends.exe
 		RemoteMachine = DESKTOP-42DCIO5
-		StartingDirectory = C:\Users\Ricardo\Desktop\GeometryFriends\geometryfriendsgame\release
+		StartingDirectory = D:\Ricardo\Desktop\GeometryFriends\GeometryFriendsGame\Release
 		Arguments = 
 		Environment = Default
 		LaunchingEngine = 00000000-0000-0000-0000-000000000000

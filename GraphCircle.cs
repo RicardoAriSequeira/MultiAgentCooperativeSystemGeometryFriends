@@ -1,4 +1,5 @@
-﻿using GeometryFriends.AI.Perceptions.Information;
+﻿using GeometryFriends.AI;
+using GeometryFriends.AI.Perceptions.Information;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,7 @@ namespace GeometryFriendsAgents
     {
 
         bool[] platformsChecked;
+        int[,] previous_levelArray; 
 
         public GraphCircle() : base()
         {
@@ -24,6 +26,8 @@ namespace GeometryFriendsAgents
             List<Platform> platformsRectangle = PlatformIdentification.SetPlatforms_Rectangle(levelArray);
             platforms = PlatformIdentification.JoinPlatforms(platformsCircle, platformsRectangle);
             platforms = PlatformIdentification.SetPlatformsID(platforms);
+            previous_levelArray = new int[levelArray.GetLength(0), levelArray.GetLength(1)];
+            Array.Copy(levelArray, previous_levelArray, levelArray.Length);
             levelArray = LevelRepresentation.SetCooperation(levelArray, platforms);
             platformsChecked = new bool[platforms.Count];
         }
@@ -106,29 +110,80 @@ namespace GeometryFriendsAgents
         public void DeleteCooperationPlatforms()
         {
 
-            foreach (Platform p in platforms)
+            //platforms = PlatformIdentification.SetPlatforms_Circle(levelArray);
+            //platforms = PlatformIdentification.SetPlatformsID(platforms);
+            //levelArray = previous_levelArray;
+            //SetupMoves();
+
+            int p = 0;
+            while (p < platforms.Count)
             {
-                foreach (Move m in p.moves)
+                if (platforms[p].type == Graph.platformType.COOPERATION)
                 {
-                    if (m.reachablePlatform.type == Graph.platformType.COOPERATION)
-                    {
-                        var itemToRemove = p.moves.Single(r => r.type == m.type &&
-                                                                r.reachablePlatform.id == m.reachablePlatform.id &&
-                                                                r.movePoint.x == m.movePoint.x &&
-                                                                r.movePoint.y == m.movePoint.y);
-                        p.moves.Remove(itemToRemove);
-                    }
+                    platforms.Remove(platforms[p]);
+                }
+                else
+                {
+                    platforms[p].moves.Clear();
+                    p++;
                 }
             }
 
-            foreach (Platform p in platforms)
-            {
-                if (p.type == Graph.platformType.COOPERATION)
-                {
-                    var itemToRemove = platforms.Single(r => r.id == p.id && r.type == p.type);
-                    platforms.Remove(itemToRemove);
-                }
-            }
+            platforms = PlatformIdentification.SetPlatformsID(platforms);
+            levelArray = previous_levelArray;
+            SetupMoves();
+
+            //foreach (Platform platform in platforms)
+            //{
+            //    int m = 0;
+            //    while (m < platform.moves.Count)
+            //    {
+            //        if (platform.moves[m].reachablePlatform.type == Graph.platformType.COOPERATION)
+            //        {
+            //            platform.moves.Remove(platform.moves[m]);
+            //        }
+            //        else
+            //        {
+            //            m++;
+            //        }
+            //    }
+
+            //foreach (Move m in p.moves)
+            //{
+            //    if (m.reachablePlatform.type == Graph.platformType.COOPERATION)
+            //    {
+            //        var itemToRemove = p.moves.Single(r => r.type == m.type &&
+            //                                                r.reachablePlatform.id == m.reachablePlatform.id &&
+            //                                                r.movePoint.x == m.movePoint.x &&
+            //                                                r.movePoint.y == m.movePoint.y);
+            //        p.moves.Remove(itemToRemove);
+            //    }
+            //}
+            //}
+
+            //int p = 0;
+            //while (p < platforms.Count)
+            //{
+            //    if (platforms[p].type == Graph.platformType.COOPERATION)
+            //    {
+            //        platforms.Remove(platforms[p]);
+            //    }
+            //    else
+            //    {
+            //        p++;
+            //    }
+            //}
+
+
+
+            //foreach (Platform p in platforms)
+            //{
+            //    if (p.type == Graph.platformType.COOPERATION)
+            //    {
+            //        var itemToRemove = platforms.Single(r => r.id == p.id && r.type == p.type);
+            //        platforms.Remove(itemToRemove);
+            //    }
+            //}
 
         }
 

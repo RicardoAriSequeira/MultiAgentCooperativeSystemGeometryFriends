@@ -17,11 +17,7 @@ namespace GeometryFriendsAgents
 
         public override void SetupPlatforms()
         {
-            //List<Platform> platformsCircle = PlatformIdentification.SetPlatformsAsCircle(levelArray);
-            //List<Platform> platformsRectangle = PlatformIdentification.SetPlatformsAsRectangle(levelArray);
             platforms = PlatformIdentification.SetPlatforms_Rectangle(levelArray);
-            //platforms = PlatformIdentification.JoinPlatforms(platformsRectangle, platformsCircle);
-
             platforms = PlatformIdentification.SetPlatformsID(platforms);
         }
 
