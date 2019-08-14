@@ -62,7 +62,6 @@ namespace GeometryFriendsAgents
             cooperation = GameInfo.CooperationStatus.SINGLE_MODE;
 
             messages = new List<AgentMessage>();
-            messages.Add(new AgentMessage(GameInfo.IST_RECTANGLE_PLAYING));
 
             //ReinforcementLearning.WriteQTable(new float[ReinforcementLearning.N_STATES, ReinforcementLearning.N_ACTIONS]);
 
@@ -75,6 +74,8 @@ namespace GeometryFriendsAgents
         //implements abstract rectangle interface: used to setup the initial information so that the agent has basic knowledge about the level
         public override void Setup(CountInformation nI, RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI, Rectangle area, double timeLimit)
         {
+            messages.Add(new AgentMessage(GameInfo.IST_RECTANGLE_PLAYING));
+
             // Create Level Array
             levelInfo.CreateLevelArray(colI, oI, rPI, cPI, LevelRepresentation.YELLOW);
 
@@ -189,6 +190,12 @@ namespace GeometryFriendsAgents
                                 rectangleInfo.Height > Math.Max((GameInfo.RECTANGLE_AREA / nextMove.Value.height) - 1, GameInfo.MIN_RECTANGLE_HEIGHT + 3))
                             {
                                 currentAction = Moves.MORPH_DOWN;
+                            }
+
+                            else if (nextMove.Value.type == Graph.movementType.RIDING && Math.Abs(rectangleInfo.X - circleInfo.X) > 60)
+                            {
+                                currentAction = actionSelector.GetCurrentAction(circleInfo, (int)circleInfo.X, 0, true);
+                                //currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextMove.Value.movePoint.x, nextMove.Value.velocityX, nextMove.Value.rightMove);
                             }
 
                             else if (nextMove.Value.type == Graph.movementType.STAIR_GAP ||
@@ -311,6 +318,11 @@ namespace GeometryFriendsAgents
 
                     targetPointX_InAir = (nextMove.Value.reachablePlatform.leftEdge + nextMove.Value.reachablePlatform.rightEdge) / 2;
 
+                    if (cooperation == GameInfo.CooperationStatus.RIDING)
+                    {
+                        messages.Add(new AgentMessage(GameInfo.IN_POSITION));
+                    }
+
                     if (nextMove.Value.type == Graph.movementType.STAIR_GAP)
                     {
                         currentAction = nextMove.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
@@ -330,7 +342,6 @@ namespace GeometryFriendsAgents
                             cooperation = GameInfo.CooperationStatus.MORPH_READY;
                             messages.Add(new AgentMessage(GameInfo.MORPH_READY));
                         }
-                        
                             
                     }
 
@@ -432,8 +443,7 @@ namespace GeometryFriendsAgents
             nextMove = null;
             nextMove = subgoalAStar.CalculateShortestPath(currentPlatform.Value, new LevelRepresentation.Point((int)rectangleInfo.X, (int)rectangleInfo.Y),
                 Enumerable.Repeat<bool>(true, levelInfo.initialCollectibles.Length).ToArray(),
-                levelInfo.GetObtainedCollectibles(), levelInfo.initialCollectibles);
-        }
+                levelInfo.GetObtainedCollectibles(), levelInfo.initialCollectibles);        }
 
         //implements abstract rectangle interface: signals the agent the end of the current level
         public override void EndGame(int collectiblesCaught, int timeElapsed)
@@ -459,11 +469,32 @@ namespace GeometryFriendsAgents
             foreach (AgentMessage item in newMessages)
             {
 
+                if (item.Message.Equals(GameInfo.INDIVIDUAL_MOVE) &&
+                        item.Attachment.GetType() == typeof(Graph.Move))
+                {
+                    Graph.Move circleMove = (Graph.Move)item.Attachment;
+
+                    foreach (Graph.Platform p in graph.platforms)
+                    {
+                        foreach (Graph.Move m in p.moves)
+                        {
+                            for (int i = 0; i < m.collectibles_onPath.Length; i++)
+                            {
+                                if (circleMove.collectibles_onPath[i] && m.collectibles_onPath[i])
+                                {
+                                    m.collectibles_onPath[i] = false;
+                                }
+                            }
+                        }
+                    }
+                }
+
                 if (item.Message.Equals(GameInfo.AWAITING_MORPH) &&
                         item.Attachment.GetType() == typeof(Graph.Move))
                 {
                     Graph.Move newMove = Graph.CopyMove((Graph.Move)item.Attachment);
                     newMove.type = Graph.movementType.MORPH_UP;
+                    newMove.velocityX = 0;
                     nextMove = newMove;
                     cooperation = GameInfo.CooperationStatus.AWAITING_MORPH;
                 }
@@ -474,40 +505,60 @@ namespace GeometryFriendsAgents
                     Graph.Move circleMove = (Graph.Move) item.Attachment;
 
                     bool[] collectibles_onPath = Utilities.GetXorMatrix(graph.possibleCollectibles, circleMove.collectibles_onPath);
-                    LevelRepresentation.Point movePoint = new LevelRepresentation.Point(circleMove.landPoint.x, circleMove.landPoint.y + GameInfo.CIRCLE_RADIUS + (GameInfo.MIN_RECTANGLE_HEIGHT/2));
+                    int movePoint_x = Math.Min(Math.Max(circleMove.landPoint.x, 136), 1064);
+                    LevelRepresentation.Point movePoint = new LevelRepresentation.Point(movePoint_x, circleMove.landPoint.y + GameInfo.CIRCLE_RADIUS + (GameInfo.MIN_RECTANGLE_HEIGHT/2));
                     Graph.Platform? fromPlatform = graph.GetPlatform(movePoint, GameInfo.MIN_RECTANGLE_HEIGHT);
 
                     if (fromPlatform.HasValue)
                     {
-                        if (circleMove.type == Graph.movementType.RIDING)
-                        {
-                            nextMove = null;
-
-                            foreach (Graph.Platform p in graph.platforms)
-                            {
-                                int i = 0;
-
-                                while (i < p.moves.Count)
-                                {
-                                    if (p.moves[i].type == Graph.movementType.RIDE)
-                                    {
-                                        p.moves.Remove(p.moves[i]);
-                                    }
-                                    else
-                                    {
-                                        i++;
-                                    }
-
-                                }
-                            }
-                        }
-
                         Graph.Move newMove = new Graph.Move((Graph.Platform)fromPlatform, movePoint, movePoint, 0, true, circleMove.type, collectibles_onPath, 0, false, GameInfo.MIN_RECTANGLE_HEIGHT);
                         graph.AddMove((Graph.Platform)fromPlatform, newMove);
                     }
 
                     cooperation = GameInfo.CooperationStatus.NOT_COOPERATING;
 
+                }
+
+                if (item.Message.Equals(GameInfo.RIDING) &&
+                        item.Attachment.GetType() == typeof(Graph.Move))
+                {
+                    foreach (Graph.Platform p in graph.platforms)
+                    {
+                        int i = 0;
+
+                        while (i < p.moves.Count)
+                        {
+                            if (p.moves[i].type == Graph.movementType.RIDE)
+                            {
+                                p.moves.Remove(p.moves[i]);
+                            }
+                            else
+                            {
+                                i++;
+                            }
+
+                        }
+                    }
+
+                    cooperation = GameInfo.CooperationStatus.RIDING;
+                    Graph.Move newMove = (Graph.Move)item.Attachment;
+                    newMove.type = Graph.movementType.RIDING;
+                    newMove.velocityX = 0;
+                    nextMove = newMove;
+                }
+
+                if (item.Message.Equals(GameInfo.COOPERATION_FINISHED))
+                {
+                    cooperation = GameInfo.CooperationStatus.NOT_COOPERATING;
+                }
+
+                if (item.Message.Equals(GameInfo.JUMPED) && nextMove.HasValue)
+                {
+                    Graph.Move newMove = Graph.CopyMove((Graph.Move)nextMove);
+                    newMove.type = Graph.movementType.MORPH_DOWN;
+                    newMove.height = GameInfo.MIN_RECTANGLE_HEIGHT;
+                    nextMove = newMove;
+                    cooperation = GameInfo.CooperationStatus.RIDING;
                 }
 
             }

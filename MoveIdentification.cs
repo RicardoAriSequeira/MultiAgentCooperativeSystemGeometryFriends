@@ -1,13 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using static GeometryFriendsAgents.Graph;
 
 namespace GeometryFriendsAgents
 {
     static class MoveIdentification
     {
 
-        public static void Jump(Graph graph, Graph.Platform fromPlatform)
+        public static void Setup_Rectangle(Graph graph)
+        {
+            foreach (Platform fromPlatform in graph.platforms)
+            {
+
+                StairOrGap_Rectangle(graph, fromPlatform);
+
+                if (fromPlatform.type != platformType.GAP)
+                {
+                    Fall(graph, fromPlatform);
+                    Morph(graph, fromPlatform);
+                    Collect(graph, fromPlatform);
+                }
+
+            }
+
+        }
+
+        public static void Jump(Graph graph, Platform fromPlatform)
         {
             Parallel.For(0, (GameInfo.MAX_VELOCITYX / Graph.VELOCITYX_STEP), k =>
             {
@@ -45,7 +64,7 @@ namespace GeometryFriendsAgents
             });
         }
 
-        public static void Fall(Graph graph, Graph.Platform fromPlatform)
+        public static void Fall(Graph graph, Platform fromPlatform)
         {
 
             int height = Math.Min(graph.MAX_HEIGHT, GameInfo.SQUARE_HEIGHT);
@@ -60,7 +79,7 @@ namespace GeometryFriendsAgents
             });
         }
 
-        public static void Morph(Graph graph, Graph.Platform fromPlatform)
+        public static void Morph(Graph graph, Platform fromPlatform)
         {
             foreach (Graph.Platform toPlatform in graph.platforms)
             {
@@ -103,7 +122,7 @@ namespace GeometryFriendsAgents
             }
         }
 
-        public static void Collect(Graph graph, Graph.Platform fromPlatform)
+        public static void Collect(Graph graph, Platform fromPlatform)
         {
             int from = fromPlatform.leftEdge + (fromPlatform.leftEdge - GameInfo.LEVEL_ORIGINAL) % (LevelRepresentation.PIXEL_LENGTH * 2);
             int to = fromPlatform.rightEdge - (fromPlatform.rightEdge - GameInfo.LEVEL_ORIGINAL) % (LevelRepresentation.PIXEL_LENGTH * 2);
@@ -125,7 +144,7 @@ namespace GeometryFriendsAgents
 
         }
 
-        public static void StairOrGap_Circle(Graph graph, Graph.Platform fromPlatform)
+        public static void StairOrGap_Circle(Graph graph, Platform fromPlatform)
         {
 
             foreach (Graph.Platform toPlatform in graph.platforms)
@@ -166,10 +185,10 @@ namespace GeometryFriendsAgents
             }
         }
 
-        public static void StairOrGap_Rectangle(Graph graph, Graph.Platform fromPlatform)
+        public static void StairOrGap_Rectangle(Graph graph, Platform fromPlatform)
         {
 
-            foreach (Graph.Platform toPlatform in graph.platforms)
+            foreach (Platform toPlatform in graph.platforms)
             {
 
                 if (fromPlatform.Equals(toPlatform))
@@ -183,13 +202,51 @@ namespace GeometryFriendsAgents
                 }
                 else
                 {
+                    SmallGap_Rectangle(graph, fromPlatform, toPlatform);
                     Stair_Rectangle(graph, fromPlatform, toPlatform);
                 }
 
             }
         }
 
-        private static void Gap_Rectangle(Graph graph, Graph.Platform gap, Graph.Platform platform)
+        public static void SmallGap_Rectangle(Graph graph, Platform fromPlatform, Platform toPlatform)
+        {
+
+            bool rightMove = false;
+            bool obstacleFlag = false;
+            bool[] collectible_onPath = new bool[graph.nCollectibles];
+
+            if (fromPlatform.Equals(toPlatform) || !graph.IsStairOrGap(fromPlatform, toPlatform, ref rightMove))
+            {
+                return;
+            }
+
+            int from = rightMove ? fromPlatform.rightEdge : toPlatform.rightEdge;
+            int to = rightMove ? toPlatform.leftEdge : fromPlatform.leftEdge;
+
+            for (int k = from; k <= to; k += LevelRepresentation.PIXEL_LENGTH)
+            {
+                List<LevelRepresentation.ArrayPoint> rectanglePixels = graph.GetFormPixels(new LevelRepresentation.Point(k, toPlatform.height - GameInfo.SQUARE_HEIGHT), GameInfo.SQUARE_HEIGHT);
+
+                if (graph.IsObstacle_onPixels(rectanglePixels))
+                {
+                    obstacleFlag = true;
+                    break;
+                }
+
+                collectible_onPath = Utilities.GetOrMatrix(collectible_onPath, graph.GetCollectibles_onPixels(rectanglePixels));
+            }
+
+            if (!obstacleFlag)
+            {
+                LevelRepresentation.Point movePoint = rightMove ? new LevelRepresentation.Point(fromPlatform.rightEdge, fromPlatform.height) : new LevelRepresentation.Point(fromPlatform.leftEdge, fromPlatform.height);
+                LevelRepresentation.Point landPoint = rightMove ? new LevelRepresentation.Point(toPlatform.leftEdge, toPlatform.height) : new LevelRepresentation.Point(toPlatform.rightEdge, toPlatform.height);
+
+                graph.AddMove(fromPlatform, new Move(toPlatform, movePoint, landPoint, 0, rightMove, movementType.STAIR_GAP, collectible_onPath, (fromPlatform.height - toPlatform.height) + Math.Abs(movePoint.x - landPoint.x), false));
+            }
+        }
+
+        private static void Gap_Rectangle(Graph graph, Platform gap, Platform platform)
         {
 
             GapBridge_Rectangle(graph, gap, platform);
@@ -257,7 +314,7 @@ namespace GeometryFriendsAgents
 
         }
 
-        private static void GapBridge_Rectangle(Graph graph, Graph.Platform gap, Graph.Platform platform)
+        private static void GapBridge_Rectangle(Graph graph, Platform gap, Platform platform)
         {
             bool rightMove = false;
             int start_x = 0, end_x = 0;
@@ -290,7 +347,7 @@ namespace GeometryFriendsAgents
             graph.AddMove(platform, new Graph.Move(gap, end, start, 0, rightMove, Graph.movementType.STAIR_GAP, collectibles, pathLength, false, gap.allowedHeight));
         }
 
-        private static void Stair_Rectangle(Graph graph, Graph.Platform fromPlatform, Graph.Platform toPlatform)
+        private static void Stair_Rectangle(Graph graph, Platform fromPlatform, Platform toPlatform)
         {
 
             int stairHeight = fromPlatform.height - toPlatform.height;
@@ -321,7 +378,7 @@ namespace GeometryFriendsAgents
             }
         }
 
-        private static void Trajectory(Graph graph, Graph.Platform fromPlatform, LevelRepresentation.Point movePoint, int height, int velocityX, bool rightMove, Graph.movementType movementType)
+        private static void Trajectory(Graph graph, Platform fromPlatform, LevelRepresentation.Point movePoint, int height, int velocityX, bool rightMove, movementType movementType)
         {
 
             if (!graph.IsEnoughLengthToAccelerate(fromPlatform, movePoint, velocityX, rightMove))
@@ -335,9 +392,9 @@ namespace GeometryFriendsAgents
             LevelRepresentation.Point collidePoint = movePoint;
             LevelRepresentation.Point prevCollidePoint;
 
-            Graph.collideType collideType = Graph.collideType.OTHER;
+            collideType collideType = collideType.OTHER;
             float collideVelocityX = rightMove ? velocityX : -velocityX;
-            float collideVelocityY = (movementType == Graph.movementType.JUMP) ? GameInfo.JUMP_VELOCITYY : GameInfo.FALL_VELOCITYY;
+            float collideVelocityY = (movementType == movementType.JUMP) ? GameInfo.JUMP_VELOCITYY : GameInfo.FALL_VELOCITYY;
             bool collideCeiling = false;
 
             do
@@ -346,18 +403,18 @@ namespace GeometryFriendsAgents
 
                 graph.GetPathInfo(collidePoint, collideVelocityX, collideVelocityY, ref collidePoint, ref collideType, ref collideVelocityX, ref collideVelocityY, ref collectible_onPath, ref pathLength, (Math.Min(graph.AREA / height, height) / 2));
 
-                if (collideType == Graph.collideType.CEILING)
+                if (collideType == collideType.CEILING)
                 {
                     collideCeiling = true;
                 }
 
-                if (collideType == Graph.collideType.COOPERATION)
+                if (collideType == collideType.COOPERATION)
                 {
-                    Graph.Platform? toPlatform = graph.GetPlatform(collidePoint, height);
+                    Platform? toPlatform = graph.GetPlatform(collidePoint, height);
 
                     if (toPlatform.HasValue)
                     {
-                        if (movementType == Graph.movementType.FALL)
+                        if (movementType == movementType.FALL)
                         {
                             movePoint.x = rightMove ? movePoint.x - LevelRepresentation.PIXEL_LENGTH : movePoint.x + LevelRepresentation.PIXEL_LENGTH;
                         }
@@ -366,7 +423,7 @@ namespace GeometryFriendsAgents
 
                         if (distance_to_land >= 140 || fromPlatform.id == toPlatform.Value.id)
                         {
-                            graph.AddMove(fromPlatform, new Graph.Move(toPlatform.Value, movePoint, collidePoint, velocityX, rightMove, movementType, collectible_onPath, (int)pathLength, collideCeiling, height));
+                            graph.AddMove(fromPlatform, new Move(toPlatform.Value, movePoint, collidePoint, velocityX, rightMove, movementType, collectible_onPath, (int)pathLength, collideCeiling, height));
                         }
 
                     }
@@ -378,21 +435,21 @@ namespace GeometryFriendsAgents
                     break;
                 }
             }
-            while (!(collideType == Graph.collideType.FLOOR));
+            while (!(collideType == collideType.FLOOR));
 
-            if (collideType == Graph.collideType.FLOOR)
+            if (collideType == collideType.FLOOR)
             {
 
-                Graph.Platform? toPlatform = graph.GetPlatform(collidePoint, height);
+                Platform? toPlatform = graph.GetPlatform(collidePoint, height);
 
                 if (toPlatform.HasValue)
                 {
-                    if (movementType == Graph.movementType.FALL)
+                    if (movementType == movementType.FALL)
                     {
                         movePoint.x = rightMove ? movePoint.x - LevelRepresentation.PIXEL_LENGTH : movePoint.x + LevelRepresentation.PIXEL_LENGTH;
                     }
 
-                    graph.AddMove(fromPlatform, new Graph.Move(toPlatform.Value, movePoint, collidePoint, velocityX, rightMove, movementType, collectible_onPath, (int)pathLength, collideCeiling, height));
+                    graph.AddMove(fromPlatform, new Move(toPlatform.Value, movePoint, collidePoint, velocityX, rightMove, movementType, collectible_onPath, (int)pathLength, collideCeiling, height));
 
                 }
             }

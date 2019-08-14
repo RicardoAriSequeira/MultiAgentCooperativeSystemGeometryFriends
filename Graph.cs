@@ -121,8 +121,6 @@ namespace GeometryFriendsAgents
             return null;
         }
 
-
-
         public bool IsStairOrGap(Platform fromPlatform, Platform toPlatform, ref bool rightMove)
         {
             if (0 <= toPlatform.leftEdge - fromPlatform.rightEdge && toPlatform.leftEdge - fromPlatform.rightEdge <= STAIR_MAXWIDTH)

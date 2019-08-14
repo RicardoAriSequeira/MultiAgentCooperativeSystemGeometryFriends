@@ -23,19 +23,7 @@ namespace GeometryFriendsAgents
 
         public override void SetupMoves()
         {
-            foreach (Platform fromPlatform in platforms)
-            {
-
-                MoveIdentification.StairOrGap_Rectangle(this, fromPlatform);
-
-                if (fromPlatform.type != platformType.GAP)
-                {
-                    MoveIdentification.Fall(this, fromPlatform);
-                    MoveIdentification.Morph(this, fromPlatform);
-                    MoveIdentification.Collect(this, fromPlatform);
-                }
-
-            }
+             MoveIdentification.Setup_Rectangle(this);
         }
 
         public void SetPossibleCollectibles(RectangleRepresentation initial_rI)
@@ -55,8 +43,8 @@ namespace GeometryFriendsAgents
         {
             LevelRepresentation.ArrayPoint rectangleCenterArray = LevelRepresentation.ConvertPointIntoArrayPoint(center, false, false);
 
-            int rectangleHighestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint(center.y - (height/2), false);
-            int rectangleLowestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint(center.y + (height/2), true);
+            int rectangleHighestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint(center.y - (height / 2), false);
+            int rectangleLowestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint(center.y + (height / 2), true);
 
             float rectangleWidth = GameInfo.RECTANGLE_AREA / height;
             int rectangleLeftX = LevelRepresentation.ConvertValue_PointIntoArrayPoint((int)(center.x - (rectangleWidth / 2)), false);
@@ -80,7 +68,7 @@ namespace GeometryFriendsAgents
 
             int from = LevelRepresentation.ConvertValue_PointIntoArrayPoint(fromPlatform.rightEdge, false) + 1;
             int to = LevelRepresentation.ConvertValue_PointIntoArrayPoint(toPlatform.leftEdge, true);
-           
+
             int y = LevelRepresentation.ConvertValue_PointIntoArrayPoint(fromPlatform.height, false);
 
             for (int i = from; i <= to; i++)

@@ -1,35 +1,38 @@
-﻿using System;
+﻿using GeometryFriends.AI.Perceptions.Information;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static GeometryFriendsAgents.Graph;
+using static GeometryFriendsAgents.LevelRepresentation;
 
 namespace GeometryFriendsAgents
 {
     static class PlatformIdentification
     {
 
-        public static Graph.platformType[,] GetPlatformArray_Circle(int[,] levelArray)
+        public static platformType[,] GetPlatformArray_Circle(int[,] levelArray)
         {
-            Graph.platformType[,] platformArray = new Graph.platformType[levelArray.GetLength(0), levelArray.GetLength(1)];
+            platformType[,] platformArray = new platformType[levelArray.GetLength(0), levelArray.GetLength(1)];
 
             for (int y = 0; y < levelArray.GetLength(0); y++)
             {
                 Parallel.For(0, levelArray.GetLength(1), x =>
                 {
 
-                    LevelRepresentation.Point circleCenter = LevelRepresentation.ConvertArrayPointIntoPoint(new LevelRepresentation.ArrayPoint(x, y));
+                    Point circleCenter = ConvertArrayPointIntoPoint(new ArrayPoint(x, y));
                     circleCenter.y -= GameInfo.CIRCLE_RADIUS;
-                    List<LevelRepresentation.ArrayPoint> circlePixels = Graph.GetCirclePixels(circleCenter, GameInfo.CIRCLE_RADIUS);
+                    List<ArrayPoint> circlePixels = GetCirclePixels(circleCenter, GameInfo.CIRCLE_RADIUS);
 
                     if (!CircleAgent.IsObstacle_onPixels(levelArray, circlePixels))
                     {
-                        if (levelArray[y, x - 1] == LevelRepresentation.BLACK || levelArray[y, x] == LevelRepresentation.BLACK)
+                        if (levelArray[y, x - 1] == BLACK || levelArray[y, x] == BLACK)
                         {
-                            platformArray[y, x] = Graph.platformType.BLACK;
+                            platformArray[y, x] = platformType.BLACK;
                         }
-                        else if (levelArray[y, x - 1] == LevelRepresentation.GREEN || levelArray[y, x] == LevelRepresentation.GREEN)
+                        else if (levelArray[y, x - 1] == GREEN || levelArray[y, x] == GREEN)
                         {
-                            platformArray[y, x] = Graph.platformType.GREEN;
+                            platformArray[y, x] = platformType.GREEN;
                         }
                     }
                 });
@@ -39,7 +42,7 @@ namespace GeometryFriendsAgents
 
         }
 
-        public static Graph.platformType[,] GetPlatformArray_Rectangle(int[,] levelArray)
+        public static platformType[,] GetPlatformArray_Rectangle(int[,] levelArray)
         {
             Graph.platformType[,] platformArray = new Graph.platformType[levelArray.GetLength(0), levelArray.GetLength(1)];
 
@@ -89,7 +92,7 @@ namespace GeometryFriendsAgents
 
         }
 
-        public static List<Graph.Platform> SetPlatforms_Circle(int[,] levelArray)
+        public static List<Platform> SetPlatforms_Circle(int[,] levelArray)
         {
             List<Graph.Platform> platforms = new List<Graph.Platform>();
 
@@ -130,11 +133,11 @@ namespace GeometryFriendsAgents
                 }
             });
 
-            return platforms;
+            return SetPlatformsID(platforms);
 
         }
 
-        public static List<Graph.Platform> SetPlatforms_Rectangle(int[,] levelArray)
+        public static List<Platform> SetPlatforms_Rectangle(int[,] levelArray)
         {
 
             List<Graph.Platform> platforms = new List<Graph.Platform>();
@@ -253,21 +256,21 @@ namespace GeometryFriendsAgents
                 }
             });
 
-            return platforms;
+            return SetPlatformsID(platforms);
         }
 
-        public static List<Graph.Platform> JoinPlatforms(List<Graph.Platform> platforms1, List<Graph.Platform> platforms2)
+        public static List<Platform> JoinPlatforms(List<Platform> platforms1, List<Platform> platforms2)
         {
-            foreach (Graph.Platform p in platforms2)
+            foreach (Platform p in platforms2)
             {
-                platforms1.Add(new Graph.Platform(Graph.platformType.COOPERATION, p.height - GameInfo.MIN_RECTANGLE_HEIGHT, p.leftEdge, p.rightEdge, p.moves, p.allowedHeight, p.id));
+                platforms1.Add(new Platform(platformType.COOPERATION, p.height - GameInfo.MIN_RECTANGLE_HEIGHT, p.leftEdge, p.rightEdge, p.moves, p.allowedHeight, p.id));
             }
 
-            return platforms1;
+            return SetPlatformsID(platforms1);
 
         }
 
-        public static List<Graph.Platform> SetPlatformsID(List<Graph.Platform> platforms)
+        public static List<Platform> SetPlatformsID(List<Platform> platforms)
         {
             platforms.Sort((a, b) => {
                 int result = a.height - b.height;
@@ -284,7 +287,7 @@ namespace GeometryFriendsAgents
             return platforms;
         }
 
-        public static List<Graph.Platform> DeleteCooperationPlatforms(List<Graph.Platform> platforms)
+        public static List<Platform> DeleteCooperationPlatforms(List<Platform> platforms)
         {
 
             foreach (Graph.Platform p in platforms)
@@ -315,5 +318,58 @@ namespace GeometryFriendsAgents
 
         }
 
+        public static List<Platform> DeleteUnreachablePlatforms(List<Platform> rectanglePlatforms, RectangleRepresentation initialRectangle)
+        {
+            Platform? currentPlatform = GetPlatform(rectanglePlatforms, new Point((int)initialRectangle.X, (int)initialRectangle.Y), initialRectangle.Height);
+
+            if (currentPlatform.HasValue)
+            {
+                bool[] platformsChecked = VisitPlatform(new bool[rectanglePlatforms.Count], currentPlatform.Value);
+
+                for (int p = platformsChecked.Length - 1; p >= 0; p--)
+                {
+                    if (!platformsChecked[p])
+                    {
+                        rectanglePlatforms.Remove(rectanglePlatforms[p]);
+                    }
+                }
+            }
+
+            foreach (Platform p in rectanglePlatforms)
+            {
+                p.moves.Clear();
+            }
+
+            return rectanglePlatforms;
+        }
+
+        private static bool[] VisitPlatform(bool[] platformsChecked, Platform platform)
+        {
+            platformsChecked[platform.id - 1] = true;
+
+            foreach (Move m in platform.moves)
+            {
+                if (!platformsChecked[m.reachablePlatform.id - 1])
+                {
+                    platformsChecked = VisitPlatform(platformsChecked, m.reachablePlatform);
+                }
+            }
+
+            return platformsChecked;
+        }
+
+        private static Platform? GetPlatform(List<Platform> platformsList, Point center, float height, int velocityY = 0)
+        {
+
+            foreach (Platform i in platformsList)
+            {
+                if (i.leftEdge <= center.x && center.x <= i.rightEdge && (i.height - center.y >= (height / 2) - 8) && (i.height - center.y <= (height / 2) + 8))
+                {
+                    return i;
+                }
+            }
+
+            return null;
+        }
     }
 }

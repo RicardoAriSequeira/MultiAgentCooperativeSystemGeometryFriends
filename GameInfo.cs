@@ -25,16 +25,21 @@
 
         public const string IST_CIRCLE_PLAYING = "IST Circle Playing";
         public const string IST_RECTANGLE_PLAYING = "IST Rectangle Playing";
-
+        public const string UNREACHABLE_PLATFORMS = "Unreachable Platforms";
         public const string AWAITING_RIDE = "Awaiting Ride";
         public const string AWAITING_MORPH = "Awaiting Morph";
-
         public const string RIDE_READY = "Ride Ready";
         public const string MORPH_READY = "Morph Ready";
+        public const string RIDING = "Riding";
+        public const string COOPERATION_FINISHED = "Cooperation Finished";
+        public const string JUMPED = "Jumped";
+        public const string IN_POSITION = "In Position";
+        public const string INDIVIDUAL_MOVE = "Taking Individual Move";
+
 
         public enum CooperationStatus
         {
-            SINGLE_MODE, NOT_COOPERATING, AWAITING_RIDE, RIDE_READY, RIDING, AWAITING_MORPH, MORPH_READY
+            SINGLE_MODE, NOT_COOPERATING, AWAITING_RIDE, RIDE_READY, RIDING, AWAITING_MORPH, MORPH_READY, JUMPED, IN_POSITION
         }
     }
 }
