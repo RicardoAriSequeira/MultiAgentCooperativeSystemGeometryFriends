@@ -77,7 +77,7 @@ namespace GeometryFriendsAgents
             messages.Add(new AgentMessage(GameInfo.IST_RECTANGLE_PLAYING));
 
             // Create Level Array
-            levelInfo.CreateLevelArray(colI, oI, rPI, cPI, LevelRepresentation.YELLOW);
+            levelInfo.CreateLevelArray(colI, oI, rPI, cPI);
 
             // Create Graph
             graph.SetupGraph(levelInfo.GetLevelArray(), colI.Length);
@@ -165,7 +165,8 @@ namespace GeometryFriendsAgents
 
                 if (currentPlatform.HasValue)
                 {
-                    if (IsDifferentPlatform() || IsGetCollectible() || cooperation == GameInfo.CooperationStatus.NOT_COOPERATING)
+                    if ((IsDifferentPlatform() || IsGetCollectible() || cooperation == GameInfo.CooperationStatus.NOT_COOPERATING) &&
+                        (cooperation == GameInfo.CooperationStatus.NOT_COOPERATING || cooperation == GameInfo.CooperationStatus.SINGLE_MODE))
                     {
                         targetPointX_InAir = (currentPlatform.Value.leftEdge + currentPlatform.Value.rightEdge) / 2;
                         Task.Factory.StartNew(SetNextMove);
@@ -224,6 +225,12 @@ namespace GeometryFriendsAgents
                                     currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextMove.Value.movePoint.x, nextMove.Value.velocityX, nextMove.Value.rightMove);
                                     //currentAction = nextMove.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                                 }
+                            }
+
+                            else if (cooperation == GameInfo.CooperationStatus.RIDE_HELP && nextMove.Value.type == Graph.movementType.RIDE)
+                            {
+                                int targetX = nextMove.Value.rightMove ? (int)circleInfo.X + 70 : (int)circleInfo.X - 70;
+                                currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetX, 0, nextMove.Value.rightMove);
                             }
 
                             else
@@ -321,6 +328,7 @@ namespace GeometryFriendsAgents
                     if (cooperation == GameInfo.CooperationStatus.RIDING)
                     {
                         messages.Add(new AgentMessage(GameInfo.IN_POSITION));
+                        cooperation = GameInfo.CooperationStatus.IN_POSITION;
                     }
 
                     if (nextMove.Value.type == Graph.movementType.STAIR_GAP)
@@ -345,9 +353,22 @@ namespace GeometryFriendsAgents
                             
                     }
 
+                    if (nextMove.Value.type == Graph.movementType.RIDE)
+                    {
+                        if (cooperation == GameInfo.CooperationStatus.RIDE_HELP)
+                        {
+                            int targetX = nextMove.Value.rightMove ? (int)circleInfo.X + 50 : (int)circleInfo.X - 50;
+                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetX, 0, nextMove.Value.rightMove);
+                        }
+
+                        else if (rectangleInfo.Height > nextMove.Value.height)
+                        {
+                            currentAction = Moves.MORPH_DOWN;
+                        }
+                    }
+
                     if ((nextMove.Value.type == Graph.movementType.MORPH_DOWN ||
-                         nextMove.Value.type == Graph.movementType.FALL ||
-                         nextMove.Value.type == Graph.movementType.RIDE) &&
+                         nextMove.Value.type == Graph.movementType.FALL) &&
                         rectangleInfo.Height > nextMove.Value.height)
                     {
                         currentAction = Moves.MORPH_DOWN;
@@ -511,7 +532,7 @@ namespace GeometryFriendsAgents
 
                     if (fromPlatform.HasValue)
                     {
-                        Graph.Move newMove = new Graph.Move((Graph.Platform)fromPlatform, movePoint, movePoint, 0, true, circleMove.type, collectibles_onPath, 0, false, GameInfo.MIN_RECTANGLE_HEIGHT);
+                        Graph.Move newMove = new Graph.Move((Graph.Platform)fromPlatform, movePoint, movePoint, 0, circleMove.rightMove, circleMove.type, collectibles_onPath, 0, circleMove.collideCeiling, GameInfo.MIN_RECTANGLE_HEIGHT);
                         graph.AddMove((Graph.Platform)fromPlatform, newMove);
                     }
 
@@ -559,6 +580,11 @@ namespace GeometryFriendsAgents
                     newMove.height = GameInfo.MIN_RECTANGLE_HEIGHT;
                     nextMove = newMove;
                     cooperation = GameInfo.CooperationStatus.RIDING;
+                }
+
+                if (item.Message.Equals(GameInfo.RIDE_HELP))
+                {
+                    cooperation = GameInfo.CooperationStatus.RIDE_HELP;
                 }
 
             }

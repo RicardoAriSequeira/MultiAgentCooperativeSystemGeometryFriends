@@ -51,19 +51,19 @@ namespace GeometryFriendsAgents
                 Parallel.For(0, levelArray.GetLength(1), x =>
                 {
 
-                    if (levelArray[y, x] == LevelRepresentation.BLACK || levelArray[y, x] == LevelRepresentation.YELLOW)
+                    if (levelArray[y, x] == BLACK || levelArray[y, x] == YELLOW)
                     {
 
                         // RECTANGLE WITH HEIGHT 100
-                        LevelRepresentation.Point rectangleCenter = LevelRepresentation.ConvertArrayPointIntoPoint(new LevelRepresentation.ArrayPoint(x, y));
+                        Point rectangleCenter = ConvertArrayPointIntoPoint(new ArrayPoint(x, y));
                         rectangleCenter.y -= GameInfo.SQUARE_HEIGHT / 2;
-                        List<LevelRepresentation.ArrayPoint> rectanglePixels = RectangleAgent.GetFormPixels(rectangleCenter, GameInfo.SQUARE_HEIGHT);
+                        List<ArrayPoint> rectanglePixels = RectangleAgent.GetFormPixels(rectangleCenter, GameInfo.SQUARE_HEIGHT);
 
                         if (RectangleAgent.IsObstacle_onPixels(levelArray, rectanglePixels))
                         {
 
                             // RECTANGLE WITH HEIGHT 50
-                            rectangleCenter = LevelRepresentation.ConvertArrayPointIntoPoint(new LevelRepresentation.ArrayPoint(x, y));
+                            rectangleCenter = ConvertArrayPointIntoPoint(new ArrayPoint(x, y));
                             rectangleCenter.y -= GameInfo.MIN_RECTANGLE_HEIGHT / 2;
                             rectanglePixels = RectangleAgent.GetFormPixels(rectangleCenter, GameInfo.MIN_RECTANGLE_HEIGHT);
 
@@ -71,7 +71,7 @@ namespace GeometryFriendsAgents
                             {
 
                                 // RECTANGLE WITH HEIGHT 200
-                                rectangleCenter = LevelRepresentation.ConvertArrayPointIntoPoint(new LevelRepresentation.ArrayPoint(x, y));
+                                rectangleCenter = ConvertArrayPointIntoPoint(new ArrayPoint(x, y));
                                 rectangleCenter.y -= GameInfo.MAX_RECTANGLE_HEIGHT / 2;
                                 rectanglePixels = RectangleAgent.GetFormPixels(rectangleCenter, GameInfo.MAX_RECTANGLE_HEIGHT);
 
@@ -82,7 +82,7 @@ namespace GeometryFriendsAgents
                             }
                         }
 
-                        platformArray[y, x] = (levelArray[y, x] == LevelRepresentation.BLACK) ? Graph.platformType.BLACK : Graph.platformType.YELLOW;
+                        platformArray[y, x] = (levelArray[y, x] == BLACK) ? platformType.BLACK : platformType.YELLOW;
                     }
 
                 });

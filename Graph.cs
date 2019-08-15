@@ -399,16 +399,13 @@ namespace GeometryFriendsAgents
                 int lowestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint(currentCenter.y + radius, true);
                 bool ascent = velocityY - GameInfo.GRAVITY * (i - 1) * TIME_STEP >= 0;
 
-                if (!ascent)
+                if (!ascent && (collideType != collideType.COOPERATION) && levelArray[lowestY, centerArray.xArray] == LevelRepresentation.COOPERATION)
                 {
-                    if (levelArray[lowestY, centerArray.xArray] == LevelRepresentation.COOPERATION)
-                    {
-                        collidePoint = previousCenter;
-                        collideType = collideType.COOPERATION;
-                        collideVelocityX = 0;
-                        collideVelocityY = 0;
-                        return;
-                    }
+                    collidePoint = previousCenter;
+                    collideType = collideType.COOPERATION;
+                    collideVelocityX = 0;
+                    collideVelocityY = 0;
+                    return;
                 }
 
 

@@ -66,14 +66,14 @@ namespace GeometryFriendsAgents
             messages.Add(new AgentMessage(GameInfo.IST_CIRCLE_PLAYING));
 
             // Create Level Array
-            levelInfo.CreateLevelArray(colI, oI, rPI, cPI, LevelRepresentation.GREEN);
+            levelInfo.CreateLevelArray(colI, oI, rPI, cPI);
 
             // Create Graph
             graph.initialRectangleInfo = rI;
             graph.SetupGraph(levelInfo.GetLevelArray(), colI.Length);
             graph.SetPossibleCollectibles(cI);
 
-            if (rI.X == -1000 && rI.Y == -1000)
+            if (rI.X < 0 || rI.Y < 0)
             {
                 graph.DeleteCooperationPlatforms();
                 cooperation = GameInfo.CooperationStatus.NOT_COOPERATING;
@@ -206,7 +206,7 @@ namespace GeometryFriendsAgents
 
                     }
 
-                    else if (cooperation != GameInfo.CooperationStatus.NOT_COOPERATING)
+                    else if (cooperation != GameInfo.CooperationStatus.NOT_COOPERATING && currentPlatform.Value.type != Graph.platformType.COOPERATION)
                     {
                         cooperation = GameInfo.CooperationStatus.NOT_COOPERATING;
                         messages.Add(new AgentMessage(GameInfo.COOPERATION_FINISHED));
@@ -226,6 +226,10 @@ namespace GeometryFriendsAgents
                         {
                             currentAction = actionSelector.GetCurrentAction(circleInfo, (int)rectangleInfo.X, 0, true);
                         }
+                        else if (nextMove.Value.type == Graph.movementType.JUMP)
+                        {
+                            currentAction = Moves.NO_ACTION;
+                        }
                         else if (nextMove.Value.type == Graph.movementType.STAIR_GAP)
                         {
                             currentAction = nextMove.Value.rightMove ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
@@ -233,12 +237,7 @@ namespace GeometryFriendsAgents
                         else if (cooperation == GameInfo.CooperationStatus.AWAITING_MORPH)
                         {
                             currentAction = actionSelector.GetCurrentAction(circleInfo, (int)rectangleInfo.X, 0, true);
-                            //currentAction = actionSelector.GetCurrentAction(circleInfo, nextMove.Value.movePoint.x, nextMove.Value.velocityX, nextMove.Value.rightMove);
                         }
-                        //else if (cooperation == GameInfo.CooperationStatus.MORPH_READY)
-                        //{
-                        //    currentAction = actionSelector.GetCurrentAction(circleInfo, nextMove.Value.movePoint.x, nextMove.Value.velocityX, nextMove.Value.rightMove);
-                        //}
                         else
                         {
                             if (nextMove.Value.collideCeiling && circleInfo.VelocityY < 0)
@@ -290,6 +289,11 @@ namespace GeometryFriendsAgents
                         if (cooperation == GameInfo.CooperationStatus.MORPH_READY)
                         {
                             messages.Add(new AgentMessage(GameInfo.JUMPED));
+                        }
+
+                        if (cooperation == GameInfo.CooperationStatus.RIDE_READY && nextMove.Value.collideCeiling)
+                        {
+                            messages.Add(new AgentMessage(GameInfo.RIDE_HELP));
                         }
 
                     }
@@ -372,6 +376,12 @@ namespace GeometryFriendsAgents
             nextMove = subgoalAStar.CalculateShortestPath(currentPlatform.Value, new LevelRepresentation.Point((int)circleInfo.X, (int)circleInfo.Y),
                 Enumerable.Repeat<bool>(true, levelInfo.initialCollectibles.Length).ToArray(),
                 levelInfo.GetObtainedCollectibles(), levelInfo.initialCollectibles);
+
+            if (nextMove.HasValue && currentPlatform.HasValue && currentPlatform.Value.type != Graph.platformType.COOPERATION && nextMove.Value.reachablePlatform.type != Graph.platformType.COOPERATION)
+            {
+                cooperation = GameInfo.CooperationStatus.NOT_COOPERATING;
+                messages.Add(new AgentMessage(GameInfo.COOPERATION_FINISHED));
+            }
 
             if (nextMove.HasValue && nextMove.Value.reachablePlatform.type != Graph.platformType.COOPERATION &&
                             cooperation == GameInfo.CooperationStatus.NOT_COOPERATING)

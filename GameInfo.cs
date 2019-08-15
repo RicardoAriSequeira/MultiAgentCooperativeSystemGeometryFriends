@@ -35,11 +35,12 @@
         public const string JUMPED = "Jumped";
         public const string IN_POSITION = "In Position";
         public const string INDIVIDUAL_MOVE = "Taking Individual Move";
+        public const string RIDE_HELP = "Ride Help";
 
 
         public enum CooperationStatus
         {
-            SINGLE_MODE, NOT_COOPERATING, AWAITING_RIDE, RIDE_READY, RIDING, AWAITING_MORPH, MORPH_READY, JUMPED, IN_POSITION
+            SINGLE_MODE, NOT_COOPERATING, AWAITING_RIDE, RIDE_READY, RIDING, AWAITING_MORPH, MORPH_READY, IN_POSITION, RIDE_HELP
         }
     }
 }

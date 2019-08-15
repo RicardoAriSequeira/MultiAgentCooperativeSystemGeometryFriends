@@ -88,9 +88,8 @@ namespace GeometryFriendsAgents
             return levelArray;
         }
 
-        public void CreateLevelArray(CollectibleRepresentation[] col, ObstacleRepresentation[] black, ObstacleRepresentation[] green, ObstacleRepresentation[] yellow, int obstacleColour)
+        public void CreateLevelArray(CollectibleRepresentation[] col, ObstacleRepresentation[] black, ObstacleRepresentation[] green, ObstacleRepresentation[] yellow)
         {
-            //ObstacleRepresentation[] obstacles = (obstacleColour == YELLOW) ? yellow : green;
 
             this.blackObstacles = black;
             this.greenObstacles = green;
@@ -102,7 +101,6 @@ namespace GeometryFriendsAgents
             SetCollectibles(collectibles);
             SetDefaultObstacles();
             SetObstacles(blackObstacles, BLACK);
-            //SetObstacles(obstacles, obstacleColour);
             SetObstacles(greenObstacles, GREEN);
             SetObstacles(yellowObstacles, YELLOW);
         }

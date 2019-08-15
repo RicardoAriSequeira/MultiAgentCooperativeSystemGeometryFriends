@@ -12,23 +12,28 @@ namespace GeometryFriendsAgents
 
         bool[] platformsChecked;
         int[,] previous_levelArray;
+        int obstacleColour;
         public RectangleRepresentation initialRectangleInfo;
 
         public GraphCircle() : base()
         {
-            this.AREA = GameInfo.CIRCLE_AREA;
-            this.MIN_HEIGHT = GameInfo.MIN_CIRCLE_HEIGHT;
-            this.MAX_HEIGHT = GameInfo.MAX_CIRCLE_HEIGHT;
+            AREA = GameInfo.CIRCLE_AREA;
+            MIN_HEIGHT = GameInfo.MIN_CIRCLE_HEIGHT;
+            MAX_HEIGHT = GameInfo.MAX_CIRCLE_HEIGHT;
+            obstacleColour = LevelRepresentation.GREEN;
         }
 
         public override void SetupPlatforms()
         {
+            obstacleColour = LevelRepresentation.YELLOW;
+
             platforms = PlatformIdentification.SetPlatforms_Rectangle(levelArray);
             MoveIdentification.Setup_Rectangle(this);
             platforms = PlatformIdentification.DeleteUnreachablePlatforms(platforms, initialRectangleInfo);
 
-            List<Platform> platformsCircle = PlatformIdentification.SetPlatforms_Circle(levelArray);
+            obstacleColour = LevelRepresentation.GREEN;
 
+            List<Platform> platformsCircle = PlatformIdentification.SetPlatforms_Circle(levelArray);
             platforms = PlatformIdentification.JoinPlatforms(platformsCircle, platforms);
             platforms = PlatformIdentification.SetPlatformsID(platforms);
 
@@ -81,7 +86,7 @@ namespace GeometryFriendsAgents
 
             foreach (LevelRepresentation.ArrayPoint i in checkPixels)
             {
-                if (levelArray[i.yArray, i.xArray] == LevelRepresentation.BLACK || levelArray[i.yArray, i.xArray] == LevelRepresentation.GREEN)
+                if (levelArray[i.yArray, i.xArray] == LevelRepresentation.BLACK || levelArray[i.yArray, i.xArray] == obstacleColour)
                 {
                     return true;
                 }
