@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using static GeometryFriendsAgents.Graph;
+using static GeometryFriendsAgents.LevelRepresentation;
 
 namespace GeometryFriendsAgents
 {
@@ -28,25 +29,25 @@ namespace GeometryFriendsAgents
 
         public static void Jump(Graph graph, Platform fromPlatform)
         {
-            Parallel.For(0, (GameInfo.MAX_VELOCITYX / Graph.VELOCITYX_STEP), k =>
+            Parallel.For(0, (GameInfo.MAX_VELOCITYX / VELOCITYX_STEP), k =>
             {
-                int from = fromPlatform.leftEdge + (fromPlatform.leftEdge - GameInfo.LEVEL_ORIGINAL) % (LevelRepresentation.PIXEL_LENGTH * 2);
-                int to = fromPlatform.rightEdge - (fromPlatform.rightEdge - GameInfo.LEVEL_ORIGINAL) % (LevelRepresentation.PIXEL_LENGTH * 2);
+                int from = fromPlatform.leftEdge + (fromPlatform.leftEdge - GameInfo.LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2);
+                int to = fromPlatform.rightEdge - (fromPlatform.rightEdge - GameInfo.LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2);
                 
-                if (fromPlatform.type == Graph.platformType.COOPERATION && k <= 5)
+                if (fromPlatform.type == platformType.COOPERATION && k <= 5)
                 {
-                    from = fromPlatform.leftEdge + (fromPlatform.leftEdge - GameInfo.LEVEL_ORIGINAL) % (LevelRepresentation.PIXEL_LENGTH * 2) + 90;
-                    to = fromPlatform.rightEdge - (fromPlatform.rightEdge - GameInfo.LEVEL_ORIGINAL) % (LevelRepresentation.PIXEL_LENGTH * 2) - 90;
+                    from = fromPlatform.leftEdge + (fromPlatform.leftEdge - GameInfo.LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2) + 90;
+                    to = fromPlatform.rightEdge - (fromPlatform.rightEdge - GameInfo.LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2) - 90;
 
-                    Parallel.For(0, (to - from) / (LevelRepresentation.PIXEL_LENGTH * 2) + 1, j =>
+                    Parallel.For(0, (to - from) / (PIXEL_LENGTH * 2) + 1, j =>
                     {
-                        LevelRepresentation.Point movePoint = new LevelRepresentation.Point(from + j * LevelRepresentation.PIXEL_LENGTH * 2, fromPlatform.height - GameInfo.CIRCLE_RADIUS);
-                        Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, Graph.VELOCITYX_STEP * k, true, Graph.movementType.JUMP);
-                        Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, Graph.VELOCITYX_STEP * k, false, Graph.movementType.JUMP);
+                        Point movePoint = new Point(from + j * PIXEL_LENGTH * 2, fromPlatform.height - GameInfo.CIRCLE_RADIUS);
+                        Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, VELOCITYX_STEP * k, true, movementType.JUMP);
+                        Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, VELOCITYX_STEP * k, false, movementType.JUMP);
 
-                        movePoint = new LevelRepresentation.Point(from + j * LevelRepresentation.PIXEL_LENGTH * 2, fromPlatform.height - 50 - GameInfo.CIRCLE_RADIUS);
-                        Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, Graph.VELOCITYX_STEP * k, true, Graph.movementType.JUMP);
-                        Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, Graph.VELOCITYX_STEP * k, false, Graph.movementType.JUMP);
+                        movePoint = new Point(from + j * PIXEL_LENGTH * 2, fromPlatform.height - 50 - GameInfo.CIRCLE_RADIUS);
+                        Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, VELOCITYX_STEP * k, true, movementType.JUMP);
+                        Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, VELOCITYX_STEP * k, false, movementType.JUMP);
 
                         //movePoint = new LevelRepresentation.Point(from + j * LevelRepresentation.PIXEL_LENGTH * 2, fromPlatform.height - 150 - GameInfo.CIRCLE_RADIUS);
                         //Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, Graph.VELOCITYX_STEP * k, true, Graph.movementType.JUMP);
@@ -54,13 +55,13 @@ namespace GeometryFriendsAgents
                     });
                 }
 
-                else if (fromPlatform.type != Graph.platformType.COOPERATION)
+                else if (fromPlatform.type != platformType.COOPERATION)
                 {
-                    Parallel.For(0, (to - from) / (LevelRepresentation.PIXEL_LENGTH * 2) + 1, j =>
+                    Parallel.For(0, (to - from) / (PIXEL_LENGTH * 2) + 1, j =>
                     {
-                        LevelRepresentation.Point movePoint = new LevelRepresentation.Point(from + j * LevelRepresentation.PIXEL_LENGTH * 2, fromPlatform.height - GameInfo.CIRCLE_RADIUS);
-                        Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, Graph.VELOCITYX_STEP * k, true, Graph.movementType.JUMP);
-                        Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, Graph.VELOCITYX_STEP * k, false, Graph.movementType.JUMP);
+                        Point movePoint = new Point(from + j * PIXEL_LENGTH * 2, fromPlatform.height - GameInfo.CIRCLE_RADIUS);
+                        Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, VELOCITYX_STEP * k, true, movementType.JUMP);
+                        Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, VELOCITYX_STEP * k, false, movementType.JUMP);
                     });
                 }
 
@@ -400,7 +401,7 @@ namespace GeometryFriendsAgents
             }
         }
 
-        private static void Trajectory(Graph graph, Platform fromPlatform, LevelRepresentation.Point movePoint, int height, int velocityX, bool rightMove, movementType movementType)
+        private static void Trajectory(Graph graph, Platform fromPlatform, Point movePoint, int height, int velocityX, bool rightMove, movementType movementType)
         {
 
             if (!graph.IsEnoughLengthToAccelerate(fromPlatform, movePoint, velocityX, rightMove))
@@ -411,8 +412,8 @@ namespace GeometryFriendsAgents
             bool[] collectible_onPath = new bool[graph.nCollectibles];
             float pathLength = 0;
 
-            LevelRepresentation.Point collidePoint = movePoint;
-            LevelRepresentation.Point prevCollidePoint;
+            Point collidePoint = movePoint;
+            Point prevCollidePoint;
 
             collideType collideType = collideType.OTHER;
             float collideVelocityX = rightMove ? velocityX : -velocityX;
@@ -438,15 +439,19 @@ namespace GeometryFriendsAgents
                     {
                         if (movementType == movementType.FALL)
                         {
-                            movePoint.x = rightMove ? movePoint.x - LevelRepresentation.PIXEL_LENGTH : movePoint.x + LevelRepresentation.PIXEL_LENGTH;
+                            movePoint.x = rightMove ? movePoint.x - PIXEL_LENGTH : movePoint.x + PIXEL_LENGTH;
                         }
 
                         int distance_to_land = Math.Abs(collidePoint.x - movePoint.x);
 
                         if (distance_to_land >= 140 || fromPlatform.id == toPlatform.Value.id)
                         {
+                            int rectangle_position_x = Math.Min(Math.Max(collidePoint.x, 136), 1064);
+                            Point rectangle_position = new Point(rectangle_position_x, collidePoint.y + GameInfo.CIRCLE_RADIUS + (GameInfo.MIN_RECTANGLE_HEIGHT / 2));
+                            PreCondition rectanglePreCondition = new PreCondition(rectangle_position, GameInfo.MIN_RECTANGLE_HEIGHT, 0, true);
+
                             PreCondition newPreCondition = new PreCondition(movePoint, height, velocityX, rightMove);
-                            Move newMove = new Move(toPlatform.Value, newPreCondition, collidePoint, movementType, collectible_onPath, (int)pathLength, collideCeiling);
+                            Move newMove = new Move(toPlatform.Value, newPreCondition, collidePoint, movementType, collectible_onPath, (int)pathLength, collideCeiling, rectanglePreCondition);
                             graph.AddMove(fromPlatform, newMove);
                         }
 
@@ -470,7 +475,7 @@ namespace GeometryFriendsAgents
                 {
                     if (movementType == movementType.FALL)
                     {
-                        movePoint.x = rightMove ? movePoint.x - LevelRepresentation.PIXEL_LENGTH : movePoint.x + LevelRepresentation.PIXEL_LENGTH;
+                        movePoint.x = rightMove ? movePoint.x - PIXEL_LENGTH : movePoint.x + PIXEL_LENGTH;
                     }
 
                     PreCondition newPreCondition = new PreCondition(movePoint, height, velocityX, rightMove);

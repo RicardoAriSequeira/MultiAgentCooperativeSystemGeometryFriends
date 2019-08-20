@@ -8,6 +8,9 @@ using GeometryFriends.AI;
 using GeometryFriends.AI.Interfaces;
 using GeometryFriends.AI.Communication;
 using GeometryFriends.AI.Perceptions.Information;
+using static GeometryFriendsAgents.GameInfo;
+using static GeometryFriendsAgents.Graph;
+using static GeometryFriendsAgents.LevelRepresentation;
 
 namespace GeometryFriendsAgents
 {
@@ -36,11 +39,11 @@ namespace GeometryFriendsAgents
 
         // Auxiliary Variables
         private Moves currentAction;
-        private Graph.Move? nextMove;
+        private Move? nextMove;
         private DateTime lastMoveTime;
         private int targetPointX_InAir;
         private bool[] previousCollectibles;
-        private Graph.Platform? previousPlatform, currentPlatform;
+        private Platform? previousPlatform, currentPlatform;
 
         public CircleAgent()
         {
@@ -63,7 +66,7 @@ namespace GeometryFriendsAgents
         public override void Setup(CountInformation nI, RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI, Rectangle area, double timeLimit)
         {
         
-            messages.Add(new AgentMessage(GameInfo.IST_CIRCLE_PLAYING));
+            messages.Add(new AgentMessage(IST_CIRCLE_PLAYING));
 
             // Create Level Array
             levelInfo.CreateLevelArray(colI, oI, rPI, cPI);
@@ -76,7 +79,7 @@ namespace GeometryFriendsAgents
             if (rI.X < 0 || rI.Y < 0)
             {
                 graph.DeleteCooperationPlatforms();
-                cooperation = GameInfo.CooperationStatus.NOT_COOPERATING;
+                cooperation = CooperationStatus.NOT_COOPERATING;
             }
 
             // Initial Information
@@ -119,36 +122,24 @@ namespace GeometryFriendsAgents
         public override void Update(TimeSpan elapsedGameTime)
         {
 
-            //if (cooperation == GameInfo.CooperationStatus.SINGLE_MODE)
-            //{
-            //    graph.DeleteCooperationPlatforms();
-            //    cooperation = GameInfo.CooperationStatus.NOT_COOPERATING;
-            //}
-
             if ((DateTime.Now - lastMoveTime).TotalMilliseconds >= 20)
             {
 
-                currentPlatform = graph.GetPlatform(new LevelRepresentation.Point((int)circleInfo.X, (int)circleInfo.Y), GameInfo.MAX_CIRCLE_HEIGHT, (int)circleInfo.VelocityY);
+                currentPlatform = graph.GetPlatform(new LevelRepresentation.Point((int)circleInfo.X, (int)circleInfo.Y), MAX_CIRCLE_HEIGHT, (int)circleInfo.VelocityY);
 
-                if (!currentPlatform.HasValue)
+                if (!currentPlatform.HasValue && (cooperation == CooperationStatus.AWAITING_MORPH || cooperation == CooperationStatus.MORPH_READY) && IsRidingRectangle())
                 {
-
-                    if ((cooperation == GameInfo.CooperationStatus.AWAITING_MORPH || cooperation == GameInfo.CooperationStatus.MORPH_READY) && IsRidingRectangle())
-                    {
-                        currentPlatform = previousPlatform;  
-                    }
+                    currentPlatform = previousPlatform;  
                 }
-
-                if (currentPlatform.HasValue &&
-                    cooperation == GameInfo.CooperationStatus.AWAITING_MORPH &&
-                    !IsRidingRectangle())
-                {
-                    cooperation = GameInfo.CooperationStatus.NOT_COOPERATING;
-                }
-
 
                 if (currentPlatform.HasValue)
                 {
+
+                    if (cooperation == CooperationStatus.AWAITING_MORPH && !IsRidingRectangle())
+                    {
+                        cooperation = CooperationStatus.NOT_COOPERATING;
+                    }
+
                     if (IsDifferentPlatform() || IsGetCollectible())
                     {
                         targetPointX_InAir = (currentPlatform.Value.leftEdge + currentPlatform.Value.rightEdge) / 2;
@@ -158,44 +149,40 @@ namespace GeometryFriendsAgents
                     if (nextMove.HasValue)
                     {
 
-                        if (nextMove.Value.reachablePlatform.type == Graph.platformType.COOPERATION &&
-                            cooperation == GameInfo.CooperationStatus.NOT_COOPERATING)
+                        if (nextMove.Value.reachablePlatform.type == platformType.COOPERATION && cooperation == CooperationStatus.NOT_COOPERATING)
                         {
-                            currentAction = Cooperate((Graph.Move)nextMove);
+                            currentAction = Cooperate((Move)nextMove);
                         }
 
-                        else if (currentPlatform.Value.type != Graph.platformType.COOPERATION &&
-                                nextMove.Value.reachablePlatform.type != Graph.platformType.COOPERATION &&
-                                cooperation == GameInfo.CooperationStatus.MORPH_READY)
+                        else if (currentPlatform.Value.type != platformType.COOPERATION && nextMove.Value.reachablePlatform.type != platformType.COOPERATION && cooperation == CooperationStatus.MORPH_READY)
                         {
-                            cooperation = GameInfo.CooperationStatus.NOT_COOPERATING;
-                            messages.Add(new AgentMessage(GameInfo.COOPERATION_FINISHED));
+                            cooperation = CooperationStatus.NOT_COOPERATING;
+                            messages.Add(new AgentMessage(COOPERATION_FINISHED));
                         }
 
-                        else if (cooperation == GameInfo.CooperationStatus.RIDING)
+                        else if (cooperation == CooperationStatus.RIDING)
                         {
                             currentAction = actionSelector.GetCurrentAction(circleInfo, (int)rectangleInfo.X, 0, true);
                         }
 
-                        else if ((cooperation == GameInfo.CooperationStatus.RIDE_READY || cooperation == GameInfo.CooperationStatus.RIDE_READY) &&
-                            currentPlatform.Value.type == Graph.platformType.COOPERATION)
+                        else if ((cooperation == CooperationStatus.RIDE_READY || cooperation == CooperationStatus.RIDE_READY) && currentPlatform.Value.type == platformType.COOPERATION)
                         {
                             currentAction = actionSelector.GetCurrentAction(circleInfo, (int)rectangleInfo.X, 0, true);
                         }
 
-                        else if (cooperation == GameInfo.CooperationStatus.AWAITING_RIDE)
+                        else if (cooperation == CooperationStatus.AWAITING_RIDE)
                         {
                             currentAction = Moves.NO_ACTION;
                         }
 
-                        else if (cooperation == GameInfo.CooperationStatus.AWAITING_MORPH)
+                        else if (cooperation == CooperationStatus.AWAITING_MORPH)
                         {
                             currentAction = actionSelector.GetCurrentAction(circleInfo, (int)rectangleInfo.X, 0, true);
                         }
 
-                        else if (-GameInfo.MAX_VELOCITYY <= circleInfo.VelocityY && circleInfo.VelocityY <= GameInfo.MAX_VELOCITYY)
+                        else if (-MAX_VELOCITYY <= circleInfo.VelocityY && circleInfo.VelocityY <= MAX_VELOCITYY)
                         {
-                            if (nextMove.Value.type == Graph.movementType.STAIR_GAP)
+                            if (nextMove.Value.type == movementType.STAIR_GAP)
                             {
                                 currentAction = nextMove.Value.precondition.right_direction ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
                             }
@@ -211,10 +198,10 @@ namespace GeometryFriendsAgents
 
                     }
 
-                    else if (cooperation != GameInfo.CooperationStatus.NOT_COOPERATING && currentPlatform.Value.type != Graph.platformType.COOPERATION)
+                    else if (cooperation != CooperationStatus.NOT_COOPERATING && currentPlatform.Value.type != platformType.COOPERATION)
                     {
-                        cooperation = GameInfo.CooperationStatus.NOT_COOPERATING;
-                        messages.Add(new AgentMessage(GameInfo.COOPERATION_FINISHED));
+                        cooperation = CooperationStatus.NOT_COOPERATING;
+                        messages.Add(new AgentMessage(COOPERATION_FINISHED));
                     }
                 }
 
@@ -222,24 +209,23 @@ namespace GeometryFriendsAgents
                 {
                     if (nextMove.HasValue)
                     {
-                        if (nextMove.Value.reachablePlatform.type == Graph.platformType.COOPERATION &&
-                            cooperation == GameInfo.CooperationStatus.NOT_COOPERATING)
+                        if (nextMove.Value.reachablePlatform.type == platformType.COOPERATION && cooperation == CooperationStatus.NOT_COOPERATING)
                         {
-                            currentAction = Cooperate((Graph.Move)nextMove);
+                            currentAction = Cooperate((Move)nextMove);
                         }
-                        else if (cooperation == GameInfo.CooperationStatus.RIDE_READY || cooperation == GameInfo.CooperationStatus.RIDE_HELP)
+                        else if (cooperation == CooperationStatus.RIDE_READY || cooperation == CooperationStatus.RIDE_HELP)
                         {
                             currentAction = actionSelector.GetCurrentAction(circleInfo, (int)rectangleInfo.X, 0, true);
                         }
-                        else if (nextMove.Value.type == Graph.movementType.JUMP)
+                        else if (nextMove.Value.type == movementType.JUMP)
                         {
                             currentAction = Moves.NO_ACTION;
                         }
-                        else if (nextMove.Value.type == Graph.movementType.STAIR_GAP)
+                        else if (nextMove.Value.type == movementType.STAIR_GAP)
                         {
                             currentAction = nextMove.Value.precondition.right_direction ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
                         }
-                        else if (cooperation == GameInfo.CooperationStatus.AWAITING_MORPH)
+                        else if (cooperation == CooperationStatus.AWAITING_MORPH)
                         {
                             currentAction = actionSelector.GetCurrentAction(circleInfo, (int)rectangleInfo.X, 0, true);
                         }
@@ -268,11 +254,11 @@ namespace GeometryFriendsAgents
             if (nextMove.HasValue)
             {
 
-                if ((cooperation == GameInfo.CooperationStatus.RIDE_READY && actionSelector.IsGoal(circleInfo, (int) rectangleInfo.X, 0, true)) ||
-                    (cooperation == GameInfo.CooperationStatus.RIDE_HELP && currentPlatform.HasValue && currentPlatform.Value.type == Graph.platformType.COOPERATION && IsRidingRectangle()))
+                if ((cooperation == CooperationStatus.RIDE_READY && actionSelector.IsGoal(circleInfo, (int) rectangleInfo.X, 0, true)) ||
+                    (cooperation == CooperationStatus.RIDE_HELP && currentPlatform.HasValue && currentPlatform.Value.type == platformType.COOPERATION && IsRidingRectangle()))
                 {
-                    cooperation = GameInfo.CooperationStatus.RIDING;
-                    messages.Add(new AgentMessage(GameInfo.RIDING, nextMove));
+                    cooperation = CooperationStatus.RIDING;
+                    messages.Add(new AgentMessage(RIDING, nextMove));
                 }
 
                 if (!actionSelector.IsGoal(circleInfo, nextMove.Value.precondition.position.x, nextMove.Value.precondition.horizontal_velocity, nextMove.Value.precondition.right_direction))
@@ -280,27 +266,28 @@ namespace GeometryFriendsAgents
                     return;
                 }
 
-                if (-GameInfo.MAX_VELOCITYY <= circleInfo.VelocityY && circleInfo.VelocityY <= GameInfo.MAX_VELOCITYY)
+                if (-MAX_VELOCITYY <= circleInfo.VelocityY && circleInfo.VelocityY <= MAX_VELOCITYY)
                 {
                     targetPointX_InAir = (nextMove.Value.reachablePlatform.leftEdge + nextMove.Value.reachablePlatform.rightEdge) / 2;
 
-                    if (nextMove.Value.type == Graph.movementType.JUMP && cooperation == GameInfo.CooperationStatus.IN_POSITION)
+                    if (nextMove.Value.type == movementType.JUMP && cooperation == CooperationStatus.IN_POSITION)
                     {
-                        currentAction = Cooperate((Graph.Move)nextMove);
+                        currentAction = Cooperate((Move)nextMove);
                     }
 
-                    if (nextMove.Value.type == Graph.movementType.JUMP && cooperation != GameInfo.CooperationStatus.AWAITING_MORPH)
+                    if (nextMove.Value.type == movementType.JUMP && cooperation != CooperationStatus.AWAITING_MORPH)
                     {
                         currentAction = Moves.JUMP;
-                        if (cooperation == GameInfo.CooperationStatus.MORPH_READY)
+
+                        if (cooperation == CooperationStatus.MORPH_READY)
                         {
-                            messages.Add(new AgentMessage(GameInfo.JUMPED));
+                            messages.Add(new AgentMessage(JUMPED));
                         }
 
-                        if (cooperation == GameInfo.CooperationStatus.RIDE_READY && nextMove.Value.collideCeiling)
+                        if (cooperation == CooperationStatus.RIDE_READY && nextMove.Value.collideCeiling)
                         {
-                            cooperation = GameInfo.CooperationStatus.RIDE_HELP;
-                            messages.Add(new AgentMessage(GameInfo.RIDE_HELP));
+                            cooperation = CooperationStatus.RIDE_HELP;
+                            messages.Add(new AgentMessage(RIDE_HELP));
                         }
 
                     }
@@ -422,29 +409,19 @@ namespace GeometryFriendsAgents
 
         }
 
-        private Moves Cooperate(Graph.Move move)
+        private Moves Cooperate(Move move)
         {
-            Graph.Move manipulatedMove = Graph.CopyMove(move);
+            Move manipulatedMove = CopyMove(move);
             manipulatedMove.collectibles_onPath = graph.GetCollectiblesFromCooperation(move);
 
-            Graph.Platform fromPlatform;
+            Platform fromPlatform = currentPlatform.HasValue ? (Platform) currentPlatform : (Platform) previousPlatform;
 
-            if (!currentPlatform.HasValue)
+            if (fromPlatform.type == platformType.COOPERATION)
             {
-                fromPlatform = (Graph.Platform) previousPlatform;
-
-            }
-            else
-            {
-                fromPlatform = (Graph.Platform) currentPlatform;
-            }
-
-            if (fromPlatform.type == Graph.platformType.COOPERATION)
-            {
-                manipulatedMove.precondition.height = 50 + (fromPlatform.height - (move.precondition.position.y + GameInfo.CIRCLE_RADIUS));
-                manipulatedMove.type = Graph.movementType.MORPH_UP;
-                messages.Add(new AgentMessage(GameInfo.AWAITING_MORPH, manipulatedMove));
-                cooperation = GameInfo.CooperationStatus.AWAITING_MORPH;
+                manipulatedMove.precondition.height = 50 + (fromPlatform.height - (move.precondition.position.y + CIRCLE_RADIUS));
+                manipulatedMove.type = movementType.MORPH_UP;
+                messages.Add(new AgentMessage(AWAITING_MORPH, manipulatedMove));
+                cooperation = CooperationStatus.AWAITING_MORPH;
             }
             else
             {
@@ -453,24 +430,22 @@ namespace GeometryFriendsAgents
 
                 if (rectangleIsRight != move.precondition.right_direction)
                 {
-                    foreach (Graph.Move m in fromPlatform.moves)
+                    foreach (Move m in fromPlatform.moves)
                     {
-                        if (m.reachablePlatform.id == move.reachablePlatform.id &&
-                            m.type == Graph.movementType.JUMP &&
-                            m.precondition.right_direction != move.precondition.right_direction)
+                        if (m.reachablePlatform.id == move.reachablePlatform.id && m.type == movementType.JUMP && m.precondition.right_direction != move.precondition.right_direction)
                         {
                             nextMove = m;
-                            manipulatedMove = Graph.CopyMove(m);
+                            manipulatedMove = CopyMove(m);
                             manipulatedMove.collectibles_onPath = graph.GetCollectiblesFromCooperation(m);
                             break;
                         }
                     }
                 }
 
-                manipulatedMove.precondition.height = 50 + (move.reachablePlatform.height - (move.landPoint.y + GameInfo.CIRCLE_RADIUS));
-                manipulatedMove.type = Graph.movementType.RIDE;
-                messages.Add(new AgentMessage(GameInfo.AWAITING_RIDE, manipulatedMove));
-                cooperation = GameInfo.CooperationStatus.AWAITING_RIDE;
+                manipulatedMove.precondition.height = 50 + (move.reachablePlatform.height - (move.landPoint.y + CIRCLE_RADIUS));
+                manipulatedMove.type = movementType.RIDE;
+                messages.Add(new AgentMessage(AWAITING_RIDE, manipulatedMove));
+                cooperation = CooperationStatus.AWAITING_RIDE;
             }
 
             return Moves.NO_ACTION;
@@ -496,24 +471,24 @@ namespace GeometryFriendsAgents
             foreach (AgentMessage item in newMessages)
             {
 
-                if (item.Message.Equals(GameInfo.IST_RECTANGLE_PLAYING))
+                if (item.Message.Equals(IST_RECTANGLE_PLAYING))
                 {
-                    cooperation = GameInfo.CooperationStatus.NOT_COOPERATING;
+                    cooperation = CooperationStatus.NOT_COOPERATING;
                 }
 
-                if (item.Message.Equals(GameInfo.RIDE_READY))
+                if (item.Message.Equals(RIDE_READY))
                 {
-                    cooperation = GameInfo.CooperationStatus.RIDE_READY;
+                    cooperation = CooperationStatus.RIDE_READY;
                 }
 
-                if (item.Message.Equals(GameInfo.MORPH_READY))
+                if (item.Message.Equals(MORPH_READY))
                 {
-                    cooperation = GameInfo.CooperationStatus.MORPH_READY;
+                    cooperation = CooperationStatus.MORPH_READY;
                 }
 
-                if (item.Message.Equals(GameInfo.IN_POSITION))
+                if (item.Message.Equals(IN_POSITION))
                 {
-                    cooperation = GameInfo.CooperationStatus.IN_POSITION;
+                    cooperation = CooperationStatus.IN_POSITION;
                 }
 
             }
@@ -521,16 +496,16 @@ namespace GeometryFriendsAgents
             return;
         }
 
-        public static bool IsObstacle_onPixels(int[,] levelArray, List<LevelRepresentation.ArrayPoint> checkPixels)
+        public static bool IsObstacle_onPixels(int[,] levelArray, List<ArrayPoint> checkPixels)
         {
             if (checkPixels.Count == 0)
             {
                 return true;
             }
 
-            foreach (LevelRepresentation.ArrayPoint i in checkPixels)
+            foreach (ArrayPoint i in checkPixels)
             {
-                if (levelArray[i.yArray, i.xArray] == LevelRepresentation.BLACK || levelArray[i.yArray, i.xArray] == LevelRepresentation.GREEN)
+                if (levelArray[i.yArray, i.xArray] == BLACK || levelArray[i.yArray, i.xArray] == GREEN)
                 {
                     return true;
                 }
@@ -541,11 +516,11 @@ namespace GeometryFriendsAgents
 
         public bool IsRidingRectangle()
         {
-            int rectangleWidth = GameInfo.RECTANGLE_AREA / (int)rectangleInfo.Height;
+            int rectangleWidth = RECTANGLE_AREA / (int)rectangleInfo.Height;
 
             if ((circleInfo.X >= rectangleInfo.X - (rectangleWidth / 2)) &&
                 (circleInfo.X <= rectangleInfo.X + (rectangleWidth / 2)) &&
-                 Math.Abs(rectangleInfo.Y - (rectangleInfo.Height / 2) - GameInfo.CIRCLE_RADIUS - circleInfo.Y) <= 8)
+                 Math.Abs(rectangleInfo.Y - (rectangleInfo.Height / 2) - CIRCLE_RADIUS - circleInfo.Y) <= 8)
             {
                 return true;
             }
