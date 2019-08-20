@@ -37,17 +37,18 @@ namespace GeometryFriendsAgents
         private ActionSelector actionSelector;
         private long timeRL;
 
-        // Messages
-        private GameInfo.CooperationStatus cooperation;
+        // Cooperation
+        private bool graphChanged;
         private List<AgentMessage> messages;
+        private CooperationStatus cooperation;
 
         // Auxiliary
+        private Move? nextMove;
         private Moves currentAction;
-        private Graph.Move? nextMove;
         private DateTime lastMoveTime;
         private int targetPointX_InAir;
         private bool[] previousCollectibles;
-        private Graph.Platform? previousPlatform, currentPlatform;
+        private Platform? previousPlatform, currentPlatform;
 
         public RectangleAgent()
         {
@@ -62,9 +63,10 @@ namespace GeometryFriendsAgents
             actionSelector = new ActionSelector();
             levelInfo = new LevelRepresentation();
             timeRL = DateTime.Now.Second;
-            cooperation = CooperationStatus.SINGLE;
 
+            graphChanged = false;
             messages = new List<AgentMessage>();
+            cooperation = CooperationStatus.SINGLE;
 
             //ReinforcementLearning.WriteQTable(new float[ReinforcementLearning.N_STATES, ReinforcementLearning.N_ACTIONS]);
 
@@ -77,7 +79,7 @@ namespace GeometryFriendsAgents
         //implements abstract rectangle interface: used to setup the initial information so that the agent has basic knowledge about the level
         public override void Setup(CountInformation nI, RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI, Rectangle area, double timeLimit)
         {
-            messages.Add(new AgentMessage(GameInfo.IST_RECTANGLE_PLAYING));
+            messages.Add(new AgentMessage(IST_RECTANGLE_PLAYING));
 
             // Create Level Array
             levelInfo.CreateLevelArray(colI, oI, rPI, cPI);
@@ -168,22 +170,17 @@ namespace GeometryFriendsAgents
 
                 if (currentPlatform.HasValue)
                 {
-                    if ((IsDifferentPlatform() || IsGetCollectible() || cooperation == CooperationStatus.NOT_COOPERATING) && (cooperation == CooperationStatus.NOT_COOPERATING || cooperation == CooperationStatus.SINGLE))
+                    if ((IsDifferentPlatform() || IsGetCollectible() || graphChanged) && cooperation == CooperationStatus.SINGLE)
                     {
                         targetPointX_InAir = (currentPlatform.Value.leftEdge + currentPlatform.Value.rightEdge) / 2;
                         Task.Factory.StartNew(SetNextMove);
-
-                        if (cooperation == CooperationStatus.NOT_COOPERATING)
-                        {
-                            cooperation = CooperationStatus.SINGLE;
-                        }
-
+                        graphChanged = false;
                     }
 
                     if (nextMove.HasValue)
                     {
 
-                        if ((cooperation == CooperationStatus.IN_POSITION) || (IsCircleInTheWay() && (cooperation == CooperationStatus.NOT_COOPERATING || cooperation == CooperationStatus.SINGLE)))
+                        if ((cooperation == CooperationStatus.IN_POSITION) || (IsCircleInTheWay() && cooperation == CooperationStatus.SINGLE))
                         {
                             currentAction = Moves.NO_ACTION;
                             return;
@@ -192,12 +189,18 @@ namespace GeometryFriendsAgents
                         if (-MAX_VELOCITYY <= rectangleInfo.VelocityY && rectangleInfo.VelocityY <= MAX_VELOCITYY)
                         {
 
-                            if (nextMove.Value.type == movementType.GAP && rectangleInfo.Height > Math.Max((RECTANGLE_AREA / nextMove.Value.precondition.height) - 1, MIN_RECTANGLE_HEIGHT + 3))
+                            if (cooperation == CooperationStatus.RIDE_HELP)
+                            {
+                                int targetX = nextMove.Value.precondition.right_direction ? (int)circleInfo.X + 50 : (int)circleInfo.X - 50;
+                                currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetX, 0, nextMove.Value.precondition.right_direction);
+                            }
+
+                            else if (nextMove.Value.type == movementType.GAP && rectangleInfo.Height > Math.Max((RECTANGLE_AREA / nextMove.Value.precondition.height) - 1, MIN_RECTANGLE_HEIGHT + 3))
                             {
                                 currentAction = Moves.MORPH_DOWN;
                             }
 
-                            else if (nextMove.Value.type == movementType.RIDING && Math.Abs(rectangleInfo.X - circleInfo.X) > 60)
+                            else if ((nextMove.Value.type == movementType.RIDING && Math.Abs(rectangleInfo.X - circleInfo.X) > 60) || cooperation == CooperationStatus.RIDE_HELP)
                             {
                                 currentAction = actionSelector.GetCurrentAction(rectangleInfo, (int)circleInfo.X, 0, true);
                             }
@@ -217,7 +220,7 @@ namespace GeometryFriendsAgents
 
                             else if (nextMove.Value.type == movementType.MORPH_UP)
                             {
-                                if (rectangleInfo.Height < Math.Min(nextMove.Value.precondition.height + LevelRepresentation.PIXEL_LENGTH, 192))
+                                if (rectangleInfo.Height < Math.Min(nextMove.Value.precondition.height + PIXEL_LENGTH, 192))
                                 {
                                     currentAction = Moves.MORPH_UP;
                                 }
@@ -226,12 +229,6 @@ namespace GeometryFriendsAgents
                                 {
                                     currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextMove.Value.precondition.position.x, nextMove.Value.precondition.horizontal_velocity, nextMove.Value.precondition.right_direction);
                                 }
-                            }
-
-                            else if (cooperation == CooperationStatus.RIDE_HELP && nextMove.Value.type == movementType.RIDE)
-                            {
-                                int targetX = nextMove.Value.precondition.right_direction ? (int)circleInfo.X + 120 : (int)circleInfo.X - 120;
-                                currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetX, 0, nextMove.Value.precondition.right_direction);
                             }
 
                             else
@@ -253,7 +250,13 @@ namespace GeometryFriendsAgents
                     if (nextMove.HasValue)
                     {
 
-                        if (nextMove.Value.type == movementType.STAIR_GAP)
+                        if (cooperation == CooperationStatus.RIDE_HELP)
+                        {
+                            int targetX = nextMove.Value.precondition.right_direction ? (int)circleInfo.X + 50 : (int)circleInfo.X - 50;
+                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetX, 0, nextMove.Value.precondition.right_direction);
+                        }
+
+                        else if (nextMove.Value.type == movementType.STAIR_GAP)
                         {
                             currentAction = nextMove.Value.precondition.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                         }
@@ -280,7 +283,7 @@ namespace GeometryFriendsAgents
 
                         else if (nextMove.Value.type == movementType.MORPH_UP)
                         {
-                            if (rectangleInfo.Height < Math.Min(nextMove.Value.precondition.height + LevelRepresentation.PIXEL_LENGTH, GameInfo.MAX_RECTANGLE_HEIGHT))
+                            if (rectangleInfo.Height < Math.Min(nextMove.Value.precondition.height + PIXEL_LENGTH, MAX_RECTANGLE_HEIGHT))
                             {
                                 currentAction = Moves.MORPH_UP;
                             }
@@ -316,7 +319,7 @@ namespace GeometryFriendsAgents
             if (nextMove.HasValue)
             {
 
-                if (!actionSelector.IsGoal(rectangleInfo, nextMove.Value.precondition.position.x, nextMove.Value.precondition.horizontal_velocity, nextMove.Value.precondition.right_direction))
+                if (!actionSelector.IsGoal(rectangleInfo, nextMove.Value.precondition.position.x, nextMove.Value.precondition.horizontal_velocity, nextMove.Value.precondition.right_direction) || cooperation == CooperationStatus.RIDE_HELP)
                 {
                     return;
                 }
@@ -345,6 +348,13 @@ namespace GeometryFriendsAgents
 
                     }
 
+                    if (cooperation == CooperationStatus.RIDE_HELP)
+                    {
+                        int targetX = nextMove.Value.precondition.right_direction ? (int)circleInfo.X + 50 : (int)circleInfo.X - 50;
+                        currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetX, 0, nextMove.Value.precondition.right_direction);
+                        return;
+                    }
+
                     if (nextMove.Value.type == movementType.STAIR_GAP)
                     {
                         currentAction = nextMove.Value.precondition.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
@@ -356,18 +366,9 @@ namespace GeometryFriendsAgents
                             currentAction = Moves.MORPH_UP;            
                     }
 
-                    if (nextMove.Value.type == movementType.RIDE)
+                    if (nextMove.Value.type == movementType.RIDE && rectangleInfo.Height > nextMove.Value.precondition.height)
                     {
-                        if (cooperation == CooperationStatus.RIDE_HELP)
-                        {
-                            int targetX = nextMove.Value.precondition.right_direction ? (int)circleInfo.X + 50 : (int)circleInfo.X - 50;
-                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetX, 0, nextMove.Value.precondition.right_direction);
-                        }
-
-                        else if (rectangleInfo.Height > nextMove.Value.precondition.height)
-                        {
-                            currentAction = Moves.MORPH_DOWN;
-                        }
+                         currentAction = Moves.MORPH_DOWN;
                     }
 
                     if ((nextMove.Value.type == movementType.MORPH_DOWN || nextMove.Value.type == movementType.FALL) && rectangleInfo.Height > nextMove.Value.precondition.height)
@@ -380,10 +381,12 @@ namespace GeometryFriendsAgents
                         currentAction = Moves.MORPH_UP;
                     }
 
-                    if (nextMove.HasValue && (nextMove.Value.type == movementType.RIDE) && cooperation == CooperationStatus.AWAITING_RIDE && Math.Abs(nextMove.Value.precondition.height - rectangleInfo.Height) < 5)
+                    if (nextMove.Value.type == movementType.RIDE && cooperation == CooperationStatus.AWAITING && Math.Abs(nextMove.Value.precondition.height - rectangleInfo.Height) < 5)
                     {
-                        cooperation = CooperationStatus.RIDE_READY;
-                        messages.Add(new AgentMessage(RIDE_READY));
+                        //cooperation = CooperationStatus.RIDE_READY;
+                        //messages.Add(new AgentMessage(RIDE_READY));
+                        cooperation = CooperationStatus.IN_POSITION;
+                        messages.Add(new AgentMessage(IN_POSITION));
                     }
 
 
@@ -467,7 +470,7 @@ namespace GeometryFriendsAgents
 
             if (nextMove.HasValue && nextMove.Value.type == movementType.RIDE && cooperation == CooperationStatus.SINGLE)
             {
-                cooperation = CooperationStatus.AWAITING_RIDE;
+                cooperation = CooperationStatus.AWAITING;
             }
         }
 
@@ -514,7 +517,7 @@ namespace GeometryFriendsAgents
                     }
                 }
 
-                if (item.Message.Equals(AWAITING_RIDE) && item.Attachment.GetType() == typeof(Move))
+                if (item.Message.Equals(AWAITING) && item.Attachment.GetType() == typeof(Move))
                 {
                     Move circleMove = (Move) item.Attachment;
                     PreCondition rectangle_precondition = (PreCondition)circleMove.partner_precondition;
@@ -526,9 +529,8 @@ namespace GeometryFriendsAgents
                     {
                         Move newMove = new Move((Platform)fromPlatform, rectangle_precondition, rectangle_precondition.position, circleMove.type, collectibles_onPath, 0, circleMove.collideCeiling);
                         graph.AddMove((Platform)fromPlatform, newMove);
+                        graphChanged = true;
                     }
-
-                    cooperation = CooperationStatus.NOT_COOPERATING;
 
                 }
 
@@ -552,7 +554,7 @@ namespace GeometryFriendsAgents
 
                 if (item.Message.Equals(COOPERATION_FINISHED))
                 {
-                    cooperation = CooperationStatus.NOT_COOPERATING;
+                    cooperation = CooperationStatus.SINGLE;
                 }
 
                 if (item.Message.Equals(JUMPED) && nextMove.HasValue)

@@ -33,7 +33,8 @@ namespace GeometryFriendsAgents
         // Reinforcement Learning
         private ActionSelector actionSelector;
 
-        // Messages
+        // Cooperation
+        private bool rectangle_ping;
         private CooperationStatus cooperation;
         private List<AgentMessage> messages;
 
@@ -52,14 +53,15 @@ namespace GeometryFriendsAgents
             previousPlatform = null;
             lastMoveTime = DateTime.Now;
             currentAction = Moves.NO_ACTION;
-            cooperation = CooperationStatus.SINGLE;
 
             graph = new GraphCircle();
             subgoalAStar = new SubgoalAStar();
             actionSelector = new ActionSelector();
             levelInfo = new LevelRepresentation();
 
+            rectangle_ping = false;
             messages = new List<AgentMessage>();
+            cooperation = CooperationStatus.SINGLE;
         }
 
         //implements abstract circle interface: used to setup the initial information so that the agent has basic knowledge about the level
@@ -79,7 +81,7 @@ namespace GeometryFriendsAgents
             if (rI.X < 0 || rI.Y < 0)
             {
                 graph.DeleteCooperationPlatforms();
-                cooperation = CooperationStatus.NOT_COOPERATING;
+                //cooperation = CooperationStatus.NOT_COOPERATING;
             }
 
             // Initial Information
@@ -122,6 +124,13 @@ namespace GeometryFriendsAgents
         public override void Update(TimeSpan elapsedGameTime)
         {
 
+            if (!rectangle_ping)
+            {
+                graph.DeleteCooperationPlatforms();
+                rectangle_ping = false;
+                //cooperation = CooperationStatus.NOT_COOPERATING;
+            }
+
             if ((DateTime.Now - lastMoveTime).TotalMilliseconds >= 20)
             {
 
@@ -149,12 +158,7 @@ namespace GeometryFriendsAgents
                             currentAction = actionSelector.GetCurrentAction(circleInfo, (int)rectangleInfo.X, 0, true);
                         }
 
-                        else if (cooperation == CooperationStatus.RIDE_READY && currentPlatform.Value.type == platformType.COOPERATION)
-                        {
-                            currentAction = actionSelector.GetCurrentAction(circleInfo, (int)rectangleInfo.X, 0, true);
-                        }
-
-                        else if (cooperation == CooperationStatus.AWAITING_RIDE)
+                        else if (cooperation == CooperationStatus.AWAITING)
                         {
                             currentAction = Moves.NO_ACTION;
                         }
@@ -177,9 +181,9 @@ namespace GeometryFriendsAgents
 
                     }
 
-                    else if (cooperation != CooperationStatus.NOT_COOPERATING && currentPlatform.Value.type != platformType.COOPERATION)
+                    else if (cooperation != CooperationStatus.SINGLE && currentPlatform.Value.type != platformType.COOPERATION)
                     {
-                        cooperation = CooperationStatus.NOT_COOPERATING;
+                        cooperation = CooperationStatus.SINGLE;
                         messages.Add(new AgentMessage(COOPERATION_FINISHED));
                     }
                 }
@@ -188,11 +192,11 @@ namespace GeometryFriendsAgents
                 {
                     if (nextMove.HasValue)
                     {
-                        if (cooperation == CooperationStatus.RIDE_READY || cooperation == CooperationStatus.RIDE_HELP)
+                        if ((cooperation == CooperationStatus.IN_POSITION && nextMove.Value.reachablePlatform.type == platformType.COOPERATION) || cooperation == CooperationStatus.RIDE_HELP)
                         {
                             currentAction = actionSelector.GetCurrentAction(circleInfo, (int)rectangleInfo.X, 0, true);
                         }
-                        else if (nextMove.Value.type == movementType.JUMP)
+                        else if (nextMove.Value.type == movementType.JUMP || nextMove.Value.type == movementType.FALL)
                         {
                             currentAction = Moves.NO_ACTION;
                         }
@@ -225,11 +229,10 @@ namespace GeometryFriendsAgents
             if (nextMove.HasValue)
             {
 
-                if ((cooperation == CooperationStatus.RIDE_READY && actionSelector.IsGoal(circleInfo, (int)rectangleInfo.X, 0, true)) ||
+                if ((cooperation == CooperationStatus.IN_POSITION && actionSelector.IsGoal(circleInfo, (int)rectangleInfo.X, 0, true)) ||
                     (cooperation == CooperationStatus.RIDE_HELP && currentPlatform.HasValue && currentPlatform.Value.type == platformType.COOPERATION && IsRidingRectangle()))
                 {
                     cooperation = CooperationStatus.RIDING;
-                    //messages.Add(new AgentMessage(RIDING, nextMove));
                 }
 
                 if (!actionSelector.IsGoal(circleInfo, nextMove.Value.precondition.position.x, nextMove.Value.precondition.horizontal_velocity, nextMove.Value.precondition.right_direction))
@@ -241,10 +244,6 @@ namespace GeometryFriendsAgents
                 {
                     targetPointX_InAir = (nextMove.Value.reachablePlatform.leftEdge + nextMove.Value.reachablePlatform.rightEdge) / 2;
 
-                    //if (nextMove.Value.type == movementType.JUMP && cooperation == CooperationStatus.IN_POSITION)
-                    //{
-                    //    currentAction = Cooperate((Move)nextMove);
-                    //}
 
                     if (nextMove.Value.type == movementType.JUMP)
                     {
@@ -255,7 +254,7 @@ namespace GeometryFriendsAgents
                             messages.Add(new AgentMessage(JUMPED));
                         }
 
-                        if (cooperation == CooperationStatus.RIDE_READY && nextMove.Value.collideCeiling)
+                        if (cooperation == CooperationStatus.IN_POSITION && nextMove.Value.collideCeiling)
                         {
                             cooperation = CooperationStatus.RIDE_HELP;
                             messages.Add(new AgentMessage(RIDE_HELP));
@@ -351,9 +350,9 @@ namespace GeometryFriendsAgents
                 (previousMove.Value.type != nextMove.Value.type ||
                 previousMove.Value.precondition.position.x != nextMove.Value.precondition.position.x ||
                 previousMove.Value.landPoint.x != nextMove.Value.landPoint.x) &&
-                cooperation == CooperationStatus.AWAITING_RIDE)
+                cooperation == CooperationStatus.AWAITING)
                 {
-                    cooperation = CooperationStatus.NOT_COOPERATING;
+                    cooperation = CooperationStatus.SINGLE;
                     messages.Add(new AgentMessage(CLEAN_RIDES));
                 }
 
@@ -366,19 +365,15 @@ namespace GeometryFriendsAgents
 
                 if (currentPlatform.HasValue && currentPlatform.Value.type != platformType.COOPERATION && nextMove.Value.reachablePlatform.type != platformType.COOPERATION)
                 {
-                    cooperation = CooperationStatus.NOT_COOPERATING;
+                    cooperation = CooperationStatus.SINGLE;
                     messages.Add(new AgentMessage(COOPERATION_FINISHED));
                 }
 
-                if (nextMove.Value.reachablePlatform.type != platformType.COOPERATION && cooperation == CooperationStatus.NOT_COOPERATING)
+                if (nextMove.Value.reachablePlatform.type != platformType.COOPERATION && cooperation == CooperationStatus.SINGLE)
                 {
                     messages.Add(new AgentMessage(INDIVIDUAL_MOVE, nextMove));
                 }
 
-                //if (cooperation == CooperationStatus.RIDING)
-                //{
-                //    messages.Add(new AgentMessage(RIDING, nextMove));
-                //}
             }
 
         }
@@ -418,8 +413,8 @@ namespace GeometryFriendsAgents
 
                 manipulatedMove.precondition.height = 50 + (move.reachablePlatform.height - (move.landPoint.y + CIRCLE_RADIUS));
                 manipulatedMove.type = movementType.RIDE;
-                messages.Add(new AgentMessage(AWAITING_RIDE, manipulatedMove));
-                cooperation = CooperationStatus.AWAITING_RIDE;
+                messages.Add(new AgentMessage(AWAITING, manipulatedMove));
+                cooperation = CooperationStatus.AWAITING;
             }
 
         }
@@ -430,7 +425,7 @@ namespace GeometryFriendsAgents
             Console.WriteLine("CIRCLE - Collectibles caught = {0}, Time elapsed - {1}", collectiblesCaught, timeElapsed);
         }
 
-        public override List<GeometryFriends.AI.Communication.AgentMessage> GetAgentMessages()
+        public override List<AgentMessage> GetAgentMessages()
         {
             List<AgentMessage> toSent = new List<AgentMessage>(messages);
             messages.Clear();
@@ -445,12 +440,8 @@ namespace GeometryFriendsAgents
 
                 if (item.Message.Equals(IST_RECTANGLE_PLAYING))
                 {
-                    cooperation = CooperationStatus.NOT_COOPERATING;
-                }
-
-                if (item.Message.Equals(RIDE_READY))
-                {
-                    cooperation = CooperationStatus.RIDE_READY;
+                    rectangle_ping = true;
+                    //cooperation = CooperationStatus.NOT_COOPERATING;
                 }
 
                 if (item.Message.Equals(IN_POSITION))
