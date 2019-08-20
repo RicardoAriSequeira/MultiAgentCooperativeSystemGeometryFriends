@@ -36,6 +36,7 @@
         public const string IN_POSITION = "In Position";
         public const string INDIVIDUAL_MOVE = "Taking Individual Move";
         public const string RIDE_HELP = "Ride Help";
+        public const string CLEAN_RIDES = "Clean Rides";
 
 
         public enum CooperationStatus

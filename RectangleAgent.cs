@@ -9,6 +9,7 @@ using GeometryFriends.AI;
 using GeometryFriends.AI.Interfaces;
 using GeometryFriends.AI.Communication;
 using GeometryFriends.AI.Perceptions.Information;
+using static GeometryFriendsAgents.Graph;
 
 namespace GeometryFriendsAgents
 {
@@ -179,6 +180,13 @@ namespace GeometryFriendsAgents
                     if (nextMove.HasValue)
                     {
 
+                        if ((cooperation == GameInfo.CooperationStatus.IN_POSITION) ||
+                            (IsCircleInTheWay() && (cooperation == GameInfo.CooperationStatus.NOT_COOPERATING || cooperation == GameInfo.CooperationStatus.SINGLE_MODE)))
+                        {
+                            currentAction = Moves.NO_ACTION;
+                            return;
+                        }
+
                         if (nextMove.Value.type == Graph.movementType.RIDE && cooperation == GameInfo.CooperationStatus.SINGLE_MODE)
                         {
                             cooperation = GameInfo.CooperationStatus.AWAITING_RIDE;
@@ -188,54 +196,57 @@ namespace GeometryFriendsAgents
                         {
 
                             if (nextMove.Value.type == Graph.movementType.GAP &&
-                                rectangleInfo.Height > Math.Max((GameInfo.RECTANGLE_AREA / nextMove.Value.height) - 1, GameInfo.MIN_RECTANGLE_HEIGHT + 3))
+                                rectangleInfo.Height > Math.Max((GameInfo.RECTANGLE_AREA / nextMove.Value.precondition.height) - 1, GameInfo.MIN_RECTANGLE_HEIGHT + 3))
                             {
                                 currentAction = Moves.MORPH_DOWN;
                             }
 
                             else if (nextMove.Value.type == Graph.movementType.RIDING && Math.Abs(rectangleInfo.X - circleInfo.X) > 60)
                             {
-                                currentAction = actionSelector.GetCurrentAction(circleInfo, (int)circleInfo.X, 0, true);
+                                currentAction = actionSelector.GetCurrentAction(rectangleInfo, (int)circleInfo.X, 0, true);
                                 //currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextMove.Value.movePoint.x, nextMove.Value.velocityX, nextMove.Value.rightMove);
                             }
 
                             else if (nextMove.Value.type == Graph.movementType.STAIR_GAP ||
                                 nextMove.Value.type == Graph.movementType.MORPH_DOWN)
                             {
-                                if (rectangleInfo.Height >= nextMove.Value.height - LevelRepresentation.PIXEL_LENGTH)
+                                //if (rectangleInfo.Height >= nextMove.Value.height - LevelRepresentation.PIXEL_LENGTH)
+                                if (rectangleInfo.Height > nextMove.Value.precondition.height)
                                 {
                                     currentAction = Moves.MORPH_DOWN;
                                 }
 
                                 else
                                 {
-                                    currentAction = nextMove.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                                    currentAction = nextMove.Value.precondition.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                                 }
                             }
 
                             else if (nextMove.Value.type == Graph.movementType.MORPH_UP)
                             {
-                                if (rectangleInfo.Height < Math.Min(nextMove.Value.height + LevelRepresentation.PIXEL_LENGTH, 192))
+                                if (rectangleInfo.Height < Math.Min(nextMove.Value.precondition.height + LevelRepresentation.PIXEL_LENGTH, 192))
                                 {
+
                                     currentAction = Moves.MORPH_UP;
+
                                 }
 
                                 else
                                 {
-                                    currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextMove.Value.movePoint.x, nextMove.Value.velocityX, nextMove.Value.rightMove);
+                                    currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextMove.Value.precondition.position.x, nextMove.Value.precondition.horizontal_velocity, nextMove.Value.precondition.right_direction);
                                     //currentAction = nextMove.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                                 }
                             }
 
                             else if (cooperation == GameInfo.CooperationStatus.RIDE_HELP && nextMove.Value.type == Graph.movementType.RIDE)
                             {
-                                int targetX = nextMove.Value.rightMove ? (int)circleInfo.X + 70 : (int)circleInfo.X - 70;
-                                currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetX, 0, nextMove.Value.rightMove);
+                                int targetX = nextMove.Value.precondition.right_direction ? (int)circleInfo.X + 120 : (int)circleInfo.X - 120;
+                                currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetX, 0, nextMove.Value.precondition.right_direction);
                             }
 
                             else
                             {
-                                currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextMove.Value.movePoint.x, nextMove.Value.velocityX, nextMove.Value.rightMove);
+                                currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextMove.Value.precondition.position.x, nextMove.Value.precondition.horizontal_velocity, nextMove.Value.precondition.right_direction);
                             }
 
                         }
@@ -254,39 +265,39 @@ namespace GeometryFriendsAgents
 
                         if (nextMove.Value.type == Graph.movementType.STAIR_GAP)
                         {
-                            currentAction = nextMove.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                            currentAction = nextMove.Value.precondition.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                         }
 
-                        else if ((nextMove.Value.type == Graph.movementType.MORPH_DOWN ) && rectangleInfo.Height > nextMove.Value.height)
+                        else if ((nextMove.Value.type == Graph.movementType.MORPH_DOWN ) && rectangleInfo.Height > nextMove.Value.precondition.height)
                         {
                             currentAction = Moves.MORPH_DOWN;
                         }
 
-                        else if ((nextMove.Value.type == Graph.movementType.MORPH_DOWN) && rectangleInfo.Height <= nextMove.Value.height)
+                        else if ((nextMove.Value.type == Graph.movementType.MORPH_DOWN) && rectangleInfo.Height <= nextMove.Value.precondition.height)
                         {
-                            currentAction = nextMove.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                            currentAction = nextMove.Value.precondition.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                         }
 
                         else if (nextMove.Value.type == Graph.movementType.GAP)
                         {
-                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextMove.Value.movePoint.x, nextMove.Value.velocityX, nextMove.Value.rightMove);
+                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextMove.Value.precondition.position.x, nextMove.Value.precondition.horizontal_velocity, nextMove.Value.precondition.right_direction);
                         }
 
-                        else if (nextMove.Value.type == Graph.movementType.FALL && nextMove.Value.velocityX == 0 && rectangleInfo.Height <= nextMove.Value.height)
+                        else if (nextMove.Value.type == Graph.movementType.FALL && nextMove.Value.precondition.horizontal_velocity == 0 && rectangleInfo.Height <= nextMove.Value.precondition.height)
                         {
-                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextMove.Value.movePoint.x, nextMove.Value.velocityX, nextMove.Value.rightMove);
+                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextMove.Value.precondition.position.x, nextMove.Value.precondition.horizontal_velocity, nextMove.Value.precondition.right_direction);
                         }
 
                         else if (nextMove.Value.type == Graph.movementType.MORPH_UP)
                         {
-                            if (rectangleInfo.Height < Math.Min(nextMove.Value.height + LevelRepresentation.PIXEL_LENGTH, GameInfo.MAX_RECTANGLE_HEIGHT))
+                            if (rectangleInfo.Height < Math.Min(nextMove.Value.precondition.height + LevelRepresentation.PIXEL_LENGTH, GameInfo.MAX_RECTANGLE_HEIGHT))
                             {
                                 currentAction = Moves.MORPH_UP;
                             }
 
                             else
                             {
-                                currentAction = nextMove.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                                currentAction = nextMove.Value.precondition.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                             }
                         }
 
@@ -315,7 +326,7 @@ namespace GeometryFriendsAgents
             if (nextMove.HasValue)
             {
 
-                if (!actionSelector.IsGoal(rectangleInfo, nextMove.Value.movePoint.x, nextMove.Value.velocityX, nextMove.Value.rightMove))
+                if (!actionSelector.IsGoal(rectangleInfo, nextMove.Value.precondition.position.x, nextMove.Value.precondition.horizontal_velocity, nextMove.Value.precondition.right_direction))
                 {
                     return;
                 }
@@ -333,14 +344,14 @@ namespace GeometryFriendsAgents
 
                     if (nextMove.Value.type == Graph.movementType.STAIR_GAP)
                     {
-                        currentAction = nextMove.Value.rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                        currentAction = nextMove.Value.precondition.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                     }
 
                     if (nextMove.Value.type == Graph.movementType.MORPH_UP ||
                         nextMove.Value.type == Graph.movementType.COLLECT ||
                         nextMove.Value.type == Graph.movementType.GAP)
                     {
-                        if (rectangleInfo.Height < Math.Min(nextMove.Value.height + LevelRepresentation.PIXEL_LENGTH, 192))
+                        if (rectangleInfo.Height < Math.Min(nextMove.Value.precondition.height + LevelRepresentation.PIXEL_LENGTH, 192))
                         {
                             currentAction = Moves.MORPH_UP;
                         }
@@ -357,11 +368,11 @@ namespace GeometryFriendsAgents
                     {
                         if (cooperation == GameInfo.CooperationStatus.RIDE_HELP)
                         {
-                            int targetX = nextMove.Value.rightMove ? (int)circleInfo.X + 50 : (int)circleInfo.X - 50;
-                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetX, 0, nextMove.Value.rightMove);
+                            int targetX = nextMove.Value.precondition.right_direction ? (int)circleInfo.X + 50 : (int)circleInfo.X - 50;
+                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetX, 0, nextMove.Value.precondition.right_direction);
                         }
 
-                        else if (rectangleInfo.Height > nextMove.Value.height)
+                        else if (rectangleInfo.Height > nextMove.Value.precondition.height)
                         {
                             currentAction = Moves.MORPH_DOWN;
                         }
@@ -369,19 +380,19 @@ namespace GeometryFriendsAgents
 
                     if ((nextMove.Value.type == Graph.movementType.MORPH_DOWN ||
                          nextMove.Value.type == Graph.movementType.FALL) &&
-                        rectangleInfo.Height > nextMove.Value.height)
+                        rectangleInfo.Height > nextMove.Value.precondition.height)
                     {
                         currentAction = Moves.MORPH_DOWN;
                     }
 
-                    if (nextMove.Value.type == Graph.movementType.FALL && nextMove.Value.velocityX == 0 && rectangleInfo.Height < 190)
+                    if (nextMove.Value.type == Graph.movementType.FALL && nextMove.Value.precondition.horizontal_velocity == 0 && rectangleInfo.Height < 190)
                     {
                         currentAction = Moves.MORPH_UP;
                     }
 
                     if (nextMove.HasValue && (nextMove.Value.type == Graph.movementType.RIDE) &&
                         cooperation == GameInfo.CooperationStatus.AWAITING_RIDE &&
-                        Math.Abs(nextMove.Value.height - rectangleInfo.Height) < 5)
+                        Math.Abs(nextMove.Value.precondition.height - rectangleInfo.Height) < 5)
                     {
                         cooperation = GameInfo.CooperationStatus.RIDE_READY;
                         messages.Add(new AgentMessage(GameInfo.RIDE_READY));
@@ -515,7 +526,7 @@ namespace GeometryFriendsAgents
                 {
                     Graph.Move newMove = Graph.CopyMove((Graph.Move)item.Attachment);
                     newMove.type = Graph.movementType.MORPH_UP;
-                    newMove.velocityX = 0;
+                    newMove.precondition.horizontal_velocity = 0;
                     nextMove = newMove;
                     cooperation = GameInfo.CooperationStatus.AWAITING_MORPH;
                 }
@@ -532,8 +543,9 @@ namespace GeometryFriendsAgents
 
                     if (fromPlatform.HasValue)
                     {
-                        Graph.Move newMove = new Graph.Move((Graph.Platform)fromPlatform, movePoint, movePoint, 0, circleMove.rightMove, circleMove.type, collectibles_onPath, 0, circleMove.collideCeiling, GameInfo.MIN_RECTANGLE_HEIGHT);
-                        graph.AddMove((Graph.Platform)fromPlatform, newMove);
+                        PreCondition newPreCondition = new PreCondition(movePoint, GameInfo.MIN_RECTANGLE_HEIGHT,0, circleMove.precondition.right_direction);
+                        Move newMove = new Move((Platform)fromPlatform, newPreCondition, movePoint, circleMove.type, collectibles_onPath, 0, circleMove.collideCeiling);
+                        graph.AddMove((Platform)fromPlatform, newMove);
                     }
 
                     cooperation = GameInfo.CooperationStatus.NOT_COOPERATING;
@@ -543,28 +555,18 @@ namespace GeometryFriendsAgents
                 if (item.Message.Equals(GameInfo.RIDING) &&
                         item.Attachment.GetType() == typeof(Graph.Move))
                 {
-                    foreach (Graph.Platform p in graph.platforms)
+                    CleanRides();
+
+                    Graph.Move newMove = (Graph.Move)item.Attachment;
+                    cooperation = GameInfo.CooperationStatus.RIDING;
+                    newMove.precondition.horizontal_velocity = 0;
+
+                    if (newMove.type == Graph.movementType.FALL)
                     {
-                        int i = 0;
-
-                        while (i < p.moves.Count)
-                        {
-                            if (p.moves[i].type == Graph.movementType.RIDE)
-                            {
-                                p.moves.Remove(p.moves[i]);
-                            }
-                            else
-                            {
-                                i++;
-                            }
-
-                        }
+                        newMove.precondition.position.x += newMove.precondition.right_direction ? (-112) : 112;
                     }
 
-                    cooperation = GameInfo.CooperationStatus.RIDING;
-                    Graph.Move newMove = (Graph.Move)item.Attachment;
                     newMove.type = Graph.movementType.RIDING;
-                    newMove.velocityX = 0;
                     nextMove = newMove;
                 }
 
@@ -577,7 +579,7 @@ namespace GeometryFriendsAgents
                 {
                     Graph.Move newMove = Graph.CopyMove((Graph.Move)nextMove);
                     newMove.type = Graph.movementType.MORPH_DOWN;
-                    newMove.height = GameInfo.MIN_RECTANGLE_HEIGHT;
+                    newMove.precondition.height = GameInfo.MIN_RECTANGLE_HEIGHT;
                     nextMove = newMove;
                     cooperation = GameInfo.CooperationStatus.RIDING;
                 }
@@ -585,6 +587,11 @@ namespace GeometryFriendsAgents
                 if (item.Message.Equals(GameInfo.RIDE_HELP))
                 {
                     cooperation = GameInfo.CooperationStatus.RIDE_HELP;
+                }
+
+                if (item.Message.Equals(GameInfo.CLEAN_RIDES))
+                {
+                    CleanRides();
                 }
 
             }
@@ -632,6 +639,89 @@ namespace GeometryFriendsAgents
             }
 
             return false;
+        }
+
+        public bool CanMorphUp()
+        {
+
+            List<LevelRepresentation.ArrayPoint> pixelsToMorph = new List<LevelRepresentation.ArrayPoint>();
+
+            int lowestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint((int) rectangleInfo.Y + ((int)rectangleInfo.Height / 2), false);
+            int highestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint((int)rectangleInfo.Y - (200 - ((int)rectangleInfo.Height / 2)), false);
+
+            int rectangleWidth = GameInfo.RECTANGLE_AREA / (int)rectangleInfo.Height;
+
+            int lowestLeft = LevelRepresentation.ConvertValue_PointIntoArrayPoint((int)rectangleInfo.X - (rectangleWidth / 2), false);
+            int highestLeft = LevelRepresentation.ConvertValue_PointIntoArrayPoint((int)rectangleInfo.X - (GameInfo.MIN_RECTANGLE_HEIGHT / 2), false);
+
+            int lowestRight = LevelRepresentation.ConvertValue_PointIntoArrayPoint((int)rectangleInfo.X + (GameInfo.MIN_RECTANGLE_HEIGHT / 2), false);
+            int highestRight = LevelRepresentation.ConvertValue_PointIntoArrayPoint((int)rectangleInfo.X + (rectangleWidth / 2), false);
+
+            for (int y = highestY; y <= lowestY; y++)
+            {
+                for (int x = lowestLeft; x <= highestLeft; x++)
+                {
+                    pixelsToMorph.Add(new LevelRepresentation.ArrayPoint(x, y));
+                }
+
+                for (int x = lowestRight; x <= highestRight; x++)
+                {
+                    pixelsToMorph.Add(new LevelRepresentation.ArrayPoint(x, y));
+                }
+
+            }
+
+            return !IsObstacle_onPixels(levelInfo.levelArray, pixelsToMorph);
+        }
+
+        public bool IsCircleInTheWay()
+        {
+
+            if (nextMove.HasValue &&
+                circleInfo.Y <= rectangleInfo.Y + (rectangleInfo.Height/2) &&
+                circleInfo.Y >= rectangleInfo.Y - (rectangleInfo.Height/2))
+            {
+
+                int rectangleWidth = GameInfo.RECTANGLE_AREA / (int)rectangleInfo.Height;
+
+                if (nextMove.Value.precondition.right_direction &&
+                    circleInfo.X >= rectangleInfo.X &&
+                    circleInfo.X <= nextMove.Value.precondition.position.x + rectangleWidth + GameInfo.CIRCLE_RADIUS)
+                {
+                    return true;
+                }
+
+                if (!nextMove.Value.precondition.right_direction &&
+                    circleInfo.X <= rectangleInfo.X &&
+                    circleInfo.X >= nextMove.Value.precondition.position.x - rectangleWidth - GameInfo.CIRCLE_RADIUS)
+                {
+                    return true;
+                }
+
+            }
+
+            return false;
+        }
+
+        public void CleanRides()
+        {
+            foreach (Graph.Platform p in graph.platforms)
+            {
+                int i = 0;
+
+                while (i < p.moves.Count)
+                {
+                    if (p.moves[i].type == Graph.movementType.RIDE)
+                    {
+                        p.moves.Remove(p.moves[i]);
+                    }
+                    else
+                    {
+                        i++;
+                    }
+
+                }
+            }
         }
     }
 }

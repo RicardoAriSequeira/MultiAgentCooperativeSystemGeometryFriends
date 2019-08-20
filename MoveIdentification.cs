@@ -35,8 +35,8 @@ namespace GeometryFriendsAgents
                 
                 if (fromPlatform.type == Graph.platformType.COOPERATION && k <= 5)
                 {
-                    from = fromPlatform.leftEdge + (fromPlatform.leftEdge - GameInfo.LEVEL_ORIGINAL) % (LevelRepresentation.PIXEL_LENGTH * 2) + 40;
-                    to = fromPlatform.rightEdge - (fromPlatform.rightEdge - GameInfo.LEVEL_ORIGINAL) % (LevelRepresentation.PIXEL_LENGTH * 2) - 40;
+                    from = fromPlatform.leftEdge + (fromPlatform.leftEdge - GameInfo.LEVEL_ORIGINAL) % (LevelRepresentation.PIXEL_LENGTH * 2) + 90;
+                    to = fromPlatform.rightEdge - (fromPlatform.rightEdge - GameInfo.LEVEL_ORIGINAL) % (LevelRepresentation.PIXEL_LENGTH * 2) - 90;
 
                     Parallel.For(0, (to - from) / (LevelRepresentation.PIXEL_LENGTH * 2) + 1, j =>
                     {
@@ -48,9 +48,9 @@ namespace GeometryFriendsAgents
                         Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, Graph.VELOCITYX_STEP * k, true, Graph.movementType.JUMP);
                         Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, Graph.VELOCITYX_STEP * k, false, Graph.movementType.JUMP);
 
-                        movePoint = new LevelRepresentation.Point(from + j * LevelRepresentation.PIXEL_LENGTH * 2, fromPlatform.height - 150 - GameInfo.CIRCLE_RADIUS);
-                        Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, Graph.VELOCITYX_STEP * k, true, Graph.movementType.JUMP);
-                        Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, Graph.VELOCITYX_STEP * k, false, Graph.movementType.JUMP);
+                        //movePoint = new LevelRepresentation.Point(from + j * LevelRepresentation.PIXEL_LENGTH * 2, fromPlatform.height - 150 - GameInfo.CIRCLE_RADIUS);
+                        //Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, Graph.VELOCITYX_STEP * k, true, Graph.movementType.JUMP);
+                        //Trajectory(graph, fromPlatform, movePoint, graph.MAX_HEIGHT, Graph.VELOCITYX_STEP * k, false, Graph.movementType.JUMP);
                     });
                 }
 
@@ -120,7 +120,9 @@ namespace GeometryFriendsAgents
                     collectible_onPath = collectible_onPath = Utilities.GetOrMatrix(collectible_onPath, graph.GetCollectibles_onPixels(rectanglePixels));
                 }
 
-                graph.AddMove(fromPlatform, new Graph.Move(toPlatform, movePoint, landPoint, 0, rightMove, Graph.movementType.MORPH_DOWN, collectible_onPath, (fromPlatform.height - toPlatform.height) + Math.Abs(movePoint.x - landPoint.x), false, toPlatform.allowedHeight));
+                PreCondition newPreCondition = new PreCondition(movePoint, toPlatform.allowedHeight - LevelRepresentation.PIXEL_LENGTH, 0, rightMove);
+                Move newMove = new Move(toPlatform, newPreCondition, landPoint, movementType.MORPH_DOWN, collectible_onPath, (fromPlatform.height - toPlatform.height) + Math.Abs(movePoint.x - landPoint.x), false);
+                graph.AddMove(fromPlatform, newMove);
 
             }
         }
@@ -140,7 +142,9 @@ namespace GeometryFriendsAgents
                     if (!graph.IsObstacle_onPixels(pixels))
                     {
                         bool[] collectible_onPath = graph.GetCollectibles_onPixels(pixels);
-                        graph.AddMove(fromPlatform, new Graph.Move(fromPlatform, movePoint, movePoint, 0, true, Graph.movementType.COLLECT, collectible_onPath, 0, false, height));
+                        PreCondition newPreCondition = new PreCondition(movePoint, height, 0, true);
+                        Move newMove = new Move(fromPlatform, newPreCondition, movePoint, movementType.COLLECT, collectible_onPath, 0, false);
+                        graph.AddMove(fromPlatform, newMove);
                     }
                 }
             });
@@ -183,7 +187,9 @@ namespace GeometryFriendsAgents
                     LevelRepresentation.Point movePoint = rightMove ? new LevelRepresentation.Point(fromPlatform.rightEdge, fromPlatform.height) : new LevelRepresentation.Point(fromPlatform.leftEdge, fromPlatform.height);
                     LevelRepresentation.Point landPoint = rightMove ? new LevelRepresentation.Point(toPlatform.leftEdge, toPlatform.height) : new LevelRepresentation.Point(toPlatform.rightEdge, toPlatform.height);
 
-                    graph.AddMove(fromPlatform, new Graph.Move(toPlatform, movePoint, landPoint, 0, rightMove, Graph.movementType.STAIR_GAP, collectible_onPath, (fromPlatform.height - toPlatform.height) + Math.Abs(movePoint.x - landPoint.x), false));
+                    PreCondition newPreCondition = new PreCondition(movePoint, GameInfo.SQUARE_HEIGHT, 0, rightMove);
+                    Move newMove = new Move(toPlatform, newPreCondition, landPoint, movementType.STAIR_GAP, collectible_onPath, (fromPlatform.height - toPlatform.height) + Math.Abs(movePoint.x - landPoint.x), false);
+                    graph.AddMove(fromPlatform, newMove);
                 }
             }
         }
@@ -245,7 +251,9 @@ namespace GeometryFriendsAgents
                 LevelRepresentation.Point movePoint = rightMove ? new LevelRepresentation.Point(fromPlatform.rightEdge, fromPlatform.height) : new LevelRepresentation.Point(fromPlatform.leftEdge, fromPlatform.height);
                 LevelRepresentation.Point landPoint = rightMove ? new LevelRepresentation.Point(toPlatform.leftEdge, toPlatform.height) : new LevelRepresentation.Point(toPlatform.rightEdge, toPlatform.height);
 
-                graph.AddMove(fromPlatform, new Move(toPlatform, movePoint, landPoint, 0, rightMove, movementType.STAIR_GAP, collectible_onPath, (fromPlatform.height - toPlatform.height) + Math.Abs(movePoint.x - landPoint.x), false));
+                PreCondition newPreCondition = new PreCondition(movePoint, GameInfo.SQUARE_HEIGHT, 0, rightMove);
+                Move newMove = new Move(toPlatform, newPreCondition, landPoint, movementType.STAIR_GAP, collectible_onPath, (fromPlatform.height - toPlatform.height) + Math.Abs(movePoint.x - landPoint.x), false);
+                graph.AddMove(fromPlatform, newMove);
             }
         }
 
@@ -291,7 +299,9 @@ namespace GeometryFriendsAgents
 
                     if (reachablePlatform != null)
                     {
-                        graph.AddMove(platform, new Graph.Move((Graph.Platform)reachablePlatform, movePoint, previousCenter, 0, rightMove, Graph.movementType.GAP, collectible_onPath, (int)pathLength, false, fall_height));
+                        PreCondition newPreCondition = new PreCondition(movePoint, fall_height, 0, rightMove);
+                        Move newMove = new Move((Platform)reachablePlatform, newPreCondition, previousCenter, movementType.GAP, collectible_onPath, (int)pathLength, false);
+                        graph.AddMove((Platform)reachablePlatform, newMove);
                         break;
                     }
 
@@ -344,10 +354,15 @@ namespace GeometryFriendsAgents
             LevelRepresentation.Point end = new LevelRepresentation.Point(end_x, platform.height - (platform.allowedHeight / 2));
 
             int pathLength = (gap.height - platform.height) + Math.Abs(start.x - end.x);
-            graph.AddMove(gap, new Graph.Move(platform, start, end, 0, !rightMove, Graph.movementType.STAIR_GAP, collectibles, pathLength, false, gap.allowedHeight));
+            PreCondition newPreCondition = new PreCondition(start, gap.allowedHeight, 0, !rightMove);
+            Move newMove = new Move(platform, newPreCondition, end, movementType.STAIR_GAP, collectibles, pathLength, false);
+            graph.AddMove(gap, newMove);
+
 
             pathLength = (platform.height - gap.height) + Math.Abs(end.x - start.x);
-            graph.AddMove(platform, new Graph.Move(gap, end, start, 0, rightMove, Graph.movementType.STAIR_GAP, collectibles, pathLength, false, gap.allowedHeight));
+            newPreCondition = new PreCondition(end, gap.allowedHeight, 0, rightMove);
+            newMove = new Move(gap, newPreCondition, start, movementType.STAIR_GAP, collectibles, pathLength, false);
+            graph.AddMove(platform, newMove);
         }
 
         private static void Stair_Rectangle(Graph graph, Platform fromPlatform, Platform toPlatform)
@@ -366,7 +381,9 @@ namespace GeometryFriendsAgents
                     int pathLength = (fromPlatform.height - toPlatform.height) + Math.Abs(start.x - end.x);
                     int requiredHeight = 3 * stairHeight + LevelRepresentation.PIXEL_LENGTH;
 
-                    graph.AddMove(fromPlatform, new Graph.Move(toPlatform, start, end, 150, true, Graph.movementType.MORPH_UP, new bool[graph.nCollectibles], pathLength, false, requiredHeight));
+                    PreCondition newPreCondition = new PreCondition(start, requiredHeight, 150, true);
+                    Move newMove = new Move(toPlatform, newPreCondition, end, movementType.MORPH_UP, new bool[graph.nCollectibles], pathLength, false);
+                    graph.AddMove(fromPlatform, newMove);
                 }
                 else if (toPlatform.rightEdge <= fromPlatform.leftEdge && fromPlatform.leftEdge <= toPlatform.rightEdge + 33)
                 {
@@ -376,7 +393,9 @@ namespace GeometryFriendsAgents
                     int pathLength = (fromPlatform.height - toPlatform.height) + Math.Abs(start.x - end.x);
                     int requiredHeight = 3 * stairHeight + LevelRepresentation.PIXEL_LENGTH;
 
-                    graph.AddMove(fromPlatform, new Graph.Move(toPlatform, start, end, 150, false, Graph.movementType.MORPH_UP, new bool[graph.nCollectibles], pathLength, false, requiredHeight));
+                    PreCondition newPreCondition = new PreCondition(start, requiredHeight, 150, false);
+                    Move newMove = new Move(toPlatform, newPreCondition, end, movementType.MORPH_UP, new bool[graph.nCollectibles], pathLength, false);
+                    graph.AddMove(fromPlatform, newMove);
                 }
             }
         }
@@ -404,14 +423,6 @@ namespace GeometryFriendsAgents
             {
                 prevCollidePoint = collidePoint;
 
-                //if (collideType == collideType.COOPERATION)
-                //{
-
-                //}
-                //else
-                //{
-
-                //}
                 graph.GetPathInfo(collidePoint, collideVelocityX, collideVelocityY, ref collidePoint, ref collideType, ref collideVelocityX, ref collideVelocityY, ref collectible_onPath, ref pathLength, (Math.Min(graph.AREA / height, height) / 2));
 
                 if (collideType == collideType.CEILING)
@@ -434,14 +445,16 @@ namespace GeometryFriendsAgents
 
                         if (distance_to_land >= 140 || fromPlatform.id == toPlatform.Value.id)
                         {
-                            graph.AddMove(fromPlatform, new Move(toPlatform.Value, movePoint, collidePoint, velocityX, rightMove, movementType, collectible_onPath, (int)pathLength, collideCeiling, height));
+                            PreCondition newPreCondition = new PreCondition(movePoint, height, velocityX, rightMove);
+                            Move newMove = new Move(toPlatform.Value, newPreCondition, collidePoint, movementType, collectible_onPath, (int)pathLength, collideCeiling);
+                            graph.AddMove(fromPlatform, newMove);
                         }
 
                     }
 
                 }
 
-                if (prevCollidePoint.Equals(collidePoint)/* && collideType != collideType.COOPERATION*/)
+                if (prevCollidePoint.Equals(collidePoint))
                 {
                     break;
                 }
@@ -460,7 +473,9 @@ namespace GeometryFriendsAgents
                         movePoint.x = rightMove ? movePoint.x - LevelRepresentation.PIXEL_LENGTH : movePoint.x + LevelRepresentation.PIXEL_LENGTH;
                     }
 
-                    graph.AddMove(fromPlatform, new Move(toPlatform.Value, movePoint, collidePoint, velocityX, rightMove, movementType, collectible_onPath, (int)pathLength, collideCeiling, height));
+                    PreCondition newPreCondition = new PreCondition(movePoint, height, velocityX, rightMove);
+                    Move newMove = new Move(toPlatform.Value, newPreCondition, collidePoint, movementType, collectible_onPath, (int)pathLength, collideCeiling);
+                    graph.AddMove(fromPlatform, newMove);
 
                 }
             }

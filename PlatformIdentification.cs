@@ -44,7 +44,7 @@ namespace GeometryFriendsAgents
 
         public static platformType[,] GetPlatformArray_Rectangle(int[,] levelArray)
         {
-            Graph.platformType[,] platformArray = new Graph.platformType[levelArray.GetLength(0), levelArray.GetLength(1)];
+            platformType[,] platformArray = new platformType[levelArray.GetLength(0), levelArray.GetLength(1)];
 
             for (int y = 0; y < levelArray.GetLength(0); y++)
             {
@@ -94,22 +94,22 @@ namespace GeometryFriendsAgents
 
         public static List<Platform> SetPlatforms_Circle(int[,] levelArray)
         {
-            List<Graph.Platform> platforms = new List<Graph.Platform>();
+            List<Platform> platforms = new List<Platform>();
 
-            Graph.platformType[,] platformArray = GetPlatformArray_Circle(levelArray);
+            platformType[,] platformArray = GetPlatformArray_Circle(levelArray);
 
             Parallel.For(0, levelArray.GetLength(0), i =>
             {
-                Graph.platformType currentPlatform = Graph.platformType.NO_PLATFORM;
+                platformType currentPlatform = platformType.NO_PLATFORM;
                 int leftEdge = 0;
 
                 for (int j = 0; j < platformArray.GetLength(1); j++)
                 {
-                    if (currentPlatform == Graph.platformType.NO_PLATFORM)
+                    if (currentPlatform == platformType.NO_PLATFORM)
                     {
-                        if (platformArray[i, j] == Graph.platformType.BLACK || platformArray[i, j] == Graph.platformType.GREEN)
+                        if (platformArray[i, j] == platformType.BLACK || platformArray[i, j] == platformType.GREEN)
                         {
-                            leftEdge = LevelRepresentation.ConvertValue_ArrayPointIntoPoint(j);
+                            leftEdge = ConvertValue_ArrayPointIntoPoint(j);
                             currentPlatform = platformArray[i, j];
                         }
                     }
@@ -117,13 +117,13 @@ namespace GeometryFriendsAgents
                     {
                         if (platformArray[i, j] != currentPlatform)
                         {
-                            int rightEdge = LevelRepresentation.ConvertValue_ArrayPointIntoPoint(j - 1);
+                            int rightEdge = ConvertValue_ArrayPointIntoPoint(j - 1);
 
                             if (rightEdge >= leftEdge)
                             {
                                 lock (platforms)
                                 {
-                                    platforms.Add(new Graph.Platform(Graph.platformType.BLACK, LevelRepresentation.ConvertValue_ArrayPointIntoPoint(i), leftEdge, rightEdge, new List<Graph.Move>(), GameInfo.MAX_CIRCLE_HEIGHT / LevelRepresentation.PIXEL_LENGTH));
+                                    platforms.Add(new Platform(platformType.BLACK, ConvertValue_ArrayPointIntoPoint(i), leftEdge, rightEdge, new List<Move>(), GameInfo.MAX_CIRCLE_HEIGHT / PIXEL_LENGTH));
                                 }
                             }
 
@@ -140,39 +140,39 @@ namespace GeometryFriendsAgents
         public static List<Platform> SetPlatforms_Rectangle(int[,] levelArray)
         {
 
-            List<Graph.Platform> platforms = new List<Graph.Platform>();
+            List<Platform> platforms = new List<Platform>();
 
-            Graph.platformType[,] platformArray = GetPlatformArray_Rectangle(levelArray);
+            platformType[,] platformArray = GetPlatformArray_Rectangle(levelArray);
 
             Parallel.For(0, platformArray.GetLength(0), y =>
             {
 
-                int min_height_pixels = GameInfo.MIN_RECTANGLE_HEIGHT / LevelRepresentation.PIXEL_LENGTH;
-                int max_height_pixels = Math.Min((GameInfo.MAX_RECTANGLE_HEIGHT / LevelRepresentation.PIXEL_LENGTH), y + LevelRepresentation.MARGIN + min_height_pixels);
+                int min_height_pixels = GameInfo.MIN_RECTANGLE_HEIGHT / PIXEL_LENGTH;
+                int max_height_pixels = Math.Min((GameInfo.MAX_RECTANGLE_HEIGHT / PIXEL_LENGTH), y + MARGIN + min_height_pixels);
 
                 int leftEdge = 0, allowedHeight = max_height_pixels, gap_size = 0;
-                Graph.platformType currentPlatform = Graph.platformType.NO_PLATFORM;
+                platformType currentPlatform = platformType.NO_PLATFORM;
 
                 for (int x = 0; x < platformArray.GetLength(1); x++)
                 {
 
-                    if (currentPlatform == Graph.platformType.NO_PLATFORM)
+                    if (currentPlatform == platformType.NO_PLATFORM)
                     {
-                        if (platformArray[y, x] == Graph.platformType.BLACK || platformArray[y, x] == Graph.platformType.YELLOW)
+                        if (platformArray[y, x] == platformType.BLACK || platformArray[y, x] == platformType.YELLOW)
                         {
 
                             if (7 <= gap_size && gap_size <= 19)
                             {
-                                int rightEdge = LevelRepresentation.ConvertValue_ArrayPointIntoPoint(x - 1);
+                                int rightEdge = ConvertValue_ArrayPointIntoPoint(x - 1);
 
                                 if (rightEdge >= leftEdge)
                                 {
 
-                                    int gap_allowed_height = (GameInfo.RECTANGLE_AREA / (Math.Min((gap_size + 8) * LevelRepresentation.PIXEL_LENGTH, GameInfo.MAX_RECTANGLE_HEIGHT))) / LevelRepresentation.PIXEL_LENGTH;
+                                    int gap_allowed_height = (GameInfo.RECTANGLE_AREA / (Math.Min((gap_size + 8) * PIXEL_LENGTH, GameInfo.MAX_RECTANGLE_HEIGHT))) / PIXEL_LENGTH;
 
                                     lock (platforms)
                                     {
-                                        platforms.Add(new Graph.Platform(Graph.platformType.GAP, LevelRepresentation.ConvertValue_ArrayPointIntoPoint(y), leftEdge, rightEdge, new List<Graph.Move>(), gap_allowed_height));
+                                        platforms.Add(new Platform(platformType.GAP, ConvertValue_ArrayPointIntoPoint(y), leftEdge, rightEdge, new List<Move>(), gap_allowed_height));
                                     }
                                 }
                             }
@@ -182,17 +182,17 @@ namespace GeometryFriendsAgents
 
                             for (int h = min_height_pixels; h <= max_height_pixels; h++)
                             {
-                                if (levelArray[y - h, x] == LevelRepresentation.BLACK || levelArray[y - h, x] == LevelRepresentation.YELLOW)
+                                if (levelArray[y - h, x] == BLACK || levelArray[y - h, x] == YELLOW)
                                 {
                                     allowedHeight = h;
                                     break;
                                 }
                             }
 
-                            leftEdge = LevelRepresentation.ConvertValue_ArrayPointIntoPoint(x);
+                            leftEdge = ConvertValue_ArrayPointIntoPoint(x);
                         }
 
-                        else if (levelArray[y, x] == LevelRepresentation.GREEN || levelArray[y, x] == LevelRepresentation.OPEN)
+                        else if (levelArray[y, x] == GREEN || levelArray[y, x] == OPEN)
                         {
                             gap_size++;
                         }
@@ -202,48 +202,48 @@ namespace GeometryFriendsAgents
                     {
                         if (platformArray[y, x] != currentPlatform)
                         {
-                            int rightEdge = LevelRepresentation.ConvertValue_ArrayPointIntoPoint(x - 1);
+                            int rightEdge = ConvertValue_ArrayPointIntoPoint(x - 1);
 
                             if (rightEdge >= leftEdge)
                             {
                                 lock (platforms)
                                 {
-                                    platforms.Add(new Graph.Platform(currentPlatform, LevelRepresentation.ConvertValue_ArrayPointIntoPoint(y), leftEdge, rightEdge, new List<Graph.Move>(), allowedHeight));
+                                    platforms.Add(new Platform(currentPlatform, ConvertValue_ArrayPointIntoPoint(y), leftEdge, rightEdge, new List<Move>(), allowedHeight));
                                 }
                             }
 
                             allowedHeight = max_height_pixels;
                             currentPlatform = platformArray[y, x];
-                            leftEdge = LevelRepresentation.ConvertValue_ArrayPointIntoPoint(x);
+                            leftEdge = ConvertValue_ArrayPointIntoPoint(x);
 
                         }
 
-                        if (platformArray[y, x] != Graph.platformType.NO_PLATFORM && y > LevelRepresentation.MARGIN + min_height_pixels)
+                        if (platformArray[y, x] != platformType.NO_PLATFORM && y > MARGIN + min_height_pixels)
                         {
 
                             for (int h = min_height_pixels; h <= max_height_pixels; h++)
                             {
 
-                                if (levelArray[y - h, x] == LevelRepresentation.BLACK ||
-                                    levelArray[y - h, x] == LevelRepresentation.YELLOW ||
-                                    (h == max_height_pixels && allowedHeight != max_height_pixels && levelArray[y - h, x] == LevelRepresentation.OPEN))
+                                if (levelArray[y - h, x] == BLACK ||
+                                    levelArray[y - h, x] == YELLOW ||
+                                    (h == max_height_pixels && allowedHeight != max_height_pixels && levelArray[y - h, x] == OPEN))
                                 {
 
                                     if (h != allowedHeight)
                                     {
 
-                                        int rightEdge = LevelRepresentation.ConvertValue_ArrayPointIntoPoint(x - 1);
+                                        int rightEdge = ConvertValue_ArrayPointIntoPoint(x - 1);
 
                                         if (rightEdge >= leftEdge)
                                         {
                                             lock (platforms)
                                             {
-                                                platforms.Add(new Graph.Platform(currentPlatform, LevelRepresentation.ConvertValue_ArrayPointIntoPoint(y), leftEdge, rightEdge, new List<Graph.Move>(), allowedHeight));
+                                                platforms.Add(new Platform(currentPlatform, ConvertValue_ArrayPointIntoPoint(y), leftEdge, rightEdge, new List<Move>(), allowedHeight));
                                             }
                                         }
 
                                         allowedHeight = h;
-                                        leftEdge = LevelRepresentation.ConvertValue_ArrayPointIntoPoint(x - 1);
+                                        leftEdge = ConvertValue_ArrayPointIntoPoint(x - 1);
 
                                     }
 
@@ -261,6 +261,7 @@ namespace GeometryFriendsAgents
 
         public static List<Platform> JoinPlatforms(List<Platform> platforms1, List<Platform> platforms2)
         {
+
             foreach (Platform p in platforms2)
             {
                 platforms1.Add(new Platform(platformType.COOPERATION, p.height - GameInfo.MIN_RECTANGLE_HEIGHT, p.leftEdge, p.rightEdge, p.moves, p.allowedHeight, p.id));
@@ -279,7 +280,7 @@ namespace GeometryFriendsAgents
 
             Parallel.For(0, platforms.Count, i =>
             {
-                Graph.Platform tempPlatfom = platforms[i];
+                Platform tempPlatfom = platforms[i];
                 tempPlatfom.id = i + 1;
                 platforms[i] = tempPlatfom;
             });
@@ -290,24 +291,24 @@ namespace GeometryFriendsAgents
         public static List<Platform> DeleteCooperationPlatforms(List<Platform> platforms)
         {
 
-            foreach (Graph.Platform p in platforms)
+            foreach (Platform p in platforms)
             {
-                foreach (Graph.Move m in p.moves)
+                foreach (Move m in p.moves)
                 {
-                    if (m.reachablePlatform.type == Graph.platformType.COOPERATION)
+                    if (m.reachablePlatform.type == platformType.COOPERATION)
                     {
                         var itemToRemove = p.moves.Single(r => r.type == m.type &&
                                                                 r.reachablePlatform.id == m.reachablePlatform.id &&
-                                                                r.movePoint.x == m.movePoint.x &&
-                                                                r.movePoint.y == m.movePoint.y);
+                                                                r.precondition.position.x == m.precondition.position.x &&
+                                                                r.precondition.position.y == m.precondition.position.y);
                         p.moves.Remove(itemToRemove);
                     }
                 }
             }
 
-            foreach (Graph.Platform p in platforms)
+            foreach (Platform p in platforms)
             {
-                if (p.type == Graph.platformType.COOPERATION)
+                if (p.type == platformType.COOPERATION)
                 {
                     var itemToRemove = platforms.Single(r => r.id == p.id && r.type == p.type);
                     platforms.Remove(itemToRemove);

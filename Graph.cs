@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 
 using System.Threading.Tasks;
+using static GeometryFriendsAgents.LevelRepresentation;
 
 namespace GeometryFriendsAgents
 {
@@ -61,32 +62,41 @@ namespace GeometryFriendsAgents
             }
         }
 
+        public struct PreCondition
+        {
+            public int height;
+            public Point position;
+            public bool right_direction;
+            public int horizontal_velocity;
+
+            public PreCondition(Point position, int height, int horizontal_velocity, bool right_direction)
+            {
+                this.height = height;
+                this.position = position;
+                this.right_direction = right_direction;
+                this.horizontal_velocity = horizontal_velocity;
+            }
+        }
+
         public struct Move
         {
-            public Platform reachablePlatform;
-            public LevelRepresentation.Point movePoint;
-            public LevelRepresentation.Point landPoint;
-            public int velocityX;
-            public bool rightMove;
-            public movementType type;
-            public bool[] collectibles_onPath;
             public int pathLength;
+            public Point landPoint;
+            public movementType type;
             public bool collideCeiling;
-            public int height;
+            public PreCondition precondition;
+            public bool[] collectibles_onPath;
+            public Platform reachablePlatform;
 
-
-            public Move(Platform reachablePlatform, LevelRepresentation.Point movePoint, LevelRepresentation.Point landPoint, int velocityX, bool rightMove, movementType type, bool[] collectibles_onPath, int pathLength, bool collideCeiling, int height = GameInfo.SQUARE_HEIGHT)
+            public Move(Platform reachablePlatform, PreCondition precondition, Point landPoint, movementType type, bool[] collectibles_onPath, int pathLength, bool collideCeiling)
             {
-                this.reachablePlatform = reachablePlatform;
-                this.movePoint = movePoint;
-                this.landPoint = landPoint;
-                this.velocityX = velocityX;
-                this.rightMove = rightMove;
                 this.type = type;
-                this.collectibles_onPath = collectibles_onPath;
+                this.landPoint = landPoint;
                 this.pathLength = pathLength;
+                this.precondition = precondition;
                 this.collideCeiling = collideCeiling;
-                this.height = height;
+                this.reachablePlatform = reachablePlatform;
+                this.collectibles_onPath = collectibles_onPath;
             }
         }
 
@@ -240,7 +250,7 @@ namespace GeometryFriendsAgents
                             continue;
                         }
 
-                        if (mI.velocityX > i.velocityX)
+                        if (mI.precondition.horizontal_velocity > i.precondition.horizontal_velocity)
                         {
                             continue;
                         }
@@ -263,7 +273,7 @@ namespace GeometryFriendsAgents
                             continue;
                         }
 
-                        if (mI.velocityX < i.velocityX)
+                        if (mI.precondition.horizontal_velocity < i.precondition.horizontal_velocity)
                         {
                             continue;
                         }
@@ -290,8 +300,8 @@ namespace GeometryFriendsAgents
                             continue;
                         }
 
-                        if (i.height == GameInfo.SQUARE_HEIGHT ||
-                            (Math.Abs(i.height - GameInfo.SQUARE_HEIGHT) < Math.Abs(mI.height - GameInfo.SQUARE_HEIGHT)))
+                        if (i.precondition.height == GameInfo.SQUARE_HEIGHT ||
+                            (Math.Abs(i.precondition.height - GameInfo.SQUARE_HEIGHT) < Math.Abs(mI.precondition.height - GameInfo.SQUARE_HEIGHT)))
                         {
                             priorityHighestFlag = false;
                             continue;
@@ -315,7 +325,7 @@ namespace GeometryFriendsAgents
 
                     if (mI.type != movementType.COLLECT && i.type != movementType.COLLECT)
                     {
-                        if (mI.rightMove == i.rightMove || ((mI.type == movementType.JUMP && i.type == movementType.JUMP) && (mI.velocityX == 0 || i.velocityX == 0)))
+                        if (mI.precondition.right_direction == i.precondition.right_direction || ((mI.type == movementType.JUMP && i.type == movementType.JUMP) && (mI.precondition.horizontal_velocity == 0 || i.precondition.horizontal_velocity == 0)))
                         {
                             if (mI.type > i.type)
                             {
@@ -329,31 +339,31 @@ namespace GeometryFriendsAgents
                                 continue;
                             }
 
-                            if (i.velocityX == 0 && mI.velocityX > 0)
+                            if (i.precondition.horizontal_velocity == 0 && mI.precondition.horizontal_velocity > 0)
                             {
                                 priorityHighestFlag = false;
                                 continue;
                             }
 
-                            if (Math.Abs(mI.height - GameInfo.SQUARE_HEIGHT) > Math.Abs(i.height - GameInfo.SQUARE_HEIGHT))
+                            if (Math.Abs(mI.precondition.height - GameInfo.SQUARE_HEIGHT) > Math.Abs(i.precondition.height - GameInfo.SQUARE_HEIGHT))
                             {
                                 priorityHighestFlag = false;
                                 continue;
                             }
 
-                            if (Math.Abs(i.height - GameInfo.SQUARE_HEIGHT) > Math.Abs(mI.height - GameInfo.SQUARE_HEIGHT))
+                            if (Math.Abs(i.precondition.height - GameInfo.SQUARE_HEIGHT) > Math.Abs(mI.precondition.height - GameInfo.SQUARE_HEIGHT))
                             {
                                 moveInfoToRemove.Add(i);
                                 continue;
                             }
 
-                            if (mI.velocityX > i.velocityX)
+                            if (mI.precondition.horizontal_velocity > i.precondition.horizontal_velocity)
                             {
                                 priorityHighestFlag = false;
                                 continue;
                             }
 
-                            if (mI.velocityX < i.velocityX)
+                            if (mI.precondition.horizontal_velocity < i.precondition.horizontal_velocity)
                             {
                                 moveInfoToRemove.Add(i);
                                 continue;
@@ -512,7 +522,7 @@ namespace GeometryFriendsAgents
 
         public static Move CopyMove(Move m)
         {
-            return new Move(m.reachablePlatform, m.movePoint, m.landPoint, m.velocityX, m.rightMove, m.type, m.collectibles_onPath, m.pathLength, m.collideCeiling, m.height);
+            return new Move(m.reachablePlatform, m.precondition, m.landPoint, m.type, m.collectibles_onPath, m.pathLength, m.collideCeiling);
         }
 
     }
