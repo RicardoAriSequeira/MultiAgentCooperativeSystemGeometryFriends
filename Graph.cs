@@ -122,6 +122,11 @@ namespace GeometryFriendsAgents
         public Platform? GetPlatform(Point center, float height, int velocityY = 0)
         {
 
+            if (Math.Abs(velocityY) > GameInfo.MAX_VELOCITYY)
+            {
+                return null;
+            }
+
             foreach (Platform i in platforms)
             {
                 if (i.leftEdge <= center.x && center.x <= i.rightEdge && (i.height - center.y >= (height / 2) - 8) && (i.height - center.y <= (height/2) + 8))
