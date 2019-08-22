@@ -180,7 +180,7 @@ namespace GeometryFriendsAgents
                     if (nextMove.HasValue)
                     {
 
-                        if ((cooperation == CooperationStatus.IN_POSITION) || (IsCircleInTheWay() && cooperation == CooperationStatus.SINGLE))
+                        if ((cooperation == CooperationStatus.SYNCHRONIZED) || (IsCircleInTheWay() && cooperation == CooperationStatus.SINGLE))
                         {
                             currentAction = Moves.NO_ACTION;
                             return;
@@ -319,7 +319,7 @@ namespace GeometryFriendsAgents
             if (nextMove.HasValue)
             {
 
-                if (!actionSelector.IsGoal(rectangleInfo, nextMove.Value.precondition.position.x, nextMove.Value.precondition.horizontal_velocity, nextMove.Value.precondition.right_direction) || cooperation == CooperationStatus.RIDE_HELP)
+                if (!actionSelector.IsGoal(rectangleInfo, nextMove.Value.precondition) || cooperation == CooperationStatus.RIDE_HELP)
                 {
                     return;
                 }
@@ -329,7 +329,7 @@ namespace GeometryFriendsAgents
 
                     targetPointX_InAir = (nextMove.Value.reachablePlatform.leftEdge + nextMove.Value.reachablePlatform.rightEdge) / 2;
 
-                    if (cooperation == CooperationStatus.RIDING)
+                    if (cooperation == CooperationStatus.RIDE)
                     {
                         if (rectangleInfo.Height > nextMove.Value.precondition.height + 4)
                         {
@@ -342,8 +342,7 @@ namespace GeometryFriendsAgents
                         }
                         else
                         {
-                            messages.Add(new AgentMessage(IN_POSITION));
-                            cooperation = CooperationStatus.IN_POSITION;
+                            cooperation = CooperationStatus.SYNCHRONIZED;
                         }
 
                     }
@@ -381,12 +380,9 @@ namespace GeometryFriendsAgents
                         currentAction = Moves.MORPH_UP;
                     }
 
-                    if (nextMove.Value.type == movementType.RIDE && cooperation == CooperationStatus.AWAITING && Math.Abs(nextMove.Value.precondition.height - rectangleInfo.Height) < 5)
+                    if (nextMove.Value.type == movementType.RIDE && cooperation == CooperationStatus.UNSYNCHRONIZED && Math.Abs(nextMove.Value.precondition.height - rectangleInfo.Height) < 5)
                     {
-                        //cooperation = CooperationStatus.RIDE_READY;
-                        //messages.Add(new AgentMessage(RIDE_READY));
-                        cooperation = CooperationStatus.IN_POSITION;
-                        messages.Add(new AgentMessage(IN_POSITION));
+                        cooperation = CooperationStatus.SYNCHRONIZED;
                     }
 
 
@@ -470,7 +466,7 @@ namespace GeometryFriendsAgents
 
             if (nextMove.HasValue && nextMove.Value.type == movementType.RIDE && cooperation == CooperationStatus.SINGLE)
             {
-                cooperation = CooperationStatus.AWAITING;
+                cooperation = CooperationStatus.UNSYNCHRONIZED;
             }
         }
 
@@ -515,12 +511,14 @@ namespace GeometryFriendsAgents
                             }
                         }
                     }
+
+                    cooperation = CooperationStatus.SINGLE;
                 }
 
-                if (item.Message.Equals(AWAITING) && item.Attachment.GetType() == typeof(Move))
+                if (item.Message.Equals(UNSYNCHRONIZED) && item.Attachment.GetType() == typeof(Move))
                 {
                     Move circleMove = (Move) item.Attachment;
-                    PreCondition rectangle_precondition = (PreCondition)circleMove.partner_precondition;
+                    PreCondition rectangle_precondition = circleMove.precondition;
 
                     bool[] collectibles_onPath = Utilities.GetXorMatrix(graph.possibleCollectibles, circleMove.collectibles_onPath);
                     Platform? fromPlatform = graph.GetPlatform(rectangle_precondition.position, rectangle_precondition.height);
@@ -534,27 +532,22 @@ namespace GeometryFriendsAgents
 
                 }
 
-                if (item.Message.Equals(RIDING) && item.Attachment.GetType() == typeof(Move))
+                if (item.Message.Equals(RIDE) && item.Attachment.GetType() == typeof(Move))
                 {
+                    cooperation = CooperationStatus.RIDE;
+
                     CleanRides();
 
                     Move newMove = (Move)item.Attachment;
-                    newMove.precondition = (PreCondition) newMove.partner_precondition;
-
-                    if (newMove.type == movementType.FALL)
-                    {
-                        newMove.precondition.position.x += newMove.precondition.right_direction ? (-120) : 120;
-                    }
-
                     newMove.type = movementType.RIDING;
                     nextMove = newMove;
 
-                    cooperation = CooperationStatus.RIDING;
                 }
 
                 if (item.Message.Equals(COOPERATION_FINISHED))
                 {
                     cooperation = CooperationStatus.SINGLE;
+                    CleanRides();
                 }
 
                 if (item.Message.Equals(JUMPED) && nextMove.HasValue)
@@ -563,17 +556,12 @@ namespace GeometryFriendsAgents
                     newMove.type = movementType.MORPH_DOWN;
                     newMove.precondition.height = MIN_RECTANGLE_HEIGHT;
                     nextMove = newMove;
-                    cooperation = CooperationStatus.RIDING;
+                    cooperation = CooperationStatus.RIDE;
                 }
 
                 if (item.Message.Equals(RIDE_HELP))
                 {
                     cooperation = CooperationStatus.RIDE_HELP;
-                }
-
-                if (item.Message.Equals(CLEAN_RIDES))
-                {
-                    CleanRides();
                 }
 
             }
@@ -687,13 +675,19 @@ namespace GeometryFriendsAgents
 
         public void CleanRides()
         {
+
+            if (nextMove.HasValue && (nextMove.Value.type == movementType.RIDE || nextMove.Value.type == movementType.RIDING))
+            {
+                nextMove = null;
+            }
+
             foreach (Platform p in graph.platforms)
             {
                 int i = 0;
 
                 while (i < p.moves.Count)
                 {
-                    if (p.moves[i].type == movementType.RIDE)
+                    if (p.moves[i].type == movementType.RIDE || p.moves[i].type == movementType.RIDING)
                     {
                         p.moves.Remove(p.moves[i]);
                     }

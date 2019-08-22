@@ -26,19 +26,23 @@
         public const string IST_CIRCLE_PLAYING = "IST Circle Playing";
         public const string IST_RECTANGLE_PLAYING = "IST Rectangle Playing";
         public const string UNREACHABLE_PLATFORMS = "Unreachable Platforms";
-        public const string AWAITING = "Awaiting";
-        public const string RIDING = "Riding";
         public const string COOPERATION_FINISHED = "Cooperation Finished";
         public const string JUMPED = "Jumped";
-        public const string IN_POSITION = "In Position";
         public const string INDIVIDUAL_MOVE = "Taking Individual Move";
         public const string RIDE_HELP = "Ride Help";
-        public const string CLEAN_RIDES = "Clean Rides";
+
+
+        public const string UNSYNCHRONIZED = "There is a cooperation move to be executed but the players have to assume their positions.";
+        public const string RIDE = "The players are in the ride position (circle is above the rectangle).";
 
 
         public enum CooperationStatus
         {
-            SINGLE, AWAITING, RIDING, IN_POSITION, RIDE_HELP
+            SINGLE,
+            UNSYNCHRONIZED,
+            SYNCHRONIZED,
+            RIDE,
+            RIDE_HELP
         }
     }
 }

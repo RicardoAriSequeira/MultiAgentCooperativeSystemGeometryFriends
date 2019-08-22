@@ -87,7 +87,7 @@ namespace GeometryFriendsAgents
             public PreCondition precondition;
             public bool[] collectibles_onPath;
             public Platform reachablePlatform;
-            public PreCondition? partner_precondition;
+            public PreCondition partner_precondition;
 
             public Move(Platform reachablePlatform, PreCondition precondition, Point landPoint, movementType type, bool[] collectibles_onPath, int pathLength, bool collideCeiling, PreCondition? partner_precondition = null)
             {
@@ -98,7 +98,7 @@ namespace GeometryFriendsAgents
                 this.collideCeiling = collideCeiling;
                 this.reachablePlatform = reachablePlatform;
                 this.collectibles_onPath = collectibles_onPath;
-                this.partner_precondition = partner_precondition;
+                this.partner_precondition = partner_precondition ?? new PreCondition();
             }
         }
 

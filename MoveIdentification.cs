@@ -473,6 +473,7 @@ namespace GeometryFriendsAgents
 
                 if (toPlatform.HasValue)
                 {
+
                     if (movementType == movementType.FALL)
                     {
                         movePoint.x = rightMove ? movePoint.x - PIXEL_LENGTH : movePoint.x + PIXEL_LENGTH;

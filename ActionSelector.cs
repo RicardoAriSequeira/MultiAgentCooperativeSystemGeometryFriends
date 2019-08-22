@@ -1,6 +1,7 @@
 ﻿using GeometryFriends.AI;
 using GeometryFriends.AI.Perceptions.Information;
 using System;
+using static GeometryFriendsAgents.Graph;
 
 namespace GeometryFriendsAgents
 {
@@ -36,24 +37,24 @@ namespace GeometryFriendsAgents
         }
 
 
-        public bool IsGoal(CircleRepresentation cI, int targetPointX, int targetVelocityX, bool rightMove)
+        public bool IsGoal(CircleRepresentation cI, PreCondition precondition)
         {        
-            float distanceX = rightMove ? cI.X - targetPointX : targetPointX - cI.X;
+            float distanceX = precondition.right_direction ? cI.X - precondition.position.x : precondition.position.x - cI.X;
 
             if (-DISCRETIZATION_D * 2 < distanceX && distanceX <= 0)
             {
-                float relativeVelocityX = rightMove ? cI.VelocityX : -cI.VelocityX;
+                float relativeVelocityX = precondition.right_direction ? cI.VelocityX : -cI.VelocityX;
 
-                if (targetVelocityX == 0)
+                if (precondition.horizontal_velocity == 0)
                 {
-                    if (targetVelocityX - DISCRETIZATION_V <= relativeVelocityX && relativeVelocityX < targetVelocityX + DISCRETIZATION_V)
+                    if (precondition.horizontal_velocity - DISCRETIZATION_V <= relativeVelocityX && relativeVelocityX < precondition.horizontal_velocity + DISCRETIZATION_V)
                     {
                         return true;
                     }
                 }
                 else
                 {
-                    if (targetVelocityX <= relativeVelocityX && relativeVelocityX < targetVelocityX + DISCRETIZATION_V * 2)
+                    if (precondition.horizontal_velocity <= relativeVelocityX && relativeVelocityX < precondition.horizontal_velocity + DISCRETIZATION_V * 2)
                     {
                         return true;
                     }
@@ -63,29 +64,34 @@ namespace GeometryFriendsAgents
             return false;
         }
 
-        public bool IsGoal(RectangleRepresentation rI, int targetPointX, int targetVelocityX, bool rightMove)
+        public bool IsGoal(RectangleRepresentation rI, PreCondition precondition)
         {
-            float distanceX = rightMove ? rI.X - targetPointX : targetPointX - rI.X;
+            float distanceX = precondition.right_direction ? rI.X - precondition.position.x : precondition.position.x - rI.X;
 
-            if (targetVelocityX == 0)
+            //if (Math.Abs(rI.Height - precondition.height) >= 8)
+            //{
+            //    return false;
+            //}
+
+            if (precondition.horizontal_velocity == 0)
             {
                 distanceX = - Math.Abs(distanceX);
             }
 
             if (-DISCRETIZATION_D * 2 < distanceX && distanceX <= 0)
             {
-                float relativeVelocityX = rightMove ? rI.VelocityX : -rI.VelocityX;
+                float relativeVelocityX = precondition.right_direction ? rI.VelocityX : -rI.VelocityX;
 
-                if (targetVelocityX == 0)
+                if (precondition.horizontal_velocity == 0)
                 {
-                    if (targetVelocityX - DISCRETIZATION_V <= relativeVelocityX && relativeVelocityX < targetVelocityX + DISCRETIZATION_V)
+                    if (precondition.horizontal_velocity - DISCRETIZATION_V <= relativeVelocityX && relativeVelocityX < precondition.horizontal_velocity + DISCRETIZATION_V)
                     {
                         return true;
                     }
                 }
                 else
                 {
-                    if (targetVelocityX <= relativeVelocityX && relativeVelocityX < targetVelocityX + DISCRETIZATION_V * 2)
+                    if (precondition.horizontal_velocity <= relativeVelocityX && relativeVelocityX < precondition.horizontal_velocity + DISCRETIZATION_V * 2)
                     {
                         return true;
                     }
