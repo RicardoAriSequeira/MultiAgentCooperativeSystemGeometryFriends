@@ -365,7 +365,7 @@ namespace GeometryFriendsAgents
                             currentAction = Moves.MORPH_UP;            
                     }
 
-                    if (nextMove.Value.type == movementType.RIDE && rectangleInfo.Height > nextMove.Value.precondition.height)
+                    if (nextMove.Value.type == movementType.RIDE && rectangleInfo.Height > Math.Max(nextMove.Value.precondition.height, 53))
                     {
                          currentAction = Moves.MORPH_DOWN;
                     }

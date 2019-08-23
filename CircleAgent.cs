@@ -134,7 +134,7 @@ namespace GeometryFriendsAgents
 
                 currentPlatform = graph.GetPlatform(new Point((int)circleInfo.X, (int)circleInfo.Y), MAX_CIRCLE_HEIGHT, (int)circleInfo.VelocityY);
 
-                if (!currentPlatform.HasValue && (cooperation == CooperationStatus.SYNCHRONIZED || cooperation == CooperationStatus.RIDE) && IsRidingRectangle())
+                if (!currentPlatform.HasValue && IsRidingRectangle())
                 {
                     currentPlatform = previousPlatform;  
                 }
@@ -392,7 +392,7 @@ namespace GeometryFriendsAgents
             {
                 int rectangle_height = 50 + (fromPlatform.height - (rectangle_move.precondition.position.y + CIRCLE_RADIUS));
 
-                int rectangle_position_x = rectangle_move.precondition.position.x;
+                int rectangle_position_x = Math.Min(Math.Max(rectangle_move.precondition.position.x, 137), 1063);
 
                 if (rectangle_move.type == movementType.FALL)
                 {
