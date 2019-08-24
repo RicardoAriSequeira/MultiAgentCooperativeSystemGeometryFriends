@@ -12,7 +12,6 @@ namespace GeometryFriendsAgents
         public const int YELLOW = -3;
         public const int COOPERATION = -4;
 
-        public const int MARGIN = 5;
         public const int PIXEL_LENGTH = 8;
         private int[] COLLECTIBLE_SIZE = new int[] { 2, 4, 6, 6, 4, 2 };
 
@@ -186,7 +185,7 @@ namespace GeometryFriendsAgents
             foreach (Graph.Platform p in platforms)
             {
 
-                if (p.type == Graph.platformType.COOPERATION)
+                if (p.type == Graph.platformType.RECTANGLE)
                 {
                     int platformWidth = p.rightEdge - p.leftEdge;
                     int platformHeight = GameInfo.MIN_RECTANGLE_HEIGHT;
@@ -199,16 +198,14 @@ namespace GeometryFriendsAgents
 
                     int i = y0;
 
-                    //for (int i = y0; i <= (y0 + height); i++)
-                    //{
-                        for (int j = x0; j <= (x0 + width); j++)
+                    for (int j = x0; j <= (x0 + width); j++)
+                    {
+                        if (0 <= i && i < levelArray.GetLength(0) && 0 <= j && j < levelArray.GetLength(1))
                         {
-                            if (0 <= i && i < levelArray.GetLength(0) && 0 <= j && j < levelArray.GetLength(1))
-                            {
-                                levelArray[i, j] = COOPERATION;
-                            }
+                            levelArray[i, j] = COOPERATION;
                         }
-                    //}
+                    }
+
                 }
              
             }

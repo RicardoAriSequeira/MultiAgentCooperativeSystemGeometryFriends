@@ -22,7 +22,7 @@ namespace GeometryFriendsAgents
 
         public enum platformType
         {
-            NO_PLATFORM, BLACK, GREEN, YELLOW, GAP, COOPERATION
+            NO_PLATFORM, BLACK, GREEN, YELLOW, GAP, RECTANGLE
         };
 
         public const int VELOCITYX_STEP = 20;
@@ -58,7 +58,7 @@ namespace GeometryFriendsAgents
                 this.height = height;
                 this.leftEdge = leftEdge;
                 this.rightEdge = rightEdge;
-                this.allowedHeight = allowedHeight * PIXEL_LENGTH;
+                this.allowedHeight = allowedHeight;
             }
         }
 
@@ -497,14 +497,14 @@ namespace GeometryFriendsAgents
         protected bool[] CheckCollectiblesPlatform(bool[] platformsChecked, Platform p, bool cooperation = false)
         {
             
-            if (p.type != platformType.COOPERATION || cooperation)
+            if (p.type != platformType.RECTANGLE || cooperation)
             {
                 platformsChecked[p.id - 1] = true;
 
                 foreach (Move m in p.moves)
                 {
 
-                    if (m.reachablePlatform.type != platformType.COOPERATION || m.reachablePlatform.id == p.id)
+                    if (m.reachablePlatform.type != platformType.RECTANGLE || m.reachablePlatform.id == p.id)
                     {
                         possibleCollectibles = Utilities.GetOrMatrix(possibleCollectibles, m.collectibles_onPath);
 

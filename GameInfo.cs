@@ -5,11 +5,13 @@
         public const int CIRCLE_RADIUS = 40;
         public const int MIN_CIRCLE_HEIGHT = 80;
         public const int MAX_CIRCLE_HEIGHT = 80;
-        public const int CIRCLE_AREA = 6400;  // FAKE AREA
 
         public const int SQUARE_HEIGHT = 100;
-        public const int MIN_RECTANGLE_HEIGHT = 50;
-        public const int MAX_RECTANGLE_HEIGHT = 200;
+        public const int MIN_RECTANGLE_HEIGHT = 52;
+        public const int MAX_RECTANGLE_HEIGHT = 196;
+        public static int[] RECTANGLE_HEIGHTS = new int[3] { MIN_RECTANGLE_HEIGHT, SQUARE_HEIGHT, MAX_RECTANGLE_HEIGHT };
+
+        public const int CIRCLE_AREA = 6400;  // FAKE AREA
         public const int RECTANGLE_AREA = 10000;
 
         public const int MAX_VELOCITYX = 200;
@@ -22,6 +24,7 @@
         public const int LEVEL_WIDTH = 1272;
         public const int LEVEL_HEIGHT = 776;
         public const int LEVEL_ORIGINAL = 8;
+        public const int LEVEL_MARGIN = 4;
 
         public const string IST_CIRCLE_PLAYING = "IST Circle Playing";
         public const string IST_RECTANGLE_PLAYING = "IST Rectangle Playing";

@@ -161,7 +161,7 @@ namespace GeometryFriendsAgents
                             currentAction = Moves.NO_ACTION;
                         }
 
-                        else if (-MAX_VELOCITYY <= circleInfo.VelocityY && circleInfo.VelocityY <= MAX_VELOCITYY)
+                        else if (Math.Abs(circleInfo.VelocityY) <= MAX_VELOCITYY)
                         {
                             if (nextMove.Value.type == movementType.STAIR_GAP)
                             {
@@ -179,7 +179,7 @@ namespace GeometryFriendsAgents
 
                     }
 
-                    else if (cooperation != CooperationStatus.SINGLE && currentPlatform.Value.type != platformType.COOPERATION)
+                    else if (cooperation != CooperationStatus.SINGLE && currentPlatform.Value.type != platformType.RECTANGLE)
                     {
                         cooperation = CooperationStatus.SINGLE;
                         messages.Add(new AgentMessage(COOPERATION_FINISHED));
@@ -190,7 +190,7 @@ namespace GeometryFriendsAgents
                 {
                     if (nextMove.HasValue)
                     {
-                        if ((cooperation == CooperationStatus.SYNCHRONIZED && nextMove.Value.reachablePlatform.type == platformType.COOPERATION) || cooperation == CooperationStatus.RIDE_HELP)
+                        if ((cooperation == CooperationStatus.SYNCHRONIZED && nextMove.Value.reachablePlatform.type == platformType.RECTANGLE) || cooperation == CooperationStatus.RIDE_HELP)
                         {
                             currentAction = actionSelector.GetCurrentAction(circleInfo, (int)rectangleInfo.X, 0, true);
                         }
@@ -227,7 +227,7 @@ namespace GeometryFriendsAgents
             if (nextMove.HasValue)
             {
 
-                if (cooperation == CooperationStatus.RIDE_HELP && currentPlatform.HasValue && currentPlatform.Value.type == platformType.COOPERATION && IsRidingRectangle())
+                if (cooperation == CooperationStatus.RIDE_HELP && currentPlatform.HasValue && currentPlatform.Value.type == platformType.RECTANGLE && IsRidingRectangle())
                 {
                     cooperation = CooperationStatus.RIDE;
                 }
@@ -237,7 +237,7 @@ namespace GeometryFriendsAgents
                     return;
                 }
 
-                if (-MAX_VELOCITYY <= circleInfo.VelocityY && circleInfo.VelocityY <= MAX_VELOCITYY)
+                if (Math.Abs(circleInfo.VelocityY) <= MAX_VELOCITYY)
                 {
 
                     targetPointX_InAir = (nextMove.Value.reachablePlatform.leftEdge + nextMove.Value.reachablePlatform.rightEdge) / 2;
@@ -257,7 +257,7 @@ namespace GeometryFriendsAgents
                             messages.Add(new AgentMessage(RIDE_HELP));
                         }
 
-                        else if (nextMove.Value.reachablePlatform.type == platformType.COOPERATION)
+                        else if (nextMove.Value.reachablePlatform.type == platformType.RECTANGLE)
                         {
                             messages.Add(new AgentMessage(JUMPED));
                         }
@@ -348,6 +348,7 @@ namespace GeometryFriendsAgents
 
             if (nextMove.HasValue)
             {
+
                 if (previousMove.HasValue &&
                 (previousMove.Value.type != nextMove.Value.type ||
                 previousMove.Value.precondition.position.x != nextMove.Value.precondition.position.x ||
@@ -358,18 +359,18 @@ namespace GeometryFriendsAgents
                     messages.Add(new AgentMessage(COOPERATION_FINISHED));
                 }
 
-                if (nextMove.Value.reachablePlatform.type == platformType.COOPERATION || IsRidingRectangle())
+                if (nextMove.Value.reachablePlatform.type == platformType.RECTANGLE || IsRidingRectangle())
                 {
                     Cooperate();
                 }
 
-                if (currentPlatform.HasValue && currentPlatform.Value.type != platformType.COOPERATION && nextMove.Value.reachablePlatform.type != platformType.COOPERATION)
+                if (currentPlatform.HasValue && currentPlatform.Value.type != platformType.RECTANGLE && nextMove.Value.reachablePlatform.type != platformType.RECTANGLE)
                 {
                     cooperation = CooperationStatus.SINGLE;
                     messages.Add(new AgentMessage(COOPERATION_FINISHED));
                 }
 
-                if (nextMove.Value.reachablePlatform.type != platformType.COOPERATION && cooperation == CooperationStatus.SINGLE)
+                if (nextMove.Value.reachablePlatform.type != platformType.RECTANGLE && cooperation == CooperationStatus.SINGLE)
                 {
                     messages.Add(new AgentMessage(INDIVIDUAL_MOVE, nextMove));
                 }
@@ -388,7 +389,7 @@ namespace GeometryFriendsAgents
 
             Platform fromPlatform = currentPlatform.HasValue ? (Platform) currentPlatform : (Platform) previousPlatform;
 
-            if (fromPlatform.type == platformType.COOPERATION)
+            if (fromPlatform.type == platformType.RECTANGLE)
             {
                 int rectangle_height = 50 + (fromPlatform.height - (rectangle_move.precondition.position.y + CIRCLE_RADIUS));
 

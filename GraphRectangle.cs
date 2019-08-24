@@ -1,7 +1,9 @@
 ﻿using GeometryFriends.AI.Perceptions.Information;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+
+using static GeometryFriendsAgents.GameInfo;
+using static GeometryFriendsAgents.LevelRepresentation;
 
 namespace GeometryFriendsAgents
 {
@@ -10,9 +12,9 @@ namespace GeometryFriendsAgents
 
         public GraphRectangle() : base()
         {
-            this.AREA = GameInfo.RECTANGLE_AREA;
-            this.MIN_HEIGHT = GameInfo.MIN_RECTANGLE_HEIGHT;
-            this.MAX_HEIGHT = GameInfo.MAX_RECTANGLE_HEIGHT;
+            AREA = RECTANGLE_AREA;
+            MIN_HEIGHT = MIN_RECTANGLE_HEIGHT;
+            MAX_HEIGHT = MAX_RECTANGLE_HEIGHT;
         }
 
         public override void SetupPlatforms()
@@ -31,7 +33,7 @@ namespace GeometryFriendsAgents
 
             bool[] platformsChecked = new bool[platforms.Count];
 
-            Platform? platform = GetPlatform(new LevelRepresentation.Point((int)initial_rI.X, (int)initial_rI.Y), GameInfo.SQUARE_HEIGHT);
+            Platform? platform = GetPlatform(new Point((int)initial_rI.X, (int)initial_rI.Y), SQUARE_HEIGHT);
 
             if (platform.HasValue)
             {
@@ -39,24 +41,24 @@ namespace GeometryFriendsAgents
             }
         }
 
-        public override List<LevelRepresentation.ArrayPoint> GetFormPixels(LevelRepresentation.Point center, int height)
+        public override List<ArrayPoint> GetFormPixels(Point center, int height)
         {
-            LevelRepresentation.ArrayPoint rectangleCenterArray = LevelRepresentation.ConvertPointIntoArrayPoint(center, false, false);
+            ArrayPoint rectangleCenterArray = ConvertPointIntoArrayPoint(center, false, false);
 
-            int rectangleHighestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint(center.y - (height / 2), false);
-            int rectangleLowestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint(center.y + (height / 2), true);
+            int rectangleHighestY = ConvertValue_PointIntoArrayPoint(center.y - (height / 2), false);
+            int rectangleLowestY = ConvertValue_PointIntoArrayPoint(center.y + (height / 2), true);
 
-            float rectangleWidth = GameInfo.RECTANGLE_AREA / height;
-            int rectangleLeftX = LevelRepresentation.ConvertValue_PointIntoArrayPoint((int)(center.x - (rectangleWidth / 2)), false);
-            int rectangleRightX = LevelRepresentation.ConvertValue_PointIntoArrayPoint((int)(center.x + (rectangleWidth / 2)), true);
+            float rectangleWidth = RECTANGLE_AREA / height;
+            int rectangleLeftX = ConvertValue_PointIntoArrayPoint((int)(center.x - (rectangleWidth / 2)), false);
+            int rectangleRightX = ConvertValue_PointIntoArrayPoint((int)(center.x + (rectangleWidth / 2)), true);
 
-            List<LevelRepresentation.ArrayPoint> rectanglePixels = new List<LevelRepresentation.ArrayPoint>();
+            List<ArrayPoint> rectanglePixels = new List<ArrayPoint>();
 
             for (int i = rectangleHighestY; i <= rectangleLowestY; i++)
             {
                 for (int j = rectangleLeftX; j <= rectangleRightX; j++)
                 {
-                    rectanglePixels.Add(new LevelRepresentation.ArrayPoint(j, i));
+                    rectanglePixels.Add(new ArrayPoint(j, i));
                 }
             }
 
@@ -66,14 +68,14 @@ namespace GeometryFriendsAgents
         private bool CheckEmptyGap(Platform fromPlatform, Platform toPlatform)
         {
 
-            int from = LevelRepresentation.ConvertValue_PointIntoArrayPoint(fromPlatform.rightEdge, false) + 1;
-            int to = LevelRepresentation.ConvertValue_PointIntoArrayPoint(toPlatform.leftEdge, true);
+            int from = ConvertValue_PointIntoArrayPoint(fromPlatform.rightEdge, false) + 1;
+            int to = ConvertValue_PointIntoArrayPoint(toPlatform.leftEdge, true);
 
-            int y = LevelRepresentation.ConvertValue_PointIntoArrayPoint(fromPlatform.height, false);
+            int y = ConvertValue_PointIntoArrayPoint(fromPlatform.height, false);
 
             for (int i = from; i <= to; i++)
             {
-                if (levelArray[y, i] == LevelRepresentation.BLACK)
+                if (levelArray[y, i] == BLACK)
                 {
                     return false;
                 }
@@ -82,12 +84,12 @@ namespace GeometryFriendsAgents
             return true;
         }
 
-        private List<Platform> PlatformsBelow(LevelRepresentation.Point center, int height)
+        private List<Platform> PlatformsBelow(Point center, int height)
         {
 
             List<Platform> platforms = new List<Platform>();
 
-            int rectangleWidth = GameInfo.RECTANGLE_AREA / height;
+            int rectangleWidth = RECTANGLE_AREA / height;
             int rectangleLeftX = center.x - (rectangleWidth / 2);
             int rectangleRightX = center.x + (rectangleWidth / 2);
 
@@ -106,15 +108,15 @@ namespace GeometryFriendsAgents
             return platforms;
         }
 
-        protected override collideType GetCollideType(LevelRepresentation.Point center, bool ascent, bool rightMove, int radius)
+        protected override collideType GetCollideType(Point center, bool ascent, bool rightMove, int radius)
         {
-            LevelRepresentation.ArrayPoint centerArray = LevelRepresentation.ConvertPointIntoArrayPoint(center, false, false);
-            int highestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint(center.y - radius, false);
-            int lowestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint(center.y + radius, true);
+            ArrayPoint centerArray = ConvertPointIntoArrayPoint(center, false, false);
+            int highestY = ConvertValue_PointIntoArrayPoint(center.y - radius, false);
+            int lowestY = ConvertValue_PointIntoArrayPoint(center.y + radius, true);
 
             if (!ascent)
             {
-                if (levelArray[lowestY, centerArray.xArray] == LevelRepresentation.BLACK || levelArray[lowestY, centerArray.xArray] == LevelRepresentation.YELLOW)
+                if (levelArray[lowestY, centerArray.xArray] == BLACK || levelArray[lowestY, centerArray.xArray] == YELLOW)
                 {
                     return collideType.FLOOR;
                 }
@@ -122,7 +124,7 @@ namespace GeometryFriendsAgents
             }
             else
             {
-                if (levelArray[highestY, centerArray.xArray] == LevelRepresentation.BLACK || levelArray[lowestY, centerArray.xArray] == LevelRepresentation.YELLOW)
+                if (levelArray[highestY, centerArray.xArray] == BLACK || levelArray[lowestY, centerArray.xArray] == YELLOW)
                 {
                     return collideType.CEILING;
                 }
@@ -131,16 +133,16 @@ namespace GeometryFriendsAgents
             return collideType.OTHER;
         }
 
-        public override bool IsObstacle_onPixels(List<LevelRepresentation.ArrayPoint> checkPixels)
+        public override bool IsObstacle_onPixels(List<ArrayPoint> checkPixels)
         {
             if (checkPixels.Count == 0)
             {
                 return true;
             }
 
-            foreach (LevelRepresentation.ArrayPoint i in checkPixels)
+            foreach (ArrayPoint i in checkPixels)
             {
-                if (levelArray[i.yArray, i.xArray] == LevelRepresentation.BLACK || levelArray[i.yArray, i.xArray] == LevelRepresentation.YELLOW)
+                if (levelArray[i.yArray, i.xArray] == BLACK || levelArray[i.yArray, i.xArray] == YELLOW)
                 {
                     return true;
                 }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using static GeometryFriendsAgents.Graph;
+using static GeometryFriendsAgents.GameInfo;
 using static GeometryFriendsAgents.LevelRepresentation;
 
 namespace GeometryFriendsAgents
@@ -56,24 +57,24 @@ namespace GeometryFriendsAgents
 
                         // RECTANGLE WITH HEIGHT 100
                         Point rectangleCenter = ConvertArrayPointIntoPoint(new ArrayPoint(x, y));
-                        rectangleCenter.y -= GameInfo.SQUARE_HEIGHT / 2;
-                        List<ArrayPoint> rectanglePixels = RectangleAgent.GetFormPixels(rectangleCenter, GameInfo.SQUARE_HEIGHT);
+                        rectangleCenter.y -= SQUARE_HEIGHT / 2;
+                        List<ArrayPoint> rectanglePixels = RectangleAgent.GetFormPixels(rectangleCenter, SQUARE_HEIGHT);
 
                         if (RectangleAgent.IsObstacle_onPixels(levelArray, rectanglePixels))
                         {
 
                             // RECTANGLE WITH HEIGHT 50
                             rectangleCenter = ConvertArrayPointIntoPoint(new ArrayPoint(x, y));
-                            rectangleCenter.y -= GameInfo.MIN_RECTANGLE_HEIGHT / 2;
-                            rectanglePixels = RectangleAgent.GetFormPixels(rectangleCenter, GameInfo.MIN_RECTANGLE_HEIGHT);
+                            rectangleCenter.y -= MIN_RECTANGLE_HEIGHT / 2;
+                            rectanglePixels = RectangleAgent.GetFormPixels(rectangleCenter, MIN_RECTANGLE_HEIGHT);
 
                             if (RectangleAgent.IsObstacle_onPixels(levelArray, rectanglePixels))
                             {
 
                                 // RECTANGLE WITH HEIGHT 200
                                 rectangleCenter = ConvertArrayPointIntoPoint(new ArrayPoint(x, y));
-                                rectangleCenter.y -= GameInfo.MAX_RECTANGLE_HEIGHT / 2;
-                                rectanglePixels = RectangleAgent.GetFormPixels(rectangleCenter, GameInfo.MAX_RECTANGLE_HEIGHT);
+                                rectangleCenter.y -= MAX_RECTANGLE_HEIGHT / 2;
+                                rectanglePixels = RectangleAgent.GetFormPixels(rectangleCenter, MAX_RECTANGLE_HEIGHT);
 
                                 if (RectangleAgent.IsObstacle_onPixels(levelArray,rectanglePixels))
                                 {
@@ -123,7 +124,7 @@ namespace GeometryFriendsAgents
                             {
                                 lock (platforms)
                                 {
-                                    platforms.Add(new Platform(platformType.BLACK, ConvertValue_ArrayPointIntoPoint(i), leftEdge, rightEdge, new List<Move>(), GameInfo.MAX_CIRCLE_HEIGHT / PIXEL_LENGTH));
+                                    platforms.Add(new Platform(platformType.BLACK, ConvertValue_ArrayPointIntoPoint(i), leftEdge, rightEdge, new List<Move>(), MAX_CIRCLE_HEIGHT));
                                 }
                             }
 
@@ -141,118 +142,56 @@ namespace GeometryFriendsAgents
         {
 
             List<Platform> platforms = new List<Platform>();
-
             platformType[,] platformArray = GetPlatformArray_Rectangle(levelArray);
 
-            Parallel.For(0, platformArray.GetLength(0), y =>
+            Parallel.For(8, 96, y =>
             {
 
-                int min_height_pixels = GameInfo.MIN_RECTANGLE_HEIGHT / PIXEL_LENGTH;
-                int max_height_pixels = Math.Min((GameInfo.MAX_RECTANGLE_HEIGHT / PIXEL_LENGTH), y + MARGIN + min_height_pixels);
+                int leftEdge = 0, gap_size = 0;
+                int allowed_height = MAX_RECTANGLE_HEIGHT;
 
-                int leftEdge = 0, allowedHeight = max_height_pixels, gap_size = 0;
-                platformType currentPlatform = platformType.NO_PLATFORM;
+                platformType currentPlatform = platformArray[y, 4];
 
-                for (int x = 0; x < platformArray.GetLength(1); x++)
+                for (int x = 4; x < 155; x++)
                 {
 
-                    if (currentPlatform == platformType.NO_PLATFORM)
+                    // CALCULATION OF NEW ALLOWED HEIGHT
+                    int new_allowed_height = allowed_height;
+                    if (platformArray[y, x] != platformType.NO_PLATFORM)
                     {
-                        if (platformArray[y, x] == platformType.BLACK || platformArray[y, x] == platformType.YELLOW)
+                        new_allowed_height = MIN_RECTANGLE_HEIGHT;
+                        foreach (int h in RECTANGLE_HEIGHTS)
                         {
+                            if (y - (h / PIXEL_LENGTH) < 0 || levelArray[y - (h / PIXEL_LENGTH), x] == BLACK || levelArray[y - (h / PIXEL_LENGTH), x] == YELLOW)
+                                break;
+                            new_allowed_height = h;
+                        }
+                    }
 
+                    // ADD NEW PLATFORM BECAUSE OF NEW TYPE OR NEW ALLOWED HEIGHT
+                    if (platformArray[y,x] != currentPlatform || new_allowed_height != allowed_height)
+                    {
+                        int rightEdge = ConvertValue_ArrayPointIntoPoint(x - 1);          
+                        if (rightEdge > leftEdge)
+                        {
+                            // GAP
                             if (7 <= gap_size && gap_size <= 19)
-                            {
-                                int rightEdge = ConvertValue_ArrayPointIntoPoint(x - 1);
-
-                                if (rightEdge >= leftEdge)
-                                {
-
-                                    int gap_allowed_height = (GameInfo.RECTANGLE_AREA / (Math.Min((gap_size + 8) * PIXEL_LENGTH, GameInfo.MAX_RECTANGLE_HEIGHT))) / PIXEL_LENGTH;
-
-                                    lock (platforms)
-                                    {
-                                        platforms.Add(new Platform(platformType.GAP, ConvertValue_ArrayPointIntoPoint(y), leftEdge, rightEdge, new List<Move>(), gap_allowed_height));
-                                    }
-                                }
-                            }
-
-                            gap_size = 0;
-                            currentPlatform = platformArray[y, x];
-
-                            for (int h = min_height_pixels; h <= max_height_pixels; h++)
-                            {
-                                if (levelArray[y - h, x] == BLACK || levelArray[y - h, x] == YELLOW)
-                                {
-                                    allowedHeight = h;
-                                    break;
-                                }
-                            }
-
-                            leftEdge = ConvertValue_ArrayPointIntoPoint(x);
-                        }
-
-                        else if (levelArray[y, x] == GREEN || levelArray[y, x] == OPEN)
-                        {
-                            gap_size++;
-                        }
-                    }
-
-                    else
-                    {
-                        if (platformArray[y, x] != currentPlatform)
-                        {
-                            int rightEdge = ConvertValue_ArrayPointIntoPoint(x - 1);
-
-                            if (rightEdge >= leftEdge)
-                            {
                                 lock (platforms)
-                                {
-                                    platforms.Add(new Platform(currentPlatform, ConvertValue_ArrayPointIntoPoint(y), leftEdge, rightEdge, new List<Move>(), allowedHeight));
-                                }
-                            }
-
-                            allowedHeight = max_height_pixels;
-                            currentPlatform = platformArray[y, x];
-                            leftEdge = ConvertValue_ArrayPointIntoPoint(x);
-
+                                    platforms.Add(new Platform(platformType.GAP, ConvertValue_ArrayPointIntoPoint(y), leftEdge, rightEdge, new List<Move>(), MIN_RECTANGLE_HEIGHT));
+                            // PLATFORM
+                            else if (currentPlatform != platformType.NO_PLATFORM)
+                                lock (platforms)
+                                    platforms.Add(new Platform(currentPlatform, ConvertValue_ArrayPointIntoPoint(y), leftEdge, rightEdge, new List<Move>(), allowed_height));
                         }
-
-                        if (platformArray[y, x] != platformType.NO_PLATFORM && y > MARGIN + min_height_pixels)
-                        {
-
-                            for (int h = min_height_pixels; h <= max_height_pixels; h++)
-                            {
-
-                                if (levelArray[y - h, x] == BLACK ||
-                                    levelArray[y - h, x] == YELLOW ||
-                                    (h == max_height_pixels && allowedHeight != max_height_pixels && levelArray[y - h, x] == OPEN))
-                                {
-
-                                    if (h != allowedHeight)
-                                    {
-
-                                        int rightEdge = ConvertValue_ArrayPointIntoPoint(x - 1);
-
-                                        if (rightEdge >= leftEdge)
-                                        {
-                                            lock (platforms)
-                                            {
-                                                platforms.Add(new Platform(currentPlatform, ConvertValue_ArrayPointIntoPoint(y), leftEdge, rightEdge, new List<Move>(), allowedHeight));
-                                            }
-                                        }
-
-                                        allowedHeight = h;
-                                        leftEdge = ConvertValue_ArrayPointIntoPoint(x - 1);
-
-                                    }
-
-                                    break;
-
-                                }
-                            }
-                        }
+                        leftEdge = ConvertValue_ArrayPointIntoPoint(x - 1);
+                        //leftEdge = (new_allowed_height != allowed_height) ? ConvertValue_ArrayPointIntoPoint(x - 1) : ConvertValue_ArrayPointIntoPoint(x);
                     }
+
+                    // UPDATE OF VARIABLES
+                    allowed_height = new_allowed_height;
+                    currentPlatform = platformArray[y, x];
+                    gap_size = (levelArray[y, x] == OPEN || levelArray[y, x] == GREEN) ? gap_size + 1 : 0;
+
                 }
             });
 
@@ -264,7 +203,7 @@ namespace GeometryFriendsAgents
 
             foreach (Platform p in platforms2)
             {
-                platforms1.Add(new Platform(platformType.COOPERATION, p.height - GameInfo.MIN_RECTANGLE_HEIGHT, p.leftEdge, p.rightEdge, p.moves, p.allowedHeight, p.id));
+                platforms1.Add(new Platform(platformType.RECTANGLE, p.height - GameInfo.MIN_RECTANGLE_HEIGHT, p.leftEdge, p.rightEdge, p.moves, p.allowedHeight, p.id));
             }
 
             return SetPlatformsID(platforms1);
@@ -295,7 +234,7 @@ namespace GeometryFriendsAgents
             {
                 foreach (Move m in p.moves)
                 {
-                    if (m.reachablePlatform.type == platformType.COOPERATION)
+                    if (m.reachablePlatform.type == platformType.RECTANGLE)
                     {
                         var itemToRemove = p.moves.Single(r => r.type == m.type &&
                                                                 r.reachablePlatform.id == m.reachablePlatform.id &&
@@ -308,7 +247,7 @@ namespace GeometryFriendsAgents
 
             foreach (Platform p in platforms)
             {
-                if (p.type == platformType.COOPERATION)
+                if (p.type == platformType.RECTANGLE)
                 {
                     var itemToRemove = platforms.Single(r => r.id == p.id && r.type == p.type);
                     platforms.Remove(itemToRemove);

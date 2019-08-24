@@ -124,7 +124,7 @@ namespace GeometryFriendsAgents
             int p = 0;
             while (p < platforms.Count)
             {
-                if (platforms[p].type == Graph.platformType.COOPERATION)
+                if (platforms[p].type == Graph.platformType.RECTANGLE)
                 {
                     platforms.Remove(platforms[p]);
                 }

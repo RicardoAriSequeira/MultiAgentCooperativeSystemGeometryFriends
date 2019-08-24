@@ -34,7 +34,7 @@ namespace GeometryFriendsAgents
                 int from = fromPlatform.leftEdge + (fromPlatform.leftEdge - GameInfo.LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2);
                 int to = fromPlatform.rightEdge - (fromPlatform.rightEdge - GameInfo.LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2);
                 
-                if (fromPlatform.type == platformType.COOPERATION && k <= 5)
+                if (fromPlatform.type == platformType.RECTANGLE && k <= 5)
                 {
                     from = fromPlatform.leftEdge + (fromPlatform.leftEdge - GameInfo.LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2) + 90;
                     to = fromPlatform.rightEdge - (fromPlatform.rightEdge - GameInfo.LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2) - 90;
@@ -55,7 +55,7 @@ namespace GeometryFriendsAgents
                     });
                 }
 
-                else if (fromPlatform.type != platformType.COOPERATION)
+                else if (fromPlatform.type != platformType.RECTANGLE)
                 {
                     Parallel.For(0, (to - from) / (PIXEL_LENGTH * 2) + 1, j =>
                     {
@@ -85,7 +85,7 @@ namespace GeometryFriendsAgents
 
         public static void Morph(Graph graph, Platform fromPlatform)
         {
-            foreach (Graph.Platform toPlatform in graph.platforms)
+            foreach (Platform toPlatform in graph.platforms)
             {
                 if (fromPlatform.Equals(toPlatform) ||
                     fromPlatform.height != toPlatform.height)
@@ -112,16 +112,16 @@ namespace GeometryFriendsAgents
                 int to = rightMove ? toPlatform.leftEdge : fromPlatform.leftEdge;
                 bool[] collectible_onPath = new bool[graph.nCollectibles];
 
-                LevelRepresentation.Point movePoint = rightMove ? new LevelRepresentation.Point(fromPlatform.rightEdge - 100, fromPlatform.height - (toPlatform.allowedHeight / 2)) : new LevelRepresentation.Point(fromPlatform.leftEdge + 100, fromPlatform.height - (toPlatform.allowedHeight / 2));
-                LevelRepresentation.Point landPoint = rightMove ? new LevelRepresentation.Point(toPlatform.rightEdge + 100, toPlatform.height - (toPlatform.allowedHeight / 2)) : new LevelRepresentation.Point(toPlatform.leftEdge - 100, toPlatform.height - (toPlatform.allowedHeight / 2));
+                Point movePoint = rightMove ? new Point(fromPlatform.rightEdge - 100, fromPlatform.height - (toPlatform.allowedHeight / 2)) : new Point(fromPlatform.leftEdge + 100, fromPlatform.height - (toPlatform.allowedHeight / 2));
+                Point landPoint = rightMove ? new Point(toPlatform.rightEdge + 100, toPlatform.height - (toPlatform.allowedHeight / 2)) : new Point(toPlatform.leftEdge - 100, toPlatform.height - (toPlatform.allowedHeight / 2));
 
-                for (int k = from; k <= to; k += LevelRepresentation.PIXEL_LENGTH)
+                for (int k = from; k <= to; k += PIXEL_LENGTH)
                 {
-                    List<LevelRepresentation.ArrayPoint> rectanglePixels = graph.GetFormPixels(new LevelRepresentation.Point(k, toPlatform.height - (toPlatform.allowedHeight / 2)), toPlatform.allowedHeight);
+                    List<ArrayPoint> rectanglePixels = graph.GetFormPixels(new Point(k, toPlatform.height - (toPlatform.allowedHeight / 2)), toPlatform.allowedHeight);
                     collectible_onPath = collectible_onPath = Utilities.GetOrMatrix(collectible_onPath, graph.GetCollectibles_onPixels(rectanglePixels));
                 }
 
-                PreCondition newPreCondition = new PreCondition(movePoint, toPlatform.allowedHeight - LevelRepresentation.PIXEL_LENGTH, 0, rightMove);
+                PreCondition newPreCondition = new PreCondition(movePoint, toPlatform.allowedHeight, 0, rightMove);
                 Move newMove = new Move(toPlatform, newPreCondition, landPoint, movementType.MORPH_DOWN, collectible_onPath, (fromPlatform.height - toPlatform.height) + Math.Abs(movePoint.x - landPoint.x), false);
                 graph.AddMove(fromPlatform, newMove);
 
@@ -130,15 +130,15 @@ namespace GeometryFriendsAgents
 
         public static void Collect(Graph graph, Platform fromPlatform)
         {
-            int from = fromPlatform.leftEdge + (fromPlatform.leftEdge - GameInfo.LEVEL_ORIGINAL) % (LevelRepresentation.PIXEL_LENGTH * 2);
-            int to = fromPlatform.rightEdge - (fromPlatform.rightEdge - GameInfo.LEVEL_ORIGINAL) % (LevelRepresentation.PIXEL_LENGTH * 2);
+            int from = fromPlatform.leftEdge + (fromPlatform.leftEdge - GameInfo.LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2);
+            int to = fromPlatform.rightEdge - (fromPlatform.rightEdge - GameInfo.LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2);
 
-            Parallel.For(0, (to - from) / (LevelRepresentation.PIXEL_LENGTH * 2) + 1, j =>
+            Parallel.For(0, (to - from) / (PIXEL_LENGTH * 2) + 1, j =>
             {
                 for (int height = graph.MIN_HEIGHT; height <= graph.MAX_HEIGHT; height += 8)
                 {
-                    LevelRepresentation.Point movePoint = new LevelRepresentation.Point(from + j * LevelRepresentation.PIXEL_LENGTH * 2, fromPlatform.height - (height / 2));
-                    List<LevelRepresentation.ArrayPoint> pixels = graph.GetFormPixels(movePoint, height);
+                    Point movePoint = new Point(from + j * PIXEL_LENGTH * 2, fromPlatform.height - (height / 2));
+                    List<ArrayPoint> pixels = graph.GetFormPixels(movePoint, height);
 
                     if (!graph.IsObstacle_onPixels(pixels))
                     {
@@ -201,21 +201,19 @@ namespace GeometryFriendsAgents
             foreach (Platform toPlatform in graph.platforms)
             {
 
-                if (fromPlatform.Equals(toPlatform))
+                if (!fromPlatform.Equals(toPlatform))
                 {
-                    continue;
-                }
 
-                if (fromPlatform.type == Graph.platformType.GAP && fromPlatform.height == toPlatform.height)
-                {
-                    Gap_Rectangle(graph, fromPlatform, toPlatform);
+                    if (fromPlatform.type == platformType.GAP && fromPlatform.height == toPlatform.height)
+                    {
+                        Gap_Rectangle(graph, fromPlatform, toPlatform);
+                    }
+                    else if (toPlatform.type != platformType.GAP)
+                    {
+                        SmallGap_Rectangle(graph, fromPlatform, toPlatform);
+                        Stair_Rectangle(graph, fromPlatform, toPlatform);
+                    }
                 }
-                else
-                {
-                    SmallGap_Rectangle(graph, fromPlatform, toPlatform);
-                    Stair_Rectangle(graph, fromPlatform, toPlatform);
-                }
-
             }
         }
 
@@ -234,9 +232,9 @@ namespace GeometryFriendsAgents
             int from = rightMove ? fromPlatform.rightEdge : toPlatform.rightEdge;
             int to = rightMove ? toPlatform.leftEdge : fromPlatform.leftEdge;
 
-            for (int k = from; k <= to; k += LevelRepresentation.PIXEL_LENGTH)
+            for (int k = from; k <= to; k += PIXEL_LENGTH)
             {
-                List<LevelRepresentation.ArrayPoint> rectanglePixels = graph.GetFormPixels(new LevelRepresentation.Point(k, toPlatform.height - GameInfo.SQUARE_HEIGHT), GameInfo.SQUARE_HEIGHT);
+                List<ArrayPoint> rectanglePixels = graph.GetFormPixels(new Point(k, toPlatform.height - GameInfo.SQUARE_HEIGHT), GameInfo.SQUARE_HEIGHT);
 
                 if (graph.IsObstacle_onPixels(rectanglePixels))
                 {
@@ -249,8 +247,8 @@ namespace GeometryFriendsAgents
 
             if (!obstacleFlag)
             {
-                LevelRepresentation.Point movePoint = rightMove ? new LevelRepresentation.Point(fromPlatform.rightEdge, fromPlatform.height) : new LevelRepresentation.Point(fromPlatform.leftEdge, fromPlatform.height);
-                LevelRepresentation.Point landPoint = rightMove ? new LevelRepresentation.Point(toPlatform.leftEdge, toPlatform.height) : new LevelRepresentation.Point(toPlatform.rightEdge, toPlatform.height);
+                Point movePoint = rightMove ? new Point(fromPlatform.rightEdge, fromPlatform.height) : new Point(fromPlatform.leftEdge, fromPlatform.height);
+                Point landPoint = rightMove ? new Point(toPlatform.leftEdge, toPlatform.height) : new Point(toPlatform.rightEdge, toPlatform.height);
 
                 PreCondition newPreCondition = new PreCondition(movePoint, GameInfo.SQUARE_HEIGHT, 0, rightMove);
                 Move newMove = new Move(toPlatform, newPreCondition, landPoint, movementType.STAIR_GAP, collectible_onPath, (fromPlatform.height - toPlatform.height) + Math.Abs(movePoint.x - landPoint.x), false);
@@ -265,11 +263,11 @@ namespace GeometryFriendsAgents
 
             bool rightMove;
 
-            if (platform.leftEdge == gap.rightEdge + LevelRepresentation.PIXEL_LENGTH)
+            if (platform.leftEdge == gap.rightEdge)
             {
                 rightMove = false;
             }
-            else if (platform.rightEdge == gap.leftEdge - LevelRepresentation.PIXEL_LENGTH)
+            else if (platform.rightEdge == gap.leftEdge)
             {
                 rightMove = true;
             }
@@ -279,30 +277,30 @@ namespace GeometryFriendsAgents
             }
 
             int gap_size = (gap.rightEdge - gap.leftEdge);
-            int fall_width = Math.Min(gap_size - (2 * LevelRepresentation.PIXEL_LENGTH), GameInfo.MIN_RECTANGLE_HEIGHT);
+            int fall_width = Math.Min(gap_size - (2 * PIXEL_LENGTH), GameInfo.MIN_RECTANGLE_HEIGHT);
             int fall_height = GameInfo.RECTANGLE_AREA / fall_width;
-            LevelRepresentation.Point movePoint = new LevelRepresentation.Point(gap.leftEdge + (gap_size / 2), gap.height - (fall_height / 2));
+            Point movePoint = new Point(gap.leftEdge + (gap_size / 2), gap.height - (fall_height / 2));
 
             float pathLength = 0;
-            LevelRepresentation.Point currentCenter = movePoint;
+            Point currentCenter = movePoint;
             bool[] collectible_onPath = new bool[graph.nCollectibles];
 
             for (int i = 1; true; i++)
             {
-                float currentTime = i * Graph.TIME_STEP;
-                LevelRepresentation.Point previousCenter = currentCenter;
-                currentCenter = Graph.GetCurrentCenter(movePoint, 0, GameInfo.FALL_VELOCITYY, currentTime);
-                List<LevelRepresentation.ArrayPoint> pixels = graph.GetFormPixels(currentCenter, fall_height);
+                float currentTime = i * TIME_STEP;
+                Point previousCenter = currentCenter;
+                currentCenter = GetCurrentCenter(movePoint, 0, GameInfo.FALL_VELOCITYY, currentTime);
+                List<ArrayPoint> pixels = graph.GetFormPixels(currentCenter, fall_height);
 
                 if ((currentCenter.y > movePoint.y + 16) && graph.IsObstacle_onPixels(pixels))
                 {
-                    Graph.Platform? reachablePlatform = graph.GetPlatform(previousCenter, fall_height);
+                    Platform? reachablePlatform = graph.GetPlatform(previousCenter, fall_height);
 
                     if (reachablePlatform != null)
                     {
                         PreCondition newPreCondition = new PreCondition(movePoint, fall_height, 0, rightMove);
-                        Move newMove = new Move((Platform)reachablePlatform, newPreCondition, previousCenter, movementType.GAP, collectible_onPath, (int)pathLength, false);
-                        graph.AddMove((Platform)reachablePlatform, newMove);
+                        Move newMove = new Move((Platform)reachablePlatform, newPreCondition, previousCenter, movementType.GAP, collectible_onPath, (int)pathLength, rightMove);
+                        graph.AddMove(platform, newMove);
                         break;
                     }
 
@@ -310,19 +308,6 @@ namespace GeometryFriendsAgents
 
                 collectible_onPath = Utilities.GetOrMatrix(collectible_onPath, graph.GetCollectibles_onPixels(pixels));
                 pathLength += (float)Math.Sqrt(Math.Pow(currentCenter.x - previousCenter.x, 2) + Math.Pow(currentCenter.y - previousCenter.y, 2));
-
-                // int new_height = GameInfo.MIN_RECTANGLE_HEIGHT;
-                //            pixels = GetFormPixels(currentCenter, new_height);
-                //            if ((previousCenter.y > movePoint.y + 100) && IsObstacle_onPixels(pixels))
-                //            {
-                //                Platform? platform = GetPlatform(previousCenter, new_height);
-
-                //                if (platform != null)
-                //                {
-                //                    AddMove(gap, new Move((Platform)platform, movePoint, previousCenter, 0, true, movementType.FALL, collectible_onPath, (int)pathLength, false, new_height));
-                //                }
-
-                //            }
 
             }
 
@@ -335,12 +320,12 @@ namespace GeometryFriendsAgents
             bool[] collectibles = new bool[graph.nCollectibles];
             int rectangleWidth = GameInfo.RECTANGLE_AREA / gap.allowedHeight;
 
-            if (gap.rightEdge + LevelRepresentation.PIXEL_LENGTH == platform.leftEdge)
+            if (gap.rightEdge == platform.leftEdge)
             {
                 start_x = gap.rightEdge - (rectangleWidth / 2);
                 end_x = platform.leftEdge + (rectangleWidth / 2);
             }
-            else if (gap.leftEdge - LevelRepresentation.PIXEL_LENGTH == platform.rightEdge)
+            else if (gap.leftEdge == platform.rightEdge)
             {
                 rightMove = true;
                 start_x = gap.leftEdge + (rectangleWidth / 2);
@@ -351,14 +336,13 @@ namespace GeometryFriendsAgents
                 return;
             }
 
-            LevelRepresentation.Point start = new LevelRepresentation.Point(start_x, gap.height - (gap.allowedHeight / 2));
-            LevelRepresentation.Point end = new LevelRepresentation.Point(end_x, platform.height - (platform.allowedHeight / 2));
+            Point start = new Point(start_x, gap.height - (gap.allowedHeight / 2));
+            Point end = new Point(end_x, platform.height - (platform.allowedHeight / 2));
 
             int pathLength = (gap.height - platform.height) + Math.Abs(start.x - end.x);
             PreCondition newPreCondition = new PreCondition(start, gap.allowedHeight, 0, !rightMove);
             Move newMove = new Move(platform, newPreCondition, end, movementType.STAIR_GAP, collectibles, pathLength, false);
             graph.AddMove(gap, newMove);
-
 
             pathLength = (platform.height - gap.height) + Math.Abs(end.x - start.x);
             newPreCondition = new PreCondition(end, gap.allowedHeight, 0, rightMove);
