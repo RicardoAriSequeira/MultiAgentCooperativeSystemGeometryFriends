@@ -123,8 +123,8 @@ namespace GeometryFriendsAgents
         {
 
             if ((cooperation == CooperationStatus.UNSYNCHRONIZED || cooperation == CooperationStatus.RIDE || cooperation == CooperationStatus.RIDE_HELP) &&
-                actionSelector.IsGoal(rectangleInfo, nextMove.Value.partner_precondition) &&
-                Math.Abs(rectangleInfo.Height - nextMove.Value.partner_precondition.height) < 8)
+                actionSelector.IsGoal(rectangleInfo, nextMove.Value.partner_state) &&
+                Math.Abs(rectangleInfo.Height - nextMove.Value.partner_state.height) < 8)
             {
                 cooperation = CooperationStatus.SYNCHRONIZED;
             }
@@ -165,11 +165,11 @@ namespace GeometryFriendsAgents
                         {
                             if (nextMove.Value.type == movementType.TRANSITION)
                             {
-                                currentAction = nextMove.Value.precondition.right_direction ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
+                                currentAction = nextMove.Value.state.right_direction ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
                             }
                             else
                             {
-                                currentAction = actionSelector.GetCurrentAction(circleInfo, nextMove.Value.precondition.position.x, nextMove.Value.precondition.horizontal_velocity, nextMove.Value.precondition.right_direction);
+                                currentAction = actionSelector.GetCurrentAction(circleInfo, nextMove.Value.state.position.x, nextMove.Value.state.horizontal_velocity, nextMove.Value.state.right_direction);
                             }
                         }
                         else
@@ -200,7 +200,7 @@ namespace GeometryFriendsAgents
                         }
                         else if (nextMove.Value.type == movementType.TRANSITION)
                         {
-                            currentAction = nextMove.Value.precondition.right_direction ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
+                            currentAction = nextMove.Value.state.right_direction ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
                         }
                         else
                         {
@@ -232,7 +232,7 @@ namespace GeometryFriendsAgents
                     cooperation = CooperationStatus.RIDE;
                 }
 
-                if (actionSelector.IsGoal(circleInfo, nextMove.Value.precondition) && Math.Abs(circleInfo.VelocityY) <= MAX_VELOCITYY)
+                if (actionSelector.IsGoal(circleInfo, nextMove.Value.state) && Math.Abs(circleInfo.VelocityY) <= MAX_VELOCITYY)
                 {
                     targetPointX_InAir = (nextMove.Value.reachablePlatform.leftEdge + nextMove.Value.reachablePlatform.rightEdge) / 2;
 
@@ -343,7 +343,7 @@ namespace GeometryFriendsAgents
 
                 if (previousMove.HasValue &&
                 (previousMove.Value.type != nextMove.Value.type ||
-                previousMove.Value.precondition.position.x != nextMove.Value.precondition.position.x ||
+                previousMove.Value.state.position.x != nextMove.Value.state.position.x ||
                 previousMove.Value.landPoint.x != nextMove.Value.landPoint.x) &&
                 cooperation == CooperationStatus.UNSYNCHRONIZED)
                 {
@@ -374,7 +374,7 @@ namespace GeometryFriendsAgents
         private void Cooperate()
         {
 
-            PreCondition rectangle_precondition = new PreCondition();
+            State rectangle_state = new State();
 
             Move rectangle_move = CopyMove((Move)nextMove);
             rectangle_move.collectibles_onPath = graph.GetCollectiblesFromCooperation(rectangle_move);
@@ -383,18 +383,18 @@ namespace GeometryFriendsAgents
 
             if (fromPlatform.type == platformType.RECTANGLE)
             {
-                int rectangle_height = 50 + (fromPlatform.height - (rectangle_move.precondition.position.y + CIRCLE_RADIUS));
+                int rectangle_height = 50 + (fromPlatform.height - (rectangle_move.state.position.y + CIRCLE_RADIUS));
 
-                int rectangle_position_x = Math.Min(Math.Max(rectangle_move.precondition.position.x, 137), 1063);
+                int rectangle_position_x = Math.Min(Math.Max(rectangle_move.state.position.x, 137), 1063);
 
                 if (rectangle_move.type == movementType.FALL)
                 {
-                    rectangle_position_x += rectangle_move.precondition.right_direction ? (-120) : 120;
+                    rectangle_position_x += rectangle_move.state.right_direction ? (-120) : 120;
                 }
 
-                Point rectangle_position = new Point(rectangle_position_x, rectangle_move.precondition.position.y);
-                rectangle_precondition = new PreCondition(rectangle_position, rectangle_height, 0, rectangle_move.precondition.right_direction);
-                rectangle_move.precondition = rectangle_precondition;
+                Point rectangle_position = new Point(rectangle_position_x, rectangle_move.state.position.y);
+                rectangle_state = new State(rectangle_position, rectangle_height, 0, rectangle_move.state.right_direction);
+                rectangle_move.state = rectangle_state;
 
                 messages.Add(new AgentMessage(RIDE, rectangle_move));
                 cooperation = CooperationStatus.RIDE;
@@ -404,11 +404,11 @@ namespace GeometryFriendsAgents
 
                 bool rectangleIsRight = (rectangleInfo.X - circleInfo.X > 0);
 
-                if (rectangleIsRight != rectangle_move.precondition.right_direction)
+                if (rectangleIsRight != rectangle_move.state.right_direction)
                 {
                     foreach (Move m in fromPlatform.moves)
                     {
-                        if (m.reachablePlatform.id == rectangle_move.reachablePlatform.id && m.type == movementType.JUMP && m.precondition.right_direction != rectangle_move.precondition.right_direction)
+                        if (m.reachablePlatform.id == rectangle_move.reachablePlatform.id && m.type == movementType.JUMP && m.state.right_direction != rectangle_move.state.right_direction)
                         {
                             nextMove = m;
                             rectangle_move = CopyMove(m);
@@ -421,10 +421,10 @@ namespace GeometryFriendsAgents
                 int rectangle_height = 50 + (rectangle_move.reachablePlatform.height - (rectangle_move.landPoint.y + CIRCLE_RADIUS));
                 int rectangle_position_x = Math.Min(Math.Max(rectangle_move.landPoint.x, 137), 1063);
                 Point rectangle_position = new Point(rectangle_position_x, rectangle_move.landPoint.y + CIRCLE_RADIUS + (rectangle_height / 2));
-                rectangle_precondition = new PreCondition(rectangle_position, rectangle_height, 0, rectangle_move.precondition.right_direction);
+                rectangle_state = new State(rectangle_position, rectangle_height, 0, rectangle_move.state.right_direction);
 
                 rectangle_move.type = movementType.RIDE;
-                rectangle_move.precondition = rectangle_precondition;
+                rectangle_move.state = rectangle_state;
 
                 messages.Add(new AgentMessage(UNSYNCHRONIZED, rectangle_move));
                 cooperation = CooperationStatus.UNSYNCHRONIZED;
@@ -432,7 +432,7 @@ namespace GeometryFriendsAgents
             }
 
             Move new_nextMove = CopyMove((Move)nextMove);
-            new_nextMove.partner_precondition = rectangle_precondition;
+            new_nextMove.partner_state = rectangle_state;
             nextMove = new_nextMove;
 
         }

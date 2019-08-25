@@ -191,11 +191,11 @@ namespace GeometryFriendsAgents
 
                             if (cooperation == CooperationStatus.RIDE_HELP)
                             {
-                                int targetX = nextMove.Value.precondition.right_direction ? (int)circleInfo.X + 50 : (int)circleInfo.X - 50;
-                                currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetX, 0, nextMove.Value.precondition.right_direction);
+                                int targetX = nextMove.Value.state.right_direction ? (int)circleInfo.X + 50 : (int)circleInfo.X - 50;
+                                currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetX, 0, nextMove.Value.state.right_direction);
                             }
 
-                            else if (nextMove.Value.type == movementType.GAP && rectangleInfo.Height > Math.Max((RECTANGLE_AREA / nextMove.Value.precondition.height) - 1, MIN_RECTANGLE_HEIGHT + 3))
+                            else if (nextMove.Value.type == movementType.GAP && rectangleInfo.Height > Math.Max((RECTANGLE_AREA / nextMove.Value.state.height) - 1, MIN_RECTANGLE_HEIGHT + 3))
                             {
                                 currentAction = Moves.MORPH_DOWN;
                             }
@@ -205,31 +205,31 @@ namespace GeometryFriendsAgents
                                 currentAction = actionSelector.GetCurrentAction(rectangleInfo, (int)circleInfo.X, 0, true);
                             }
 
-                            else if (nextMove.Value.type == movementType.TRANSITION || nextMove.Value.type == movementType.MORPH_DOWN)
+                            else if (nextMove.Value.type == movementType.TRANSITION)
                             {
-                                if (rectangleInfo.Height >= Math.Max(nextMove.Value.precondition.height, 53))
+                                if (rectangleInfo.Height >= Math.Max(nextMove.Value.state.height, 53))
                                     currentAction = Moves.MORPH_DOWN;
 
                                 else
-                                    currentAction = nextMove.Value.precondition.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                                    currentAction = nextMove.Value.state.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                             }
 
                             else if (nextMove.Value.type == movementType.MORPH_UP)
                             {
-                                if (rectangleInfo.Height < Math.Min(nextMove.Value.precondition.height + PIXEL_LENGTH, 192))
+                                if (rectangleInfo.Height < Math.Min(nextMove.Value.state.height + PIXEL_LENGTH, 192))
                                 {
                                     currentAction = Moves.MORPH_UP;
                                 }
 
                                 else
                                 {
-                                    currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextMove.Value.precondition.position.x, nextMove.Value.precondition.horizontal_velocity, nextMove.Value.precondition.right_direction);
+                                    currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextMove.Value.state.position.x, nextMove.Value.state.horizontal_velocity, nextMove.Value.state.right_direction);
                                 }
                             }
 
                             else
                             {
-                                currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextMove.Value.precondition.position.x, nextMove.Value.precondition.horizontal_velocity, nextMove.Value.precondition.right_direction);
+                                currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextMove.Value.state.position.x, nextMove.Value.state.horizontal_velocity, nextMove.Value.state.right_direction);
                             }
 
                         }
@@ -248,45 +248,35 @@ namespace GeometryFriendsAgents
 
                         if (cooperation == CooperationStatus.RIDE_HELP)
                         {
-                            int targetX = nextMove.Value.precondition.right_direction ? (int)circleInfo.X + 50 : (int)circleInfo.X - 50;
-                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetX, 0, nextMove.Value.precondition.right_direction);
+                            int targetX = nextMove.Value.state.right_direction ? (int)circleInfo.X + 50 : (int)circleInfo.X - 50;
+                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetX, 0, nextMove.Value.state.right_direction);
                         }
 
                         else if (nextMove.Value.type == movementType.TRANSITION)
                         {
-                            currentAction = nextMove.Value.precondition.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
-                        }
-
-                        else if ((nextMove.Value.type == movementType.MORPH_DOWN ) && rectangleInfo.Height > nextMove.Value.precondition.height)
-                        {
-                            currentAction = Moves.MORPH_DOWN;
-                        }
-
-                        else if ((nextMove.Value.type == movementType.MORPH_DOWN) && rectangleInfo.Height <= nextMove.Value.precondition.height)
-                        {
-                            currentAction = nextMove.Value.precondition.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                            currentAction = nextMove.Value.state.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                         }
 
                         else if (nextMove.Value.type == movementType.GAP)
                         {
-                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextMove.Value.precondition.position.x, nextMove.Value.precondition.horizontal_velocity, nextMove.Value.precondition.right_direction);
+                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextMove.Value.state.position.x, nextMove.Value.state.horizontal_velocity, nextMove.Value.state.right_direction);
                         }
 
-                        else if (nextMove.Value.type == movementType.FALL && nextMove.Value.precondition.horizontal_velocity == 0 && rectangleInfo.Height <= nextMove.Value.precondition.height)
+                        else if (nextMove.Value.type == movementType.FALL && nextMove.Value.state.horizontal_velocity == 0 && rectangleInfo.Height <= nextMove.Value.state.height)
                         {
-                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextMove.Value.precondition.position.x, nextMove.Value.precondition.horizontal_velocity, nextMove.Value.precondition.right_direction);
+                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextMove.Value.state.position.x, nextMove.Value.state.horizontal_velocity, nextMove.Value.state.right_direction);
                         }
 
                         else if (nextMove.Value.type == movementType.MORPH_UP)
                         {
-                            if (rectangleInfo.Height < Math.Min(nextMove.Value.precondition.height + PIXEL_LENGTH, MAX_RECTANGLE_HEIGHT))
+                            if (rectangleInfo.Height < Math.Min(nextMove.Value.state.height + PIXEL_LENGTH, MAX_RECTANGLE_HEIGHT))
                             {
                                 currentAction = Moves.MORPH_UP;
                             }
 
                             else
                             {
-                                currentAction = nextMove.Value.precondition.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                                currentAction = nextMove.Value.state.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                             }
                         }
 
@@ -315,19 +305,19 @@ namespace GeometryFriendsAgents
             if (nextMove.HasValue)
             {
 
-                if (actionSelector.IsGoal(rectangleInfo, nextMove.Value.precondition) && Math.Abs(rectangleInfo.VelocityY) <= MAX_VELOCITYY)
+                if (actionSelector.IsGoal(rectangleInfo, nextMove.Value.state) && Math.Abs(rectangleInfo.VelocityY) <= MAX_VELOCITYY)
                 {
 
                     targetPointX_InAir = (nextMove.Value.reachablePlatform.leftEdge + nextMove.Value.reachablePlatform.rightEdge) / 2;
 
                     if (cooperation == CooperationStatus.RIDE)
                     {
-                        if (rectangleInfo.Height > nextMove.Value.precondition.height + 4)
+                        if (rectangleInfo.Height > nextMove.Value.state.height + 4)
                         {
                             currentAction = Moves.MORPH_DOWN;
                         }
 
-                        else if (rectangleInfo.Height < nextMove.Value.precondition.height - 4)
+                        else if (rectangleInfo.Height < nextMove.Value.state.height - 4)
                         {
                             currentAction = Moves.MORPH_UP;
                         }
@@ -345,26 +335,26 @@ namespace GeometryFriendsAgents
 
                     if (nextMove.Value.type == movementType.TRANSITION)
                     {
-                        currentAction = nextMove.Value.precondition.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                        currentAction = nextMove.Value.state.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                     }
 
                     if ((nextMove.Value.type == movementType.MORPH_UP || nextMove.Value.type == movementType.COLLECT || nextMove.Value.type == movementType.GAP) &&
-                        rectangleInfo.Height < Math.Min(nextMove.Value.precondition.height + PIXEL_LENGTH, 192))
+                        rectangleInfo.Height < Math.Min(nextMove.Value.state.height + PIXEL_LENGTH, 192))
                     {
                             currentAction = Moves.MORPH_UP;            
                     }
 
-                    if (nextMove.Value.type == movementType.RIDE && rectangleInfo.Height > Math.Max(nextMove.Value.precondition.height, 53))
+                    if (nextMove.Value.type == movementType.RIDE && rectangleInfo.Height > Math.Max(nextMove.Value.state.height, 53))
                     {
                          currentAction = Moves.MORPH_DOWN;
                     }
 
-                    if ((nextMove.Value.type == movementType.MORPH_DOWN || nextMove.Value.type == movementType.FALL) && rectangleInfo.Height > nextMove.Value.precondition.height)
+                    if (nextMove.Value.type == movementType.FALL && rectangleInfo.Height > nextMove.Value.state.height)
                     {
                         currentAction = Moves.MORPH_DOWN;
                     }
 
-                    if (nextMove.Value.type == movementType.FALL && nextMove.Value.precondition.horizontal_velocity == 0 && rectangleInfo.Height < 190)
+                    if (nextMove.Value.type == movementType.FALL && nextMove.Value.state.horizontal_velocity == 0 && rectangleInfo.Height < 190)
                     {
                         currentAction = Moves.MORPH_UP;
                     }
@@ -500,14 +490,14 @@ namespace GeometryFriendsAgents
                 if (item.Message.Equals(UNSYNCHRONIZED) && item.Attachment.GetType() == typeof(Move))
                 {
                     Move circleMove = (Move) item.Attachment;
-                    PreCondition rectangle_precondition = circleMove.precondition;
+                    State rectangle_state = circleMove.state;
 
                     bool[] collectibles_onPath = Utilities.GetXorMatrix(graph.possibleCollectibles, circleMove.collectibles_onPath);
-                    Platform? fromPlatform = graph.GetPlatform(rectangle_precondition.position, rectangle_precondition.height);
+                    Platform? fromPlatform = graph.GetPlatform(rectangle_state.position, rectangle_state.height);
 
                     if (fromPlatform.HasValue)
                     {
-                        Move newMove = new Move((Platform)fromPlatform, rectangle_precondition, rectangle_precondition.position, circleMove.type, collectibles_onPath, 0, circleMove.collideCeiling);
+                        Move newMove = new Move((Platform)fromPlatform, rectangle_state, rectangle_state.position, circleMove.type, collectibles_onPath, 0, circleMove.collideCeiling);
                         graph.AddMove((Platform)fromPlatform, newMove);
                         graphChanged = true;
                     }
@@ -535,8 +525,8 @@ namespace GeometryFriendsAgents
                 if (item.Message.Equals(JUMPED) && nextMove.HasValue)
                 {
                     Move newMove = CopyMove((Move)nextMove);
-                    newMove.type = movementType.MORPH_DOWN;
-                    newMove.precondition.height = MIN_RECTANGLE_HEIGHT;
+                    newMove.type = movementType.COLLECT;
+                    newMove.state.height = MIN_RECTANGLE_HEIGHT;
                     nextMove = newMove;
                     cooperation = CooperationStatus.RIDE;
                 }
@@ -636,16 +626,16 @@ namespace GeometryFriendsAgents
 
                 int rectangleWidth = RECTANGLE_AREA / (int)rectangleInfo.Height;
 
-                if (nextMove.Value.precondition.right_direction &&
+                if (nextMove.Value.state.right_direction &&
                     circleInfo.X >= rectangleInfo.X &&
-                    circleInfo.X <= nextMove.Value.precondition.position.x + rectangleWidth + CIRCLE_RADIUS)
+                    circleInfo.X <= nextMove.Value.state.position.x + rectangleWidth + CIRCLE_RADIUS)
                 {
                     return true;
                 }
 
-                if (!nextMove.Value.precondition.right_direction &&
+                if (!nextMove.Value.state.right_direction &&
                     circleInfo.X <= rectangleInfo.X &&
-                    circleInfo.X >= nextMove.Value.precondition.position.x - rectangleWidth - CIRCLE_RADIUS)
+                    circleInfo.X >= nextMove.Value.state.position.x - rectangleWidth - CIRCLE_RADIUS)
                 {
                     return true;
                 }

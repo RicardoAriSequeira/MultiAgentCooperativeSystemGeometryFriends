@@ -238,8 +238,8 @@ namespace GeometryFriendsAgents
                     {
                         var itemToRemove = p.moves.Single(r => r.type == m.type &&
                                                                 r.reachablePlatform.id == m.reachablePlatform.id &&
-                                                                r.precondition.position.x == m.precondition.position.x &&
-                                                                r.precondition.position.y == m.precondition.position.y);
+                                                                r.state.position.x == m.state.position.x &&
+                                                                r.state.position.y == m.state.position.y);
                         p.moves.Remove(itemToRemove);
                     }
                 }

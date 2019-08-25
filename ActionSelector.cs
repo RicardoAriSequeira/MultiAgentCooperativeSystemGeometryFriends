@@ -37,24 +37,24 @@ namespace GeometryFriendsAgents
         }
 
 
-        public bool IsGoal(CircleRepresentation cI, PreCondition precondition)
+        public bool IsGoal(CircleRepresentation cI, State state)
         {        
-            float distanceX = precondition.right_direction ? cI.X - precondition.position.x : precondition.position.x - cI.X;
+            float distanceX = state.right_direction ? cI.X - state.position.x : state.position.x - cI.X;
 
             if (-DISCRETIZATION_D * 2 < distanceX && distanceX <= 0)
             {
-                float relativeVelocityX = precondition.right_direction ? cI.VelocityX : -cI.VelocityX;
+                float relativeVelocityX = state.right_direction ? cI.VelocityX : -cI.VelocityX;
 
-                if (precondition.horizontal_velocity == 0)
+                if (state.horizontal_velocity == 0)
                 {
-                    if (precondition.horizontal_velocity - DISCRETIZATION_V <= relativeVelocityX && relativeVelocityX < precondition.horizontal_velocity + DISCRETIZATION_V)
+                    if (state.horizontal_velocity - DISCRETIZATION_V <= relativeVelocityX && relativeVelocityX < state.horizontal_velocity + DISCRETIZATION_V)
                     {
                         return true;
                     }
                 }
                 else
                 {
-                    if (precondition.horizontal_velocity <= relativeVelocityX && relativeVelocityX < precondition.horizontal_velocity + DISCRETIZATION_V * 2)
+                    if (state.horizontal_velocity <= relativeVelocityX && relativeVelocityX < state.horizontal_velocity + DISCRETIZATION_V * 2)
                     {
                         return true;
                     }
@@ -64,34 +64,34 @@ namespace GeometryFriendsAgents
             return false;
         }
 
-        public bool IsGoal(RectangleRepresentation rI, PreCondition precondition)
+        public bool IsGoal(RectangleRepresentation rI, State state)
         {
-            float distanceX = precondition.right_direction ? rI.X - precondition.position.x : precondition.position.x - rI.X;
+            float distanceX = state.right_direction ? rI.X - state.position.x : state.position.x - rI.X;
 
-            //if (Math.Abs(rI.Height - precondition.height) >= 8)
+            //if (Math.Abs(rI.Height - state.height) >= 8)
             //{
             //    return false;
             //}
 
-            if (precondition.horizontal_velocity == 0)
+            if (state.horizontal_velocity == 0)
             {
                 distanceX = - Math.Abs(distanceX);
             }
 
             if (-DISCRETIZATION_D * 2 < distanceX && distanceX <= 0)
             {
-                float relativeVelocityX = precondition.right_direction ? rI.VelocityX : -rI.VelocityX;
+                float relativeVelocityX = state.right_direction ? rI.VelocityX : -rI.VelocityX;
 
-                if (precondition.horizontal_velocity == 0)
+                if (state.horizontal_velocity == 0)
                 {
-                    if (precondition.horizontal_velocity - DISCRETIZATION_V <= relativeVelocityX && relativeVelocityX < precondition.horizontal_velocity + DISCRETIZATION_V)
+                    if (state.horizontal_velocity - DISCRETIZATION_V <= relativeVelocityX && relativeVelocityX < state.horizontal_velocity + DISCRETIZATION_V)
                     {
                         return true;
                     }
                 }
                 else
                 {
-                    if (precondition.horizontal_velocity <= relativeVelocityX && relativeVelocityX < precondition.horizontal_velocity + DISCRETIZATION_V * 2)
+                    if (state.horizontal_velocity <= relativeVelocityX && relativeVelocityX < state.horizontal_velocity + DISCRETIZATION_V * 2)
                     {
                         return true;
                     }
