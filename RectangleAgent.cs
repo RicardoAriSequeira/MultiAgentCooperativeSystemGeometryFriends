@@ -200,7 +200,7 @@ namespace GeometryFriendsAgents
                                 currentAction = Moves.MORPH_DOWN;
                             }
 
-                            else if ((nextMove.Value.type == movementType.RIDING && Math.Abs(rectangleInfo.X - circleInfo.X) > 60) || cooperation == CooperationStatus.RIDE_HELP)
+                            else if (nextMove.Value.type == movementType.RIDING && Math.Abs(rectangleInfo.X - circleInfo.X) > 60)
                             {
                                 currentAction = actionSelector.GetCurrentAction(rectangleInfo, (int)circleInfo.X, 0, true);
                             }
@@ -210,21 +210,11 @@ namespace GeometryFriendsAgents
                                 if (rectangleInfo.Height >= Math.Max(nextMove.Value.state.height, 53))
                                     currentAction = Moves.MORPH_DOWN;
 
+                                else if (rectangleInfo.Height < nextMove.Value.state.height - PIXEL_LENGTH)
+                                    currentAction = Moves.MORPH_UP;
+
                                 else
                                     currentAction = nextMove.Value.state.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
-                            }
-
-                            else if (nextMove.Value.type == movementType.MORPH_UP)
-                            {
-                                if (rectangleInfo.Height < Math.Min(nextMove.Value.state.height + PIXEL_LENGTH, 192))
-                                {
-                                    currentAction = Moves.MORPH_UP;
-                                }
-
-                                else
-                                {
-                                    currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextMove.Value.state.position.x, nextMove.Value.state.horizontal_velocity, nextMove.Value.state.right_direction);
-                                }
                             }
 
                             else
@@ -254,7 +244,14 @@ namespace GeometryFriendsAgents
 
                         else if (nextMove.Value.type == movementType.TRANSITION)
                         {
-                            currentAction = nextMove.Value.state.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                            if (rectangleInfo.Height >= Math.Max(nextMove.Value.state.height, 53))
+                                currentAction = Moves.MORPH_DOWN;
+
+                            else if (rectangleInfo.Height < nextMove.Value.state.height - PIXEL_LENGTH)
+                                currentAction = Moves.MORPH_UP;
+
+                            else
+                                currentAction = nextMove.Value.state.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                         }
 
                         else if (nextMove.Value.type == movementType.GAP)
@@ -265,19 +262,6 @@ namespace GeometryFriendsAgents
                         else if (nextMove.Value.type == movementType.FALL && nextMove.Value.state.horizontal_velocity == 0 && rectangleInfo.Height <= nextMove.Value.state.height)
                         {
                             currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextMove.Value.state.position.x, nextMove.Value.state.horizontal_velocity, nextMove.Value.state.right_direction);
-                        }
-
-                        else if (nextMove.Value.type == movementType.MORPH_UP)
-                        {
-                            if (rectangleInfo.Height < Math.Min(nextMove.Value.state.height + PIXEL_LENGTH, MAX_RECTANGLE_HEIGHT))
-                            {
-                                currentAction = Moves.MORPH_UP;
-                            }
-
-                            else
-                            {
-                                currentAction = nextMove.Value.state.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
-                            }
                         }
 
                         else
@@ -313,18 +297,12 @@ namespace GeometryFriendsAgents
                     if (cooperation == CooperationStatus.RIDE)
                     {
                         if (rectangleInfo.Height > nextMove.Value.state.height + 4)
-                        {
                             currentAction = Moves.MORPH_DOWN;
-                        }
 
                         else if (rectangleInfo.Height < nextMove.Value.state.height - 4)
-                        {
                             currentAction = Moves.MORPH_UP;
-                        }
                         else
-                        {
                             cooperation = CooperationStatus.SYNCHRONIZED;
-                        }
 
                     }
 
@@ -333,15 +311,21 @@ namespace GeometryFriendsAgents
                         return;
                     }
 
-                    if (nextMove.Value.type == movementType.TRANSITION)
+                    else if (nextMove.Value.type == movementType.TRANSITION)
                     {
-                        currentAction = nextMove.Value.state.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                        if (rectangleInfo.Height >= Math.Max(nextMove.Value.state.height, 53))
+                            currentAction = Moves.MORPH_DOWN;
+
+                        else if (rectangleInfo.Height < nextMove.Value.state.height - PIXEL_LENGTH)
+                            currentAction = Moves.MORPH_UP;
+
+                        else
+                            currentAction = nextMove.Value.state.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                     }
 
-                    if ((nextMove.Value.type == movementType.MORPH_UP || nextMove.Value.type == movementType.COLLECT || nextMove.Value.type == movementType.GAP) &&
-                        rectangleInfo.Height < Math.Min(nextMove.Value.state.height + PIXEL_LENGTH, 192))
+                    if ((nextMove.Value.type == movementType.COLLECT || nextMove.Value.type == movementType.GAP) && rectangleInfo.Height <= Math.Max(Math.Min(nextMove.Value.state.height, 192), 53))
                     {
-                            currentAction = Moves.MORPH_UP;            
+                         currentAction = Moves.MORPH_UP;            
                     }
 
                     if (nextMove.Value.type == movementType.RIDE && rectangleInfo.Height > Math.Max(nextMove.Value.state.height, 53))
@@ -525,7 +509,7 @@ namespace GeometryFriendsAgents
                 if (item.Message.Equals(JUMPED) && nextMove.HasValue)
                 {
                     Move newMove = CopyMove((Move)nextMove);
-                    newMove.type = movementType.COLLECT;
+                    newMove.type = movementType.RIDE;
                     newMove.state.height = MIN_RECTANGLE_HEIGHT;
                     nextMove = newMove;
                     cooperation = CooperationStatus.RIDE;
@@ -539,48 +523,6 @@ namespace GeometryFriendsAgents
             }
 
             return;
-        }
-
-        public static List<ArrayPoint> GetFormPixels(LevelRepresentation.Point center, int height)
-        {
-            ArrayPoint rectangleCenterArray = ConvertPointIntoArrayPoint(center, false, false);
-
-            int rectangleHighestY = ConvertValue_PointIntoArrayPoint(center.y - (height / 2), false);
-            int rectangleLowestY = ConvertValue_PointIntoArrayPoint(center.y + (height / 2), true);
-
-            float rectangleWidth = RECTANGLE_AREA / height;
-            int rectangleLeftX = ConvertValue_PointIntoArrayPoint((int)(center.x - (rectangleWidth / 2)), false);
-            int rectangleRightX = ConvertValue_PointIntoArrayPoint((int)(center.x + (rectangleWidth / 2)), true);
-
-            List<ArrayPoint> rectanglePixels = new List<ArrayPoint>();
-
-            for (int i = rectangleHighestY; i <= rectangleLowestY; i++)
-            {
-                for (int j = rectangleLeftX; j <= rectangleRightX; j++)
-                {
-                    rectanglePixels.Add(new ArrayPoint(j, i));
-                }
-            }
-
-            return rectanglePixels;
-        }
-
-        public static bool IsObstacle_onPixels(int[,] levelArray, List<ArrayPoint> checkPixels)
-        {
-            if (checkPixels.Count == 0)
-            {
-                return true;
-            }
-
-            foreach (ArrayPoint i in checkPixels)
-            {
-                if (levelArray[i.yArray, i.xArray] == BLACK || levelArray[i.yArray, i.xArray] == YELLOW)
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         public bool CanMorphUp()
@@ -613,7 +555,7 @@ namespace GeometryFriendsAgents
 
             }
 
-            return !IsObstacle_onPixels(levelInfo.levelArray, pixelsToMorph);
+            return !graph.ObstacleOnPixels(pixelsToMorph);
         }
 
         public bool IsCircleInTheWay()

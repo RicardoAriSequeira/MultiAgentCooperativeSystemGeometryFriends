@@ -17,7 +17,7 @@ namespace GeometryFriendsAgents
 
         public enum movementType
         {
-            COLLECT, RIDE, RIDING, MORPH_UP, TRANSITION, FALL, JUMP, GAP
+            COLLECT, RIDE, RIDING, TRANSITION, FALL, JUMP, GAP
         };
 
         public enum platformType
@@ -25,18 +25,17 @@ namespace GeometryFriendsAgents
             NO_PLATFORM, BLACK, GREEN, YELLOW, GAP, RECTANGLE
         };
 
+
+        public int OBSTACLE_COLOUR;
+        public int[] POSSIBLE_HEIGHTS;
         public const int VELOCITYX_STEP = 20;
-
         public const float TIME_STEP = 0.01f;
-
-        protected int[] LENGTH_TO_ACCELERATE = new int[10] { 1, 5, 13, 20, 31, 49, 70, 95, 128, 166 };
-
         protected const int STAIR_MAXWIDTH = 48;
         protected const int STAIR_MAXHEIGHT = 16;
+        protected int[] LENGTH_TO_ACCELERATE = new int[10] { 1, 5, 13, 20, 31, 49, 70, 95, 128, 166 };
 
         protected int[,] levelArray;
-        public int AREA, MIN_HEIGHT, MAX_HEIGHT, nCollectibles;
-
+        public int AREA, nCollectibles;
         public List<Platform> platforms;
         public bool[] possibleCollectibles;
 
@@ -102,20 +101,24 @@ namespace GeometryFriendsAgents
             }
         }
 
+        public Graph(int area, int[] possible_heights, int obstacle_colour)
+        {
+            AREA = area;
+            OBSTACLE_COLOUR = obstacle_colour;
+            POSSIBLE_HEIGHTS = possible_heights;
+        }
+
         public void SetupGraph(int[,] levelArray, int nCollectibles)
         {
-            this.platforms = new List<Platform>();
             this.levelArray = levelArray;
             this.nCollectibles = nCollectibles;
-            this.possibleCollectibles = new bool[nCollectibles];
-
+            possibleCollectibles = new bool[nCollectibles];
             SetupPlatforms();
             SetupMoves();
         }
 
         public abstract void SetupPlatforms();
         public abstract void SetupMoves();
-        public abstract bool IsObstacle_onPixels(List<ArrayPoint> checkPixels);
         public abstract List<ArrayPoint> GetFormPixels(Point center, int height);
         protected abstract collideType GetCollideType(Point center, bool ascent, bool rightMove, int radius);
 
@@ -151,22 +154,22 @@ namespace GeometryFriendsAgents
             return false;
         }
 
-        public bool IsEnoughLengthToAccelerate(Platform fromPlatform, Point movePoint, int velocityX, bool rightMove)
+        public bool EnoughLength(Platform fromPlatform, State state)
         {
             int neededLengthToAccelerate;
 
-            neededLengthToAccelerate = LENGTH_TO_ACCELERATE[velocityX / VELOCITYX_STEP];
+            neededLengthToAccelerate = LENGTH_TO_ACCELERATE[state.horizontal_velocity / VELOCITYX_STEP];
 
-            if (rightMove)
+            if (state.right_direction)
             {
-                if (movePoint.x - fromPlatform.leftEdge < neededLengthToAccelerate)
+                if (state.position.x - fromPlatform.leftEdge < neededLengthToAccelerate)
                 {
                     return false;
                 }
             }
             else
             {
-                if (fromPlatform.rightEdge - movePoint.x < neededLengthToAccelerate)
+                if (fromPlatform.rightEdge - state.position.x < neededLengthToAccelerate)
                 {
                     return false;
                 }
@@ -227,7 +230,7 @@ namespace GeometryFriendsAgents
                 {
                     continue;
                 }
-                
+
                 Utilities.numTrue trueNum = Utilities.CompTrueNum(mI.collectibles_onPath, i.collectibles_onPath);
 
                 if (trueNum == Utilities.numTrue.MORETRUE)
@@ -378,7 +381,7 @@ namespace GeometryFriendsAgents
                         }
 
                     }
-                }              
+                }
             }
 
             return priorityHighestFlag;
@@ -397,7 +400,7 @@ namespace GeometryFriendsAgents
                 previousCenter = currentCenter;
                 currentCenter = GetCurrentCenter(movePoint, velocityX, velocityY, currentTime);
                 List<ArrayPoint> pixels = GetCirclePixels(currentCenter, radius);
-                
+
                 ArrayPoint centerArray = ConvertPointIntoArrayPoint(currentCenter, false, false);
                 int lowestY = ConvertValue_PointIntoArrayPoint(currentCenter.y + radius, true);
                 bool ascent = velocityY - GameInfo.GRAVITY * (i - 1) * TIME_STEP >= 0;
@@ -411,7 +414,7 @@ namespace GeometryFriendsAgents
                     return;
                 }
 
-                if (IsObstacle_onPixels(pixels))
+                if (ObstacleOnPixels(pixels))
                 {
                     collidePoint = previousCenter;
                     collideType = GetCollideType(currentCenter, velocityY - GameInfo.GRAVITY * (i - 1) * TIME_STEP >= 0, velocityX > 0, radius);
@@ -486,7 +489,7 @@ namespace GeometryFriendsAgents
 
         protected bool[] CheckCollectiblesPlatform(bool[] platformsChecked, Platform p, bool cooperation = false)
         {
-            
+
             if (p.type != platformType.RECTANGLE || cooperation)
             {
                 platformsChecked[p.id - 1] = true;
@@ -503,7 +506,7 @@ namespace GeometryFriendsAgents
                             platformsChecked = CheckCollectiblesPlatform(platformsChecked, m.reachablePlatform);
                         }
                     }
-                    
+
                 }
             }
 
@@ -515,5 +518,27 @@ namespace GeometryFriendsAgents
             return new Move(m.reachablePlatform, m.state, m.landPoint, m.type, m.collectibles_onPath, m.pathLength, m.collideCeiling, m.partner_state);
         }
 
+        public bool ObstacleOnPixels(List<ArrayPoint> checkPixels)
+        {
+            return ObstacleOnPixels(levelArray, checkPixels, OBSTACLE_COLOUR);
+        }
+
+        public static bool ObstacleOnPixels(int[,] levelArray, List<ArrayPoint> checkPixels, int obstacle_colour)
+        {
+            if (checkPixels.Count == 0)
+            {
+                return true;
+            }
+
+            foreach (ArrayPoint i in checkPixels)
+            {
+                if (levelArray[i.yArray, i.xArray] == BLACK || levelArray[i.yArray, i.xArray] == obstacle_colour)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 }

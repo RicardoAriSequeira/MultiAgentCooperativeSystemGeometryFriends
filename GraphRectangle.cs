@@ -9,13 +9,7 @@ namespace GeometryFriendsAgents
 {
     class GraphRectangle : Graph
     {
-
-        public GraphRectangle() : base()
-        {
-            AREA = RECTANGLE_AREA;
-            MIN_HEIGHT = MIN_RECTANGLE_HEIGHT;
-            MAX_HEIGHT = MAX_RECTANGLE_HEIGHT;
-        }
+        public GraphRectangle() : base(RECTANGLE_AREA, new int[3] { MIN_RECTANGLE_HEIGHT, SQUARE_HEIGHT, MAX_RECTANGLE_HEIGHT }, YELLOW) {}
 
         public override void SetupPlatforms()
         {
@@ -42,6 +36,11 @@ namespace GeometryFriendsAgents
         }
 
         public override List<ArrayPoint> GetFormPixels(Point center, int height)
+        {      
+            return GetRectanglePixels(center, height);
+        }
+
+        public static List<ArrayPoint> GetRectanglePixels(Point center, int height)
         {
             ArrayPoint rectangleCenterArray = ConvertPointIntoArrayPoint(center, false, false);
 
@@ -133,22 +132,5 @@ namespace GeometryFriendsAgents
             return collideType.OTHER;
         }
 
-        public override bool IsObstacle_onPixels(List<ArrayPoint> checkPixels)
-        {
-            if (checkPixels.Count == 0)
-            {
-                return true;
-            }
-
-            foreach (ArrayPoint i in checkPixels)
-            {
-                if (levelArray[i.yArray, i.xArray] == BLACK || levelArray[i.yArray, i.xArray] == YELLOW)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
     }
 }

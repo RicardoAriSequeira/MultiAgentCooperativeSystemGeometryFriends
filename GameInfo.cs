@@ -3,8 +3,7 @@
     class GameInfo
     {
         public const int CIRCLE_RADIUS = 40;
-        public const int MIN_CIRCLE_HEIGHT = 80;
-        public const int MAX_CIRCLE_HEIGHT = 80;
+        public const int CIRCLE_HEIGHT = 80;
 
         public const int SQUARE_HEIGHT = 100;
         public const int MIN_RECTANGLE_HEIGHT = 52;

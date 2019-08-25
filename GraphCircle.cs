@@ -1,62 +1,53 @@
-﻿using GeometryFriends.AI;
-using GeometryFriends.AI.Perceptions.Information;
+﻿using GeometryFriends.AI.Perceptions.Information;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+
+using static GeometryFriendsAgents.GameInfo;
+using static GeometryFriendsAgents.MoveIdentification;
+using static GeometryFriendsAgents.LevelRepresentation;
+using static GeometryFriendsAgents.PlatformIdentification;
 
 namespace GeometryFriendsAgents
 {
     class GraphCircle : Graph
     {
-
         bool[] platformsChecked;
         int[,] previous_levelArray;
-        int obstacleColour;
         public RectangleRepresentation initialRectangleInfo;
 
-        public GraphCircle() : base()
-        {
-            AREA = GameInfo.CIRCLE_AREA;
-            MIN_HEIGHT = GameInfo.MIN_CIRCLE_HEIGHT;
-            MAX_HEIGHT = GameInfo.MAX_CIRCLE_HEIGHT;
-            obstacleColour = LevelRepresentation.GREEN;
-        }
+        public GraphCircle() : base(CIRCLE_AREA, new int[1] { CIRCLE_HEIGHT }, GREEN) { }
 
         public override void SetupPlatforms()
         {
-            obstacleColour = LevelRepresentation.YELLOW;
+            OBSTACLE_COLOUR = YELLOW;
 
-            platforms = PlatformIdentification.SetPlatforms_Rectangle(levelArray);
-            MoveIdentification.Setup_Rectangle(this);
-            platforms = PlatformIdentification.DeleteUnreachablePlatforms(platforms, initialRectangleInfo);
+            platforms = SetPlatforms_Rectangle(levelArray);
+            Setup_Rectangle(this);
+            platforms = DeleteUnreachablePlatforms(platforms, initialRectangleInfo);
 
-            obstacleColour = LevelRepresentation.GREEN;
+            OBSTACLE_COLOUR = GREEN;
 
-            List<Platform> platformsCircle = PlatformIdentification.SetPlatforms_Circle(levelArray);
-            platforms = PlatformIdentification.JoinPlatforms(platformsCircle, platforms);
-            platforms = PlatformIdentification.SetPlatformsID(platforms);
+            List<Platform> platformsCircle = SetPlatforms_Circle(levelArray);
+            platforms = JoinPlatforms(platformsCircle, platforms);
+            platforms = SetPlatformsID(platforms);
 
             previous_levelArray = new int[levelArray.GetLength(0), levelArray.GetLength(1)];
             Array.Copy(levelArray, previous_levelArray, levelArray.Length);
-            levelArray = LevelRepresentation.SetCooperation(levelArray, platforms);
+            levelArray = SetCooperation(levelArray, platforms);
 
             platformsChecked = new bool[platforms.Count];
         }
 
         public override void SetupMoves()
         {
-            foreach (Platform fromPlatform in platforms)
+            foreach (Platform from in platforms)
             {
+                foreach (Platform to in platforms)
+                    StairOrGap(this, from, to, CIRCLE_HEIGHT);
 
-                MoveIdentification.StairOrGap_Circle(this, fromPlatform);
-
-                if (fromPlatform.type != platformType.GAP)
-                {
-                    MoveIdentification.Fall(this, fromPlatform);
-                    MoveIdentification.Jump(this, fromPlatform);
-                    MoveIdentification.Collect(this, fromPlatform);
-                }
+                Fall(this, from, CIRCLE_HEIGHT);
+                Jump(this, from);
+                Collect(this, from);
 
             }
         }
@@ -64,7 +55,7 @@ namespace GeometryFriendsAgents
         public void SetPossibleCollectibles(CircleRepresentation initial_cI)
         {
 
-            Platform? platform = GetPlatform(new LevelRepresentation.Point((int)initial_cI.X, (int)initial_cI.Y), GameInfo.MAX_CIRCLE_HEIGHT);
+            Platform? platform = GetPlatform(new Point((int)initial_cI.X, (int)initial_cI.Y), CIRCLE_HEIGHT);
 
             if (platform.HasValue)
             {
@@ -72,30 +63,12 @@ namespace GeometryFriendsAgents
             }
         }
 
-        public override List<LevelRepresentation.ArrayPoint> GetFormPixels(LevelRepresentation.Point center, int height)
+        public override List<ArrayPoint> GetFormPixels(Point center, int height)
         {
             return GetCirclePixels(center, height/2);
         }
 
-        public override bool IsObstacle_onPixels(List<LevelRepresentation.ArrayPoint> checkPixels)
-        {
-            if (checkPixels.Count == 0)
-            {
-                return true;
-            }
-
-            foreach (LevelRepresentation.ArrayPoint i in checkPixels)
-            {
-                if (levelArray[i.yArray, i.xArray] == LevelRepresentation.BLACK || levelArray[i.yArray, i.xArray] == obstacleColour)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        protected override collideType GetCollideType(LevelRepresentation.Point center, bool ascent, bool rightMove, int radius)
+        protected override collideType GetCollideType(Point center, bool ascent, bool rightMove, int radius)
         {
             LevelRepresentation.ArrayPoint centerArray = LevelRepresentation.ConvertPointIntoArrayPoint(center, false, false);
             int highestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint(center.y - radius, false);
@@ -124,7 +97,7 @@ namespace GeometryFriendsAgents
             int p = 0;
             while (p < platforms.Count)
             {
-                if (platforms[p].type == Graph.platformType.RECTANGLE)
+                if (platforms[p].type == platformType.RECTANGLE)
                 {
                     platforms.Remove(platforms[p]);
                 }
@@ -135,7 +108,7 @@ namespace GeometryFriendsAgents
                 }
             }
 
-            platforms = PlatformIdentification.SetPlatformsID(platforms);
+            platforms = SetPlatformsID(platforms);
             levelArray = previous_levelArray;
             SetupMoves();
         }

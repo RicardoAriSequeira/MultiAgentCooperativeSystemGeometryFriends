@@ -132,7 +132,7 @@ namespace GeometryFriendsAgents
             if ((DateTime.Now - lastMoveTime).TotalMilliseconds >= 20)
             {
 
-                currentPlatform = graph.GetPlatform(new Point((int)circleInfo.X, (int)circleInfo.Y), MAX_CIRCLE_HEIGHT, (int)circleInfo.VelocityY);
+                currentPlatform = graph.GetPlatform(new Point((int)circleInfo.X, (int)circleInfo.Y), CIRCLE_HEIGHT, (int)circleInfo.VelocityY);
 
                 if (!currentPlatform.HasValue && IsRidingRectangle())
                 {
@@ -463,24 +463,6 @@ namespace GeometryFriendsAgents
                 graph.DeleteCooperationPlatforms();
 
             rectangle_ping = true;
-        }
-
-        public static bool IsObstacle_onPixels(int[,] levelArray, List<ArrayPoint> checkPixels)
-        {
-            if (checkPixels.Count == 0)
-            {
-                return true;
-            }
-
-            foreach (ArrayPoint i in checkPixels)
-            {
-                if (levelArray[i.yArray, i.xArray] == BLACK || levelArray[i.yArray, i.xArray] == GREEN)
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         public bool IsRidingRectangle()

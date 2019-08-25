@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using static GeometryFriendsAgents.Graph;
 using static GeometryFriendsAgents.GameInfo;
+using static GeometryFriendsAgents.GraphRectangle;
 using static GeometryFriendsAgents.LevelRepresentation;
 
 namespace GeometryFriendsAgents
@@ -22,10 +23,10 @@ namespace GeometryFriendsAgents
                 {
 
                     Point circleCenter = ConvertArrayPointIntoPoint(new ArrayPoint(x, y));
-                    circleCenter.y -= GameInfo.CIRCLE_RADIUS;
-                    List<ArrayPoint> circlePixels = GetCirclePixels(circleCenter, GameInfo.CIRCLE_RADIUS);
+                    circleCenter.y -= CIRCLE_RADIUS;
+                    List<ArrayPoint> circlePixels = GetCirclePixels(circleCenter, CIRCLE_RADIUS);
 
-                    if (!CircleAgent.IsObstacle_onPixels(levelArray, circlePixels))
+                    if (!ObstacleOnPixels(levelArray, circlePixels, GREEN))
                     {
                         if (levelArray[y, x - 1] == BLACK || levelArray[y, x] == BLACK)
                         {
@@ -56,30 +57,27 @@ namespace GeometryFriendsAgents
                     {
 
                         // RECTANGLE WITH HEIGHT 100
-                        Point rectangleCenter = ConvertArrayPointIntoPoint(new ArrayPoint(x, y));
-                        rectangleCenter.y -= SQUARE_HEIGHT / 2;
-                        List<ArrayPoint> rectanglePixels = RectangleAgent.GetFormPixels(rectangleCenter, SQUARE_HEIGHT);
+                        Point center = ConvertArrayPointIntoPoint(new ArrayPoint(x, y));
+                        center.y -= SQUARE_HEIGHT / 2;
+                        List<ArrayPoint> pixels = GetRectanglePixels(center, SQUARE_HEIGHT);
 
-                        if (RectangleAgent.IsObstacle_onPixels(levelArray, rectanglePixels))
+                        if (ObstacleOnPixels(levelArray, pixels, YELLOW))
                         {
 
                             // RECTANGLE WITH HEIGHT 50
-                            rectangleCenter = ConvertArrayPointIntoPoint(new ArrayPoint(x, y));
-                            rectangleCenter.y -= MIN_RECTANGLE_HEIGHT / 2;
-                            rectanglePixels = RectangleAgent.GetFormPixels(rectangleCenter, MIN_RECTANGLE_HEIGHT);
+                            center = ConvertArrayPointIntoPoint(new ArrayPoint(x, y));
+                            center.y -= MIN_RECTANGLE_HEIGHT / 2;
+                            pixels = GetRectanglePixels(center, MIN_RECTANGLE_HEIGHT);
 
-                            if (RectangleAgent.IsObstacle_onPixels(levelArray, rectanglePixels))
+                            if (ObstacleOnPixels(levelArray, pixels, YELLOW))
                             {
 
                                 // RECTANGLE WITH HEIGHT 200
-                                rectangleCenter = ConvertArrayPointIntoPoint(new ArrayPoint(x, y));
-                                rectangleCenter.y -= MAX_RECTANGLE_HEIGHT / 2;
-                                rectanglePixels = RectangleAgent.GetFormPixels(rectangleCenter, MAX_RECTANGLE_HEIGHT);
+                                center = ConvertArrayPointIntoPoint(new ArrayPoint(x, y));
+                                center.y -= MAX_RECTANGLE_HEIGHT / 2;
+                                pixels = GetRectanglePixels(center, MAX_RECTANGLE_HEIGHT);
 
-                                if (RectangleAgent.IsObstacle_onPixels(levelArray,rectanglePixels))
-                                {
-                                    return;
-                                }
+                                if (ObstacleOnPixels(levelArray, pixels, YELLOW)) return;
                             }
                         }
 
@@ -124,7 +122,7 @@ namespace GeometryFriendsAgents
                             {
                                 lock (platforms)
                                 {
-                                    platforms.Add(new Platform(platformType.BLACK, ConvertValue_ArrayPointIntoPoint(i), leftEdge, rightEdge, new List<Move>(), MAX_CIRCLE_HEIGHT));
+                                    platforms.Add(new Platform(platformType.BLACK, ConvertValue_ArrayPointIntoPoint(i), leftEdge, rightEdge, new List<Move>(), CIRCLE_HEIGHT));
                                 }
                             }
 
@@ -184,7 +182,6 @@ namespace GeometryFriendsAgents
                                     platforms.Add(new Platform(currentPlatform, ConvertValue_ArrayPointIntoPoint(y), leftEdge, rightEdge, new List<Move>(), allowed_height));
                         }
                         leftEdge = ConvertValue_ArrayPointIntoPoint(x - 1);
-                        //leftEdge = (new_allowed_height != allowed_height) ? ConvertValue_ArrayPointIntoPoint(x - 1) : ConvertValue_ArrayPointIntoPoint(x);
                     }
 
                     // UPDATE OF VARIABLES
