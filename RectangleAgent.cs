@@ -205,18 +205,13 @@ namespace GeometryFriendsAgents
                                 currentAction = actionSelector.GetCurrentAction(rectangleInfo, (int)circleInfo.X, 0, true);
                             }
 
-                            else if (nextMove.Value.type == movementType.STAIR_GAP || nextMove.Value.type == movementType.MORPH_DOWN)
+                            else if (nextMove.Value.type == movementType.TRANSITION || nextMove.Value.type == movementType.MORPH_DOWN)
                             {
-                                if (rectangleInfo.Height > nextMove.Value.precondition.height)
-                                {
+                                if (rectangleInfo.Height >= Math.Max(nextMove.Value.precondition.height, 53))
                                     currentAction = Moves.MORPH_DOWN;
-                                }
 
                                 else
-                                {
-                                    //currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextMove.Value.precondition.position.x, nextMove.Value.precondition.horizontal_velocity, nextMove.Value.precondition.right_direction);
                                     currentAction = nextMove.Value.precondition.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
-                                }
                             }
 
                             else if (nextMove.Value.type == movementType.MORPH_UP)
@@ -257,7 +252,7 @@ namespace GeometryFriendsAgents
                             currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetX, 0, nextMove.Value.precondition.right_direction);
                         }
 
-                        else if (nextMove.Value.type == movementType.STAIR_GAP)
+                        else if (nextMove.Value.type == movementType.TRANSITION)
                         {
                             currentAction = nextMove.Value.precondition.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                         }
@@ -320,12 +315,7 @@ namespace GeometryFriendsAgents
             if (nextMove.HasValue)
             {
 
-                if (!actionSelector.IsGoal(rectangleInfo, nextMove.Value.precondition) || cooperation == CooperationStatus.RIDE_HELP)
-                {
-                    return;
-                }
-
-                if (-MAX_VELOCITYY <= rectangleInfo.VelocityY && rectangleInfo.VelocityY <= MAX_VELOCITYY)
+                if (actionSelector.IsGoal(rectangleInfo, nextMove.Value.precondition) && Math.Abs(rectangleInfo.VelocityY) <= MAX_VELOCITYY)
                 {
 
                     targetPointX_InAir = (nextMove.Value.reachablePlatform.leftEdge + nextMove.Value.reachablePlatform.rightEdge) / 2;
@@ -350,12 +340,10 @@ namespace GeometryFriendsAgents
 
                     if (cooperation == CooperationStatus.RIDE_HELP)
                     {
-                        int targetX = nextMove.Value.precondition.right_direction ? (int)circleInfo.X + 50 : (int)circleInfo.X - 50;
-                        currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetX, 0, nextMove.Value.precondition.right_direction);
                         return;
                     }
 
-                    if (nextMove.Value.type == movementType.STAIR_GAP)
+                    if (nextMove.Value.type == movementType.TRANSITION)
                     {
                         currentAction = nextMove.Value.precondition.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                     }
@@ -380,13 +368,6 @@ namespace GeometryFriendsAgents
                     {
                         currentAction = Moves.MORPH_UP;
                     }
-
-                    if (nextMove.Value.type == movementType.RIDE && cooperation == CooperationStatus.UNSYNCHRONIZED && Math.Abs(nextMove.Value.precondition.height - rectangleInfo.Height) < 5)
-                    {
-                        cooperation = CooperationStatus.SYNCHRONIZED;
-                    }
-
-
 
                 }
             }

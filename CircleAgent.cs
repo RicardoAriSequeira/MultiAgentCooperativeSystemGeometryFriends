@@ -163,7 +163,7 @@ namespace GeometryFriendsAgents
 
                         else if (Math.Abs(circleInfo.VelocityY) <= MAX_VELOCITYY)
                         {
-                            if (nextMove.Value.type == movementType.STAIR_GAP)
+                            if (nextMove.Value.type == movementType.TRANSITION)
                             {
                                 currentAction = nextMove.Value.precondition.right_direction ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
                             }
@@ -198,7 +198,7 @@ namespace GeometryFriendsAgents
                         {
                             currentAction = Moves.NO_ACTION;
                         }
-                        else if (nextMove.Value.type == movementType.STAIR_GAP)
+                        else if (nextMove.Value.type == movementType.TRANSITION)
                         {
                             currentAction = nextMove.Value.precondition.right_direction ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
                         }
@@ -232,14 +232,8 @@ namespace GeometryFriendsAgents
                     cooperation = CooperationStatus.RIDE;
                 }
 
-                if (!actionSelector.IsGoal(circleInfo, nextMove.Value.precondition))
+                if (actionSelector.IsGoal(circleInfo, nextMove.Value.precondition) && Math.Abs(circleInfo.VelocityY) <= MAX_VELOCITYY)
                 {
-                    return;
-                }
-
-                if (Math.Abs(circleInfo.VelocityY) <= MAX_VELOCITYY)
-                {
-
                     targetPointX_InAir = (nextMove.Value.reachablePlatform.leftEdge + nextMove.Value.reachablePlatform.rightEdge) / 2;
 
                     if (nextMove.Value.type == movementType.JUMP && cooperation == CooperationStatus.SINGLE)
@@ -263,10 +257,8 @@ namespace GeometryFriendsAgents
                         }
 
                     }
-
                 }
             }
-
         }
 
         private bool IsGetCollectible()
