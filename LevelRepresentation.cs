@@ -10,7 +10,7 @@ namespace GeometryFriendsAgents
         public const int BLACK = -1;
         public const int GREEN = -2;
         public const int YELLOW = -3;
-        public const int COOPERATION = -4;
+        public const int RECTANGLE = -4;
 
         public const int PIXEL_LENGTH = 8;
         private int[] COLLECTIBLE_SIZE = new int[] { 2, 4, 6, 6, 4, 2 };
@@ -202,7 +202,7 @@ namespace GeometryFriendsAgents
                     {
                         if (0 <= i && i < levelArray.GetLength(0) && 0 <= j && j < levelArray.GetLength(1))
                         {
-                            levelArray[i, j] = COOPERATION;
+                            levelArray[i, j] = RECTANGLE;
                         }
                     }
 

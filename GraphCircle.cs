@@ -68,30 +68,6 @@ namespace GeometryFriendsAgents
             return GetCirclePixels(center, height/2);
         }
 
-        protected override collideType GetCollideType(Point center, bool ascent, bool rightMove, int radius)
-        {
-            LevelRepresentation.ArrayPoint centerArray = LevelRepresentation.ConvertPointIntoArrayPoint(center, false, false);
-            int highestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint(center.y - radius, false);
-            int lowestY = LevelRepresentation.ConvertValue_PointIntoArrayPoint(center.y + radius, true);
-
-            if (!ascent)
-            {
-                if (levelArray[lowestY, centerArray.xArray] == LevelRepresentation.BLACK || levelArray[lowestY, centerArray.xArray] == LevelRepresentation.GREEN)
-                {
-                    return collideType.FLOOR;
-                }
-            }
-            else
-            {
-                if (levelArray[highestY, centerArray.xArray] == LevelRepresentation.BLACK || levelArray[lowestY, centerArray.xArray] == LevelRepresentation.GREEN)
-                {
-                    return collideType.CEILING;
-                }
-            }
-
-            return collideType.OTHER;
-        }
-
         public void DeleteCooperationPlatforms()
         {
             int p = 0;

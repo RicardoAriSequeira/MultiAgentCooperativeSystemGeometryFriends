@@ -180,13 +180,13 @@ namespace GeometryFriendsAgents
                     if (nextMove.HasValue)
                     {
 
-                        if ((cooperation == CooperationStatus.SYNCHRONIZED) || (IsCircleInTheWay() && cooperation == CooperationStatus.SINGLE))
+                        if (cooperation == CooperationStatus.SYNCHRONIZED || IsCircleInTheWay())
                         {
                             currentAction = Moves.NO_ACTION;
                             return;
                         }
 
-                        if (-MAX_VELOCITYY <= rectangleInfo.VelocityY && rectangleInfo.VelocityY <= MAX_VELOCITYY)
+                        if (Math.Abs(rectangleInfo.VelocityY) <= MAX_VELOCITYY)
                         {
 
                             if (cooperation == CooperationStatus.RIDE_HELP)
@@ -205,16 +205,19 @@ namespace GeometryFriendsAgents
                                 currentAction = actionSelector.GetCurrentAction(rectangleInfo, (int)circleInfo.X, 0, true);
                             }
 
+                            else if (nextMove.Value.type == movementType.TRANSITION && rectangleInfo.Height > Math.Max(nextMove.Value.state.height, 53))
+                            {
+                                currentAction = Moves.MORPH_DOWN;
+                            }
+
+                            else if (nextMove.Value.type == movementType.TRANSITION && rectangleInfo.Height < nextMove.Value.state.height - PIXEL_LENGTH)
+                            {
+                                currentAction = Moves.MORPH_UP;
+                            }
+
                             else if (nextMove.Value.type == movementType.TRANSITION)
                             {
-                                if (rectangleInfo.Height >= Math.Max(nextMove.Value.state.height, 53))
-                                    currentAction = Moves.MORPH_DOWN;
-
-                                else if (rectangleInfo.Height < nextMove.Value.state.height - PIXEL_LENGTH)
-                                    currentAction = Moves.MORPH_UP;
-
-                                else
-                                    currentAction = nextMove.Value.state.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                                currentAction = nextMove.Value.state.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                             }
 
                             else
@@ -236,44 +239,19 @@ namespace GeometryFriendsAgents
                     if (nextMove.HasValue)
                     {
 
-                        if (cooperation == CooperationStatus.RIDE_HELP)
+                        if (nextMove.Value.type == movementType.TRANSITION)
                         {
-                            int targetX = nextMove.Value.state.right_direction ? (int)circleInfo.X + 50 : (int)circleInfo.X - 50;
-                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetX, 0, nextMove.Value.state.right_direction);
+                            currentAction = nextMove.Value.state.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                         }
 
-                        else if (nextMove.Value.type == movementType.TRANSITION)
+                        else if (nextMove.Value.collideCeiling && rectangleInfo.VelocityY < 0)
                         {
-                            if (rectangleInfo.Height >= Math.Max(nextMove.Value.state.height, 53))
-                                currentAction = Moves.MORPH_DOWN;
-
-                            else if (rectangleInfo.Height < nextMove.Value.state.height - PIXEL_LENGTH)
-                                currentAction = Moves.MORPH_UP;
-
-                            else
-                                currentAction = nextMove.Value.state.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
-                        }
-
-                        else if (nextMove.Value.type == movementType.GAP)
-                        {
-                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextMove.Value.state.position.x, nextMove.Value.state.horizontal_velocity, nextMove.Value.state.right_direction);
-                        }
-
-                        else if (nextMove.Value.type == movementType.FALL && nextMove.Value.state.horizontal_velocity == 0 && rectangleInfo.Height <= nextMove.Value.state.height)
-                        {
-                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextMove.Value.state.position.x, nextMove.Value.state.horizontal_velocity, nextMove.Value.state.right_direction);
+                            currentAction = Moves.NO_ACTION;
                         }
 
                         else
                         {
-                            if (nextMove.Value.collideCeiling && rectangleInfo.VelocityY < 0)
-                            {
-                                currentAction = Moves.NO_ACTION;
-                            }
-                            else
-                            {
-                                currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetPointX_InAir, 0, true);
-                            }
+                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetPointX_InAir, 0, true);
                         }
                     }
                 }
@@ -286,7 +264,7 @@ namespace GeometryFriendsAgents
                 lastMoveTime = DateTime.Now;
             }
 
-            if (nextMove.HasValue)
+            if (nextMove.HasValue && cooperation != CooperationStatus.RIDE_HELP)
             {
 
                 if (actionSelector.IsGoal(rectangleInfo, nextMove.Value.state) && Math.Abs(rectangleInfo.VelocityY) <= MAX_VELOCITYY)
@@ -294,54 +272,26 @@ namespace GeometryFriendsAgents
 
                     targetPointX_InAir = (nextMove.Value.reachablePlatform.leftEdge + nextMove.Value.reachablePlatform.rightEdge) / 2;
 
-                    if (cooperation == CooperationStatus.RIDE)
-                    {
-                        if (rectangleInfo.Height > nextMove.Value.state.height + 4)
-                            currentAction = Moves.MORPH_DOWN;
-
-                        else if (rectangleInfo.Height < nextMove.Value.state.height - 4)
-                            currentAction = Moves.MORPH_UP;
-                        else
-                            cooperation = CooperationStatus.SYNCHRONIZED;
-
-                    }
-
-                    if (cooperation == CooperationStatus.RIDE_HELP)
-                    {
-                        return;
-                    }
-
-                    else if (nextMove.Value.type == movementType.TRANSITION)
-                    {
-                        if (rectangleInfo.Height >= Math.Max(nextMove.Value.state.height, 53))
-                            currentAction = Moves.MORPH_DOWN;
-
-                        else if (rectangleInfo.Height < nextMove.Value.state.height - PIXEL_LENGTH)
-                            currentAction = Moves.MORPH_UP;
-
-                        else
-                            currentAction = nextMove.Value.state.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
-                    }
-
-                    if ((nextMove.Value.type == movementType.COLLECT || nextMove.Value.type == movementType.GAP) && rectangleInfo.Height <= Math.Max(Math.Min(nextMove.Value.state.height, 192), 53))
-                    {
-                         currentAction = Moves.MORPH_UP;            
-                    }
-
-                    if (nextMove.Value.type == movementType.RIDE && rectangleInfo.Height > Math.Max(nextMove.Value.state.height, 53))
-                    {
-                         currentAction = Moves.MORPH_DOWN;
-                    }
-
-                    if (nextMove.Value.type == movementType.FALL && rectangleInfo.Height > nextMove.Value.state.height)
+                    if (rectangleInfo.Height >= Math.Max(nextMove.Value.state.height, 53) &&
+                        (nextMove.Value.type == movementType.RIDE || nextMove.Value.type == movementType.TRANSITION))
                     {
                         currentAction = Moves.MORPH_DOWN;
                     }
 
-                    if (nextMove.Value.type == movementType.FALL && nextMove.Value.state.horizontal_velocity == 0 && rectangleInfo.Height < 190)
+                    else if (rectangleInfo.Height < nextMove.Value.state.height - PIXEL_LENGTH &&
+                             (cooperation == CooperationStatus.RIDE ||
+                             nextMove.Value.type == movementType.GAP ||
+                             nextMove.Value.type == movementType.COLLECT ||
+                             nextMove.Value.type == movementType.TRANSITION))
                     {
                         currentAction = Moves.MORPH_UP;
                     }
+
+                    else if (nextMove.Value.type == movementType.TRANSITION)
+                        currentAction = nextMove.Value.state.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+
+                    else if (cooperation == CooperationStatus.RIDE)
+                        cooperation = CooperationStatus.SYNCHRONIZED;
 
                 }
             }
