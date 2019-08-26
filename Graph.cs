@@ -326,7 +326,7 @@ namespace GeometryFriendsAgents
 
                     if (mI.type != movementType.COLLECT && i.type != movementType.COLLECT)
                     {
-                        if (mI.state.right_direction == i.state.right_direction || ((mI.type == movementType.JUMP && i.type == movementType.JUMP) && (mI.state.horizontal_velocity == 0 || i.state.horizontal_velocity == 0)))
+                        if (mI.state.right_direction == i.state.right_direction || (mI.type == movementType.JUMP && i.type == movementType.JUMP && (mI.state.horizontal_velocity == 0 || i.state.horizontal_velocity == 0)))
                         {
                             if (mI.type > i.type)
                             {
@@ -402,8 +402,8 @@ namespace GeometryFriendsAgents
             List<ArrayPoint> circlePixels = new List<ArrayPoint>();
 
             ArrayPoint circleCenterArray = ConvertPointIntoArrayPoint(circleCenter, false, false);
-            int circleHighestY = ConvertValue_PointIntoArrayPoint(circleCenter.y - radius, false);
-            int circleLowestY = ConvertValue_PointIntoArrayPoint(circleCenter.y + radius, true);
+            int circleHighestY = PointToArrayPoint(circleCenter.y - radius, false);
+            int circleLowestY = PointToArrayPoint(circleCenter.y + radius, true);
 
 
             for (int i = circleHighestY; i <= circleLowestY; i++)
@@ -423,8 +423,8 @@ namespace GeometryFriendsAgents
                     circleWidth = radius;
                 }
 
-                int circleLeftX = ConvertValue_PointIntoArrayPoint((int)(circleCenter.x - circleWidth), false);
-                int circleRightX = ConvertValue_PointIntoArrayPoint((int)(circleCenter.x + circleWidth), true);
+                int circleLeftX = PointToArrayPoint((int)(circleCenter.x - circleWidth), false);
+                int circleRightX = PointToArrayPoint((int)(circleCenter.x + circleWidth), true);
 
                 for (int j = circleLeftX; j <= circleRightX; j++)
                 {

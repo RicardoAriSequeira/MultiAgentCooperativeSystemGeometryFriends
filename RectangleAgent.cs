@@ -480,16 +480,16 @@ namespace GeometryFriendsAgents
 
             List<ArrayPoint> pixelsToMorph = new List<ArrayPoint>();
 
-            int lowestY = ConvertValue_PointIntoArrayPoint((int) rectangleInfo.Y + ((int)rectangleInfo.Height / 2), false);
-            int highestY = ConvertValue_PointIntoArrayPoint((int)rectangleInfo.Y - (200 - ((int)rectangleInfo.Height / 2)), false);
+            int lowestY = PointToArrayPoint((int) rectangleInfo.Y + ((int)rectangleInfo.Height / 2), false);
+            int highestY = PointToArrayPoint((int)rectangleInfo.Y - (200 - ((int)rectangleInfo.Height / 2)), false);
 
             int rectangleWidth = RECTANGLE_AREA / (int)rectangleInfo.Height;
 
-            int lowestLeft = ConvertValue_PointIntoArrayPoint((int)rectangleInfo.X - (rectangleWidth / 2), false);
-            int highestLeft = ConvertValue_PointIntoArrayPoint((int)rectangleInfo.X - (MIN_RECTANGLE_HEIGHT / 2), false);
+            int lowestLeft = PointToArrayPoint((int)rectangleInfo.X - (rectangleWidth / 2), false);
+            int highestLeft = PointToArrayPoint((int)rectangleInfo.X - (MIN_RECTANGLE_HEIGHT / 2), false);
 
-            int lowestRight = ConvertValue_PointIntoArrayPoint((int)rectangleInfo.X + (MIN_RECTANGLE_HEIGHT / 2), false);
-            int highestRight = ConvertValue_PointIntoArrayPoint((int)rectangleInfo.X + (rectangleWidth / 2), false);
+            int lowestRight = PointToArrayPoint((int)rectangleInfo.X + (MIN_RECTANGLE_HEIGHT / 2), false);
+            int highestRight = PointToArrayPoint((int)rectangleInfo.X + (rectangleWidth / 2), false);
 
             for (int y = highestY; y <= lowestY; y++)
             {

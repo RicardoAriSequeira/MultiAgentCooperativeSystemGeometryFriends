@@ -49,7 +49,7 @@ namespace GeometryFriendsAgents
 
         public static ArrayPoint ConvertPointIntoArrayPoint(Point value, bool xNegative, bool yNegative)
         {
-            return new ArrayPoint(ConvertValue_PointIntoArrayPoint(value.x, xNegative), ConvertValue_PointIntoArrayPoint(value.y, yNegative));
+            return new ArrayPoint(PointToArrayPoint(value.x, xNegative), PointToArrayPoint(value.y, yNegative));
         }
 
         public static Point ConvertArrayPointIntoPoint(ArrayPoint value)
@@ -57,7 +57,7 @@ namespace GeometryFriendsAgents
             return new Point(ConvertValue_ArrayPointIntoPoint(value.xArray), ConvertValue_ArrayPointIntoPoint(value.yArray));
         }
 
-        public static int ConvertValue_PointIntoArrayPoint(int pointValue, bool negative)
+        public static int PointToArrayPoint(int pointValue, bool negative)
         {
             int arrayValue = (pointValue - GameInfo.LEVEL_ORIGINAL) / PIXEL_LENGTH;
 

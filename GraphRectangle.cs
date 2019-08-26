@@ -44,12 +44,12 @@ namespace GeometryFriendsAgents
         {
             ArrayPoint rectangleCenterArray = ConvertPointIntoArrayPoint(center, false, false);
 
-            int rectangleHighestY = ConvertValue_PointIntoArrayPoint(center.y - (height / 2), false);
-            int rectangleLowestY = ConvertValue_PointIntoArrayPoint(center.y + (height / 2), true);
+            int rectangleHighestY = PointToArrayPoint(center.y - (height / 2), false);
+            int rectangleLowestY = PointToArrayPoint(center.y + (height / 2), true);
 
             float rectangleWidth = RECTANGLE_AREA / height;
-            int rectangleLeftX = ConvertValue_PointIntoArrayPoint((int)(center.x - (rectangleWidth / 2)), false);
-            int rectangleRightX = ConvertValue_PointIntoArrayPoint((int)(center.x + (rectangleWidth / 2)), true);
+            int rectangleLeftX = PointToArrayPoint((int)(center.x - (rectangleWidth / 2)), false);
+            int rectangleRightX = PointToArrayPoint((int)(center.x + (rectangleWidth / 2)), true);
 
             List<ArrayPoint> rectanglePixels = new List<ArrayPoint>();
 

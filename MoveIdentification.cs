@@ -219,144 +219,113 @@ namespace GeometryFriendsAgents
             }
         }
 
-        public static void Trajectory(Graph graph, Platform fromPlatform, State state, movementType movementType)
+        public static void Trajectory(Graph graph, Platform from, State state, movementType movementType)
         {
 
-            if (!graph.EnoughLength(fromPlatform, state)) return;
+            if (!graph.EnoughLength(from, state)) return;
 
-            float pathLength = 0;
-            Point prevCollidePoint;
-            bool collideCeiling = false;
-            Point start = new Point(state.position.x, state.position.y);
-            Point collidePoint = start;
-            collideType collideType = collideType.OTHER;
-            bool[] collectible_onPath = new bool[graph.nCollectibles];
+            float length = 0;
+            bool ceiling = false;
+            collideType collision_type = collideType.OTHER;
+            bool[] collectibles = new bool[graph.nCollectibles];
             int fake_radius = Math.Min(graph.AREA / state.height, state.height) / 2;
-            float collideVelocityX = state.right_direction ? state.horizontal_velocity : - state.horizontal_velocity;
-            float collideVelocityY = (movementType == movementType.JUMP) ? JUMP_VELOCITYY : FALL_VELOCITYY;
+            float velocity_y = (movementType == movementType.JUMP) ? JUMP_VELOCITYY : FALL_VELOCITYY;
+            float velocity_x = state.right_direction ? state.horizontal_velocity : -state.horizontal_velocity;
+
+            Point start = new Point(state.position.x, state.position.y);
+            Point collision = start, prev_collision = collision;
 
             do
             {
-                prevCollidePoint = collidePoint;
+                Point center = collision;
 
-                GetPathInfo(graph, collidePoint, collideVelocityX, collideVelocityY, ref collidePoint, ref collideType, ref collideVelocityX, ref collideVelocityY, ref collectible_onPath, ref pathLength, fake_radius);
-
-
-                collideCeiling = (collideType == collideType.CEILING) ? true : collideCeiling;
-
-                if (collideType == collideType.RECTANGLE)
+                for (float time = TIME_STEP; true; time += TIME_STEP)
                 {
-                    Platform? toPlatform = graph.GetPlatform(collidePoint, state.height);
+                    Point previousCenter = center;
+                    center = GetCurrentCenter(collision, velocity_x, velocity_y, time);
+                    List<ArrayPoint> pixels = GetCirclePixels(center, fake_radius);
 
-                    if (toPlatform.HasValue)
+                    if (Collision(graph, pixels, center, velocity_y - GRAVITY * (time - TIME_STEP), fake_radius, ref collision_type))
+                    {
+                        prev_collision = collision;
+                        collision = previousCenter;
+                        velocity_x = (collision_type == collideType.CEILING) ? velocity_x / 3 : 0;
+                        velocity_y = (collision_type == collideType.CEILING) ? - (velocity_y - GRAVITY * (time - TIME_STEP)) / 3 : 0;
+                        break;
+                    }
+
+                    collectibles = Utilities.GetOrMatrix(collectibles, CollectiblesOnPixels(graph.levelArray, pixels, graph.nCollectibles));
+                    length += (float)Math.Sqrt(Math.Pow(center.x - previousCenter.x, 2) + Math.Pow(center.y - previousCenter.y, 2));
+
+                }
+
+                ceiling = (collision_type == collideType.CEILING) ? true : ceiling;
+
+                if (collision_type == collideType.FLOOR || collision_type == collideType.RECTANGLE)
+                {
+
+                    if (fake_radius != CIRCLE_RADIUS && fake_radius != SQUARE_HEIGHT / 2)
+                        collision.y -= Math.Max((state.height / 2) - fake_radius - PIXEL_LENGTH, 0);
+
+                    Platform? to = graph.GetPlatform(collision, state.height);
+
+                    if (to.HasValue)
                     {
                         if (movementType == movementType.FALL)
                             start.x = state.right_direction ? start.x - PIXEL_LENGTH : start.x + PIXEL_LENGTH;
 
-                        int distance_to_land = Math.Abs(collidePoint.x - start.x);
+                        State? partner_state = null;
+                        bool possible_rectangle = collision_type == collideType.RECTANGLE && (Math.Abs(collision.x - start.x) >= 140 || from.id == to.Value.id);
 
-                        if (distance_to_land >= 140 || fromPlatform.id == toPlatform.Value.id)
+                        if (collision_type == collideType.FLOOR || possible_rectangle)
                         {
-                            int rectangle_position_x = Math.Min(Math.Max(collidePoint.x, 136), 1064);
-                            Point rectangle_position = new Point(rectangle_position_x, collidePoint.y + CIRCLE_RADIUS + (MIN_RECTANGLE_HEIGHT / 2));
-                            State rectangle_state = new State(rectangle_position, MIN_RECTANGLE_HEIGHT, 0, true);
+                            if (possible_rectangle)
+                            {
+                                int rectangle_x = Math.Min(Math.Max(collision.x, 136), 1064);
+                                Point rectangle_position = new Point(rectangle_x, collision.y + CIRCLE_RADIUS + (MIN_RECTANGLE_HEIGHT / 2));
+                                partner_state = new State(rectangle_position, MIN_RECTANGLE_HEIGHT, 0, true);
+                            }
 
                             State new_state = new State(start, state.height, state.horizontal_velocity, state.right_direction);
-                            Move new_move = new Move(toPlatform.Value, new_state, collidePoint, movementType, collectible_onPath, (int)pathLength, collideCeiling, rectangle_state);
-                            graph.AddMove(fromPlatform, new_move);
+                            Move new_move = new Move(to.Value, new_state, collision, movementType, collectibles, (int)length, ceiling, partner_state);
+                            graph.AddMove(from, new_move);
                         }
-
                     }
-
                 }
 
-                if (prevCollidePoint.Equals(collidePoint)) break;
-
-            }
-            while (collideType != collideType.FLOOR);
-
-            if (collideType == collideType.FLOOR)
-            {
-
-                if (fake_radius != CIRCLE_RADIUS && fake_radius != SQUARE_HEIGHT/2)
-                    collidePoint.y -= Math.Max((state.height / 2) - fake_radius - PIXEL_LENGTH, 0);
-
-                Platform? toPlatform = graph.GetPlatform(collidePoint, state.height);
-
-                if (toPlatform.HasValue)
-                {
-                    if (movementType == movementType.FALL)
-                        start.x = state.right_direction ? start.x - PIXEL_LENGTH : start.x + PIXEL_LENGTH;
-
-                    State new_state = new State(start, state.height, state.horizontal_velocity, state.right_direction);
-                    Move new_move = new Move(toPlatform.Value, new_state, collidePoint, movementType, collectible_onPath, (int)pathLength, collideCeiling);
-                    graph.AddMove(fromPlatform, new_move);
-
-                }
-            }
+            } while (collision_type != collideType.FLOOR && !prev_collision.Equals(collision));
 
         }
 
-        private static void GetPathInfo(Graph graph, Point movePoint, float velocityX, float velocityY, ref Point collidePoint, ref collideType collideType, ref float collideVelocityX, ref float collideVelocityY, ref bool[] collectible_onPath, ref float pathLength, int radius)
-        {
-
-            Point currentCenter = movePoint;
-
-            for (int i = 1; true; i++)
-            {
-                float currentTime = i * TIME_STEP;
-
-                Point previousCenter = currentCenter;
-                currentCenter = GetCurrentCenter(movePoint, velocityX, velocityY, currentTime);
-                List<ArrayPoint> pixels = GetCirclePixels(currentCenter, radius);
-
-                ArrayPoint centerArray = ConvertPointIntoArrayPoint(currentCenter, false, false);
-                int lowestY = ConvertValue_PointIntoArrayPoint(currentCenter.y + radius, true);
-                bool ascent = (velocityY - GRAVITY * (i - 1) * TIME_STEP) >= 0;
-
-                if (!ascent && collideType != collideType.RECTANGLE && graph.levelArray[lowestY, centerArray.xArray] == RECTANGLE)
-                {
-                    collidePoint = previousCenter;
-                    collideType = collideType.RECTANGLE;
-                    collideVelocityX = 0;
-                    collideVelocityY = 0;
-                    return;
-                }
-
-                else if (graph.ObstacleOnPixels(pixels))
-                {
-                    collidePoint = previousCenter;
-                    collideType = GetCollideType(graph, currentCenter, velocityY - GRAVITY * (i - 1) * TIME_STEP >= 0, radius);
-                    collideVelocityX = (collideType == collideType.CEILING) ? velocityX / 3 : 0;
-                    collideVelocityY = (collideType == collideType.CEILING) ? -(velocityY - GRAVITY * (i - 1) * TIME_STEP) / 3 : 0;
-                    return;
-                }
-                else
-                {
-                    collectible_onPath = Utilities.GetOrMatrix(collectible_onPath, CollectiblesOnPixels(graph.levelArray, pixels, graph.nCollectibles));
-                    pathLength += (float)Math.Sqrt(Math.Pow(currentCenter.x - previousCenter.x, 2) + Math.Pow(currentCenter.y - previousCenter.y, 2));
-                }
-
-            }
-        }
-
-        private static collideType GetCollideType(Graph graph, Point center, bool ascent, int radius)
+        public static bool Collision(Graph graph, List<ArrayPoint> pixels, Point center, float velocityY, int radius, ref collideType collide_type)
         {
             ArrayPoint centerArray = ConvertPointIntoArrayPoint(center, false, false);
-            int highestY = ConvertValue_PointIntoArrayPoint(center.y - radius, false);
-            int lowestY = ConvertValue_PointIntoArrayPoint(center.y + radius, true);
+            int highestY = PointToArrayPoint(center.y - radius, false);
+            int lowestY = PointToArrayPoint(center.y + radius, true);
 
-            if (!ascent && (graph.levelArray[lowestY, centerArray.xArray] == BLACK || graph.levelArray[lowestY, centerArray.xArray] == graph.OBSTACLE_COLOUR))
+            if (graph.ObstacleOnPixels(pixels) || (velocityY < 0 && collide_type != collideType.RECTANGLE && graph.levelArray[lowestY, centerArray.xArray] == RECTANGLE))
             {
-                return collideType.FLOOR;
+                if (velocityY < 0 && (graph.levelArray[lowestY, centerArray.xArray] == BLACK || graph.levelArray[lowestY, centerArray.xArray] == graph.OBSTACLE_COLOUR))
+                {
+                    collide_type = collideType.FLOOR;
+                }
+
+                else if (velocityY < 0 && graph.levelArray[lowestY, centerArray.xArray] == RECTANGLE)
+                {
+                    collide_type = collideType.RECTANGLE;
+                }
+
+                else if (graph.levelArray[highestY, centerArray.xArray] == BLACK || graph.levelArray[highestY, centerArray.xArray] == graph.OBSTACLE_COLOUR)
+                {
+                    collide_type = collideType.CEILING;
+                }
+
+                else collide_type = collideType.OTHER;
+
+                return true;
             }
 
-            else if (graph.levelArray[highestY, centerArray.xArray] == BLACK || graph.levelArray[highestY, centerArray.xArray] == graph.OBSTACLE_COLOUR)
-            {
-                return collideType.CEILING;
-            }
-
-            return collideType.OTHER;
+            return false;
         }
 
     }
