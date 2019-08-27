@@ -216,11 +216,6 @@ namespace GeometryFriendsAgents
                     }
                 }
 
-                if (!nextMove.HasValue)
-                {
-                    currentAction = actionSelector.GetCurrentAction(circleInfo, (int)circleInfo.X, 0, false);
-                }
-
                 lastMoveTime = DateTime.Now;
             }
 

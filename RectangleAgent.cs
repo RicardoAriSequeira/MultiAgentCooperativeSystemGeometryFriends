@@ -128,8 +128,6 @@ namespace GeometryFriendsAgents
         public override Moves GetAction()
         {
             return training ? RL.GetAction(rectangleInfo) : currentAction;
-            //return training ? RL.GetBestAction(rectangleInfo) : currentAction;
-            //return currentAction;   
         }
 
         //implements abstract rectangle interface: updates the agent state logic and predictions
@@ -195,7 +193,8 @@ namespace GeometryFriendsAgents
                                 currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetX, 0, nextMove.Value.state.right_direction);
                             }
 
-                            else if (nextMove.Value.type == movementType.GAP && rectangleInfo.Height > Math.Max((RECTANGLE_AREA / nextMove.Value.state.height) - 1, MIN_RECTANGLE_HEIGHT + 3))
+                            else if (nextMove.Value.type == movementType.FALL && nextMove.Value.state.horizontal_velocity == 0 &&
+                                     rectangleInfo.Height > Math.Max((RECTANGLE_AREA / nextMove.Value.state.height) - 1, MIN_RECTANGLE_HEIGHT + 3))
                             {
                                 currentAction = Moves.MORPH_DOWN;
                             }
@@ -220,45 +219,28 @@ namespace GeometryFriendsAgents
                                 currentAction = nextMove.Value.state.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                             }
 
-                            else
-                            {
-                                currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextMove.Value.state.position.x, nextMove.Value.state.horizontal_velocity, nextMove.Value.state.right_direction);
-                            }
+                            else currentAction = actionSelector.GetCurrentAction(rectangleInfo, nextMove.Value.state.position.x, nextMove.Value.state.horizontal_velocity, nextMove.Value.state.right_direction);
+
 
                         }
-                        else
-                        {
-                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetPointX_InAir, 0, true);
-                        }
+
+                        else currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetPointX_InAir, 0, true);
+
                     }
                 }
 
-                // rectangle is not on a platform
+                // NOT ON A PLATFORM
                 else
                 {
                     if (nextMove.HasValue)
                     {
 
                         if (nextMove.Value.type == movementType.TRANSITION)
-                        {
                             currentAction = nextMove.Value.state.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
-                        }
 
-                        else if (nextMove.Value.collideCeiling && rectangleInfo.VelocityY < 0)
-                        {
-                            currentAction = Moves.NO_ACTION;
-                        }
+                        else currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetPointX_InAir, 0, true);
 
-                        else
-                        {
-                            currentAction = actionSelector.GetCurrentAction(rectangleInfo, targetPointX_InAir, 0, true);
-                        }
                     }
-                }
-
-                if (!nextMove.HasValue)
-                {
-                    currentAction = actionSelector.GetCurrentAction(rectangleInfo, (int)rectangleInfo.X, 0, false);
                 }
 
                 lastMoveTime = DateTime.Now;
@@ -280,7 +262,7 @@ namespace GeometryFriendsAgents
 
                     else if (rectangleInfo.Height < nextMove.Value.state.height - PIXEL_LENGTH &&
                              (cooperation == CooperationStatus.RIDE ||
-                             nextMove.Value.type == movementType.GAP ||
+                             (nextMove.Value.type == movementType.FALL && nextMove.Value.state.horizontal_velocity == 0) ||
                              nextMove.Value.type == movementType.COLLECT ||
                              nextMove.Value.type == movementType.TRANSITION))
                     {
@@ -347,16 +329,13 @@ namespace GeometryFriendsAgents
 
             if (currentPlatform.HasValue)
             {
-                if (!previousPlatform.HasValue)
+                if (!previousPlatform.HasValue ||
+                    (currentPlatform.Value.id != previousPlatform.Value.id && currentPlatform.Value.type != platformType.GAP))
                 {
                     previousPlatform = currentPlatform;
                     return true;
-                }
-                else if (currentPlatform.Value.id != previousPlatform.Value.id &&currentPlatform.Value.type != Graph.platformType.GAP)
-                {
-                    previousPlatform = currentPlatform;
-                    return true;
-                }
+                } 
+
             }
 
             previousPlatform = currentPlatform;

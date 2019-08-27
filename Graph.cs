@@ -15,7 +15,7 @@ namespace GeometryFriendsAgents
 
         public enum movementType
         {
-            COLLECT, RIDE, RIDING, TRANSITION, FALL, JUMP, GAP
+            COLLECT, RIDE, RIDING, TRANSITION, FALL, JUMP
         };
 
         public enum platformType

@@ -101,6 +101,77 @@ namespace GeometryFriendsAgents
             return false;
         }
 
+        //public Moves GetCurrentAction(CircleRepresentation cI, State st)
+        //{
+        //    int stateNum = GetStateNum(cI, st.position.x, st.right_direction);
+
+        //    int currentActionNum;
+
+        //    float distanceX = Math.Abs(cI.X - st.position.x);
+
+        //    if (distanceX <= -MAX_D)
+        //    {
+        //        currentActionNum = ACCELERATE;
+        //    }
+        //    else if (distanceX >= MAX_D)
+        //    {
+        //        currentActionNum = DEACCELERATE;
+        //    }
+        //    else
+        //    {
+        //        currentActionNum = GetOptimalActionNum(stateNum, st.horizontal_velocity);
+        //    }
+
+        //    Moves currentAction;
+
+        //    if (currentActionNum == ACCELERATE)
+        //    {
+        //        currentAction = st.right_direction ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
+        //    }
+        //    else
+        //    {
+        //        currentAction = st.right_direction ? Moves.ROLL_LEFT : Moves.ROLL_RIGHT;
+        //    }
+
+        //    return currentAction;
+        //}
+
+        //public Moves GetCurrentAction(RectangleRepresentation rI, State st)
+        //{
+
+        //    int stateNum = GetStateNum(rI, st.position.x, st.right_direction);
+
+        //    int currentActionNum;
+
+        //    float distanceX = Math.Abs(rI.X - st.position.x);
+
+        //    if (distanceX <= -MAX_D)
+        //    {
+        //        currentActionNum = ACCELERATE;
+        //    }
+        //    else if (distanceX >= MAX_D)
+        //    {
+        //        currentActionNum = DEACCELERATE;
+        //    }
+        //    else
+        //    {
+        //        currentActionNum = GetOptimalActionNum(stateNum, st.horizontal_velocity);
+        //    }
+
+        //    Moves currentAction;
+
+        //    if (currentActionNum == ACCELERATE)
+        //    {
+        //        currentAction = st.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+        //    }
+        //    else
+        //    {
+        //        currentAction = st.right_direction ? Moves.MOVE_LEFT : Moves.MOVE_RIGHT;
+        //    }
+
+        //    return currentAction;
+        //}
+
         public Moves GetCurrentAction(CircleRepresentation cI, int targetPointX, int targetVelocityX, bool rightMove)
         {
             int stateNum = GetStateNum(cI, targetPointX, rightMove);

@@ -144,10 +144,11 @@ namespace GeometryFriendsAgents
             {
                 if (!from.Equals(to))
                 {
-                    BigGapOrMorph(graph, from, to);
                     BigStair(graph, from, to);
                     if (from.height != to.height)
                         StairOrGap(graph, from, to, SQUARE_HEIGHT);
+                    else
+                        BigGapOrMorph(graph, from, to);
                 }
             }
         }
@@ -155,7 +156,7 @@ namespace GeometryFriendsAgents
         public static void BigGapOrMorph(Graph graph, Platform from, Platform to)
         {
 
-            if (from.height != to.height || (from.rightEdge != to.leftEdge && from.leftEdge != to.rightEdge)) return;
+            if (from.rightEdge != to.leftEdge && from.leftEdge != to.rightEdge) return;
 
             // CALCULATION OF START AND END POSITIONS
             bool right_direction = (from.rightEdge == to.leftEdge);
@@ -178,44 +179,39 @@ namespace GeometryFriendsAgents
                 int fall_height = RECTANGLE_AREA / Math.Min(gap_size - (2 * PIXEL_LENGTH), MIN_RECTANGLE_HEIGHT);
                 start = new Point(to.leftEdge + (gap_size / 2), to.height - (fall_height / 2));
                 State state = new State(start, fall_height, 0, right_direction);
-                Trajectory(graph, from, state, movementType.GAP);
+                Trajectory(graph, from, state, movementType.FALL);
             }
 
         }
 
-        public static void BigStair(Graph graph, Platform fromPlatform, Platform toPlatform)
+        public static void BigStair(Graph graph, Platform from, Platform to)
         {
 
-            int stairHeight = fromPlatform.height - toPlatform.height;
+            bool right_direction = false;
+            int stairHeight = from.height - to.height;
 
             if (1 <= stairHeight && stairHeight <= 90)
             {
 
-                if (toPlatform.leftEdge - 33 <= fromPlatform.rightEdge && fromPlatform.rightEdge <= toPlatform.leftEdge)
-                {
-                    Point start = new Point(fromPlatform.rightEdge, fromPlatform.height);
-                    Point end = new Point(toPlatform.leftEdge, toPlatform.height);
+                if (to.leftEdge - 33 <= from.rightEdge && from.rightEdge <= to.leftEdge)
 
-                    int pathLength = (fromPlatform.height - toPlatform.height) + Math.Abs(start.x - end.x);
-                    int requiredHeight = 3 * stairHeight + PIXEL_LENGTH;
+                    right_direction = true;
 
-                    State new_state = new State(start, requiredHeight, 150, true);
-                    Move new_move = new Move(toPlatform, new_state, end, movementType.TRANSITION, new bool[graph.nCollectibles], pathLength, false);
-                    graph.AddMove(fromPlatform, new_move);
-                }
+                else if (to.rightEdge <= from.leftEdge && from.leftEdge <= to.rightEdge + 33)
 
-                else if (toPlatform.rightEdge <= fromPlatform.leftEdge && fromPlatform.leftEdge <= toPlatform.rightEdge + 33)
-                {
-                    Point start = new Point(fromPlatform.leftEdge, fromPlatform.height);
-                    Point end = new Point(toPlatform.rightEdge, toPlatform.height);
+                    right_direction = false;
 
-                    int pathLength = (fromPlatform.height - toPlatform.height) + Math.Abs(start.x - end.x);
-                    int requiredHeight = 3 * stairHeight + PIXEL_LENGTH;
+                else return;
 
-                    State new_state = new State(start, requiredHeight, 150, false);
-                    Move new_move = new Move(toPlatform, new_state, end, movementType.TRANSITION, new bool[graph.nCollectibles], pathLength, false);
-                    graph.AddMove(fromPlatform, new_move);
-                }
+                Point start = new Point(right_direction ? from.rightEdge : from.leftEdge, from.height);
+                Point end = new Point(right_direction ? to.leftEdge : to.rightEdge, to.height);
+                int length = (from.height - to.height) + Math.Abs(start.x - end.x);
+                //int requiredHeight = 3 * stairHeight + PIXEL_LENGTH;
+                int required_height = MAX_RECTANGLE_HEIGHT;
+
+                State new_state = new State(start, required_height, 150, right_direction);
+                Move new_move = new Move(to, new_state, end, movementType.TRANSITION, new bool[graph.nCollectibles], length, false);
+                graph.AddMove(from, new_move);
             }
         }
 
