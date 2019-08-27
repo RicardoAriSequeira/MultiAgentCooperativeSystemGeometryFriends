@@ -35,14 +35,12 @@ namespace GeometryFriendsAgents
 
                     Parallel.For(0, (end - start) / (PIXEL_LENGTH * 2) + 1, j =>
                     {
-                        Point movePoint = new Point(start + j * PIXEL_LENGTH * 2, from.height - CIRCLE_RADIUS);
-                        State state = new State(movePoint, CIRCLE_HEIGHT, VELOCITYX_STEP * k, true);
+                        State state = new State(start + j * PIXEL_LENGTH * 2, from.height - CIRCLE_RADIUS, VELOCITYX_STEP * k, 0, CIRCLE_HEIGHT, true);
                         Trajectory(graph, from, state, movementType.JUMP);
                         state.right_direction = false;
                         Trajectory(graph, from, state, movementType.JUMP);
 
-                        movePoint = new Point(start + j * PIXEL_LENGTH * 2, from.height - 50 - CIRCLE_RADIUS);
-                        state = new State(movePoint, CIRCLE_HEIGHT, VELOCITYX_STEP * k, true);
+                        state = new State(start + j * PIXEL_LENGTH * 2, from.height - 50 - CIRCLE_RADIUS, VELOCITYX_STEP * k, 0, CIRCLE_HEIGHT, true);
                         Trajectory(graph, from, state, movementType.JUMP);
                         state.right_direction = false;
                         Trajectory(graph, from, state, movementType.JUMP);
@@ -54,8 +52,7 @@ namespace GeometryFriendsAgents
                 {
                     Parallel.For(0, (end - start) / (PIXEL_LENGTH * 2) + 1, j =>
                     {
-                        Point movePoint = new Point(start + j * PIXEL_LENGTH * 2, from.height - CIRCLE_RADIUS);
-                        State state = new State(movePoint, CIRCLE_HEIGHT, VELOCITYX_STEP * k, true);
+                        State state = new State(start + j * PIXEL_LENGTH * 2, from.height - CIRCLE_RADIUS, VELOCITYX_STEP * k, 0, CIRCLE_HEIGHT, true);
                         Trajectory(graph, from, state, movementType.JUMP);
                         state.right_direction = false;
                         Trajectory(graph, from, state, movementType.JUMP);
@@ -69,12 +66,10 @@ namespace GeometryFriendsAgents
         {
             Parallel.For(0, (MAX_VELOCITYX / VELOCITYX_STEP), k =>
             {
-                Point start = new Point(from.rightEdge + PIXEL_LENGTH, from.height - (height / 2));
-                State state = new State(start, height, VELOCITYX_STEP * k, true);
+                State state = new State(from.rightEdge + PIXEL_LENGTH, from.height - (height / 2), VELOCITYX_STEP * k, 0, height, true);
                 Trajectory(graph, from, state, movementType.FALL);
 
-                start = new Point(from.leftEdge - PIXEL_LENGTH, from.height - (height / 2));
-                state = new State(start, height, VELOCITYX_STEP * k, false);
+                state = new State(from.leftEdge - PIXEL_LENGTH, from.height - (height / 2), VELOCITYX_STEP * k, 0, height, false);
                 Trajectory(graph, from, state, movementType.FALL);
             });
         }
@@ -94,7 +89,7 @@ namespace GeometryFriendsAgents
                    if (!graph.ObstacleOnPixels(pixels))
                    {
                        bool[] collectible_onPath = graph.CollectiblesOnPixels(pixels);
-                       State new_state = new State(movePoint, h, 0, true);
+                       State new_state = new State(movePoint.x, movePoint.y, 0, 0, h, true);
                        Move new_move = new Move(from, new_state, movePoint, movementType.COLLECT, collectible_onPath, 0, false);
                        graph.AddMove(from, new_move);
                    }
@@ -132,7 +127,7 @@ namespace GeometryFriendsAgents
                 Point landPoint = right_direction ? new Point(to.leftEdge, to.height) : new Point(to.rightEdge, to.height);
 
                 int length = (from.height - to.height) + Math.Abs(movePoint.x - landPoint.x);
-                State new_state = new State(movePoint, height, 0, right_direction);
+                State new_state = new State(movePoint.x, movePoint.y, 0, 0, height, right_direction);
                 Move new_move = new Move(to, new_state, landPoint, movementType.TRANSITION, collectible_onPath, length, false);
                 graph.AddMove(from, new_move);
             }
@@ -168,7 +163,7 @@ namespace GeometryFriendsAgents
             Point end = new Point(end_x, to.height - (required_height / 2));
 
             // TRANSITION PLATFORMS
-            State new_state = new State(start, required_height, 0, right_direction);
+            State new_state = new State(start.x, start.y, 0, 0, required_height, right_direction);
             Move new_move = new Move(to, new_state, end, movementType.TRANSITION, new bool[graph.nCollectibles], Math.Abs(end.x - start.x), false);
             graph.AddMove(from, new_move);
 
@@ -178,7 +173,7 @@ namespace GeometryFriendsAgents
                 int gap_size = (to.rightEdge - to.leftEdge);
                 int fall_height = RECTANGLE_AREA / Math.Min(gap_size - (2 * PIXEL_LENGTH), MIN_RECTANGLE_HEIGHT);
                 start = new Point(to.leftEdge + (gap_size / 2), to.height - (fall_height / 2));
-                State state = new State(start, fall_height, 0, right_direction);
+                State state = new State(start.x, start.y, 0, 0, fall_height, right_direction);
                 Trajectory(graph, from, state, movementType.FALL);
             }
 
@@ -206,10 +201,8 @@ namespace GeometryFriendsAgents
                 Point start = new Point(right_direction ? from.rightEdge : from.leftEdge, from.height);
                 Point end = new Point(right_direction ? to.leftEdge : to.rightEdge, to.height);
                 int length = (from.height - to.height) + Math.Abs(start.x - end.x);
-                //int requiredHeight = 3 * stairHeight + PIXEL_LENGTH;
-                int required_height = MAX_RECTANGLE_HEIGHT;
 
-                State new_state = new State(start, required_height, 150, right_direction);
+                State new_state = new State(start.x, start.y, 150, 0, MAX_RECTANGLE_HEIGHT, right_direction);
                 Move new_move = new Move(to, new_state, end, movementType.TRANSITION, new bool[graph.nCollectibles], length, false);
                 graph.AddMove(from, new_move);
             }
@@ -226,9 +219,9 @@ namespace GeometryFriendsAgents
             bool[] collectibles = new bool[graph.nCollectibles];
             int fake_radius = Math.Min(graph.AREA / state.height, state.height) / 2;
             float velocity_y = (movementType == movementType.JUMP) ? JUMP_VELOCITYY : FALL_VELOCITYY;
-            float velocity_x = state.right_direction ? state.horizontal_velocity : -state.horizontal_velocity;
+            float velocity_x = state.right_direction ? state.v_x : -state.v_x;
 
-            Point start = new Point(state.position.x, state.position.y);
+            Point start = new Point(state.x, state.y);
             Point collision = start, prev_collision = collision;
 
             do
@@ -278,11 +271,11 @@ namespace GeometryFriendsAgents
                             if (possible_rectangle)
                             {
                                 int rectangle_x = Math.Min(Math.Max(collision.x, 136), 1064);
-                                Point rectangle_position = new Point(rectangle_x, collision.y + CIRCLE_RADIUS + (MIN_RECTANGLE_HEIGHT / 2));
-                                partner_state = new State(rectangle_position, MIN_RECTANGLE_HEIGHT, 0, true);
+                                int rectangle_y = collision.y + CIRCLE_RADIUS + (MIN_RECTANGLE_HEIGHT / 2);
+                                partner_state = new State(rectangle_x, rectangle_y, 0, 0, MIN_RECTANGLE_HEIGHT, true);
                             }
 
-                            State new_state = new State(start, state.height, state.horizontal_velocity, state.right_direction);
+                            State new_state = new State(start.x, start.y, state.v_x, state.v_y, state.height, state.right_direction);
                             Move new_move = new Move(to.Value, new_state, collision, movementType, collectibles, (int)length, ceiling, partner_state);
                             graph.AddMove(from, new_move);
                         }

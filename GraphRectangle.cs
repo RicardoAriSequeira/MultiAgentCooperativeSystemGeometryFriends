@@ -1,6 +1,4 @@
-﻿using GeometryFriends.AI.Perceptions.Information;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 using static GeometryFriendsAgents.GameInfo;
 using static GeometryFriendsAgents.LevelRepresentation;
@@ -20,19 +18,6 @@ namespace GeometryFriendsAgents
         public override void SetupMoves()
         {
              MoveIdentification.Setup_Rectangle(this);
-        }
-
-        public void SetPossibleCollectibles(RectangleRepresentation initial_rI)
-        {
-
-            bool[] platformsChecked = new bool[platforms.Count];
-
-            Platform? platform = GetPlatform(new Point((int)initial_rI.X, (int)initial_rI.Y), SQUARE_HEIGHT);
-
-            if (platform.HasValue)
-            {
-                platformsChecked = CheckCollectiblesPlatform(platformsChecked, platform.Value);
-            }
         }
 
         public override List<ArrayPoint> GetFormPixels(Point center, int height)

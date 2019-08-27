@@ -37,24 +37,24 @@ namespace GeometryFriendsAgents
         }
 
 
-        public bool IsGoal(CircleRepresentation cI, State state)
+        public bool IsGoal(State st, State goal)
         {        
-            float distanceX = state.right_direction ? cI.X - state.position.x : state.position.x - cI.X;
+            float distanceX = goal.right_direction ? st.x - goal.x : goal.x - st.x;
 
             if (-DISCRETIZATION_D * 2 < distanceX && distanceX <= 0)
             {
-                float relativeVelocityX = state.right_direction ? cI.VelocityX : -cI.VelocityX;
+                float relativeVelocityX = goal.right_direction ? st.v_x : - st.v_x;
 
-                if (state.horizontal_velocity == 0)
+                if (goal.v_x == 0)
                 {
-                    if (state.horizontal_velocity - DISCRETIZATION_V <= relativeVelocityX && relativeVelocityX < state.horizontal_velocity + DISCRETIZATION_V)
+                    if (goal.v_x - DISCRETIZATION_V <= relativeVelocityX && relativeVelocityX < goal.v_x + DISCRETIZATION_V)
                     {
                         return true;
                     }
                 }
                 else
                 {
-                    if (state.horizontal_velocity <= relativeVelocityX && relativeVelocityX < state.horizontal_velocity + DISCRETIZATION_V * 2)
+                    if (goal.v_x <= relativeVelocityX && relativeVelocityX < goal.v_x + DISCRETIZATION_V * 2)
                     {
                         return true;
                     }
@@ -64,121 +64,13 @@ namespace GeometryFriendsAgents
             return false;
         }
 
-        public bool IsGoal(RectangleRepresentation rI, State state)
+        public Moves GetCurrentAction(State st, int targetPointX, int targetVelocityX, bool rightMove)
         {
-            float distanceX = state.right_direction ? rI.X - state.position.x : state.position.x - rI.X;
-
-            //if (Math.Abs(rI.Height - state.height) >= 8)
-            //{
-            //    return false;
-            //}
-
-            if (state.horizontal_velocity == 0)
-            {
-                distanceX = - Math.Abs(distanceX);
-            }
-
-            if (-DISCRETIZATION_D * 2 < distanceX && distanceX <= 0)
-            {
-                float relativeVelocityX = state.right_direction ? rI.VelocityX : -rI.VelocityX;
-
-                if (state.horizontal_velocity == 0)
-                {
-                    if (state.horizontal_velocity - DISCRETIZATION_V <= relativeVelocityX && relativeVelocityX < state.horizontal_velocity + DISCRETIZATION_V)
-                    {
-                        return true;
-                    }
-                }
-                else
-                {
-                    if (state.horizontal_velocity <= relativeVelocityX && relativeVelocityX < state.horizontal_velocity + DISCRETIZATION_V * 2)
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        //public Moves GetCurrentAction(CircleRepresentation cI, State st)
-        //{
-        //    int stateNum = GetStateNum(cI, st.position.x, st.right_direction);
-
-        //    int currentActionNum;
-
-        //    float distanceX = Math.Abs(cI.X - st.position.x);
-
-        //    if (distanceX <= -MAX_D)
-        //    {
-        //        currentActionNum = ACCELERATE;
-        //    }
-        //    else if (distanceX >= MAX_D)
-        //    {
-        //        currentActionNum = DEACCELERATE;
-        //    }
-        //    else
-        //    {
-        //        currentActionNum = GetOptimalActionNum(stateNum, st.horizontal_velocity);
-        //    }
-
-        //    Moves currentAction;
-
-        //    if (currentActionNum == ACCELERATE)
-        //    {
-        //        currentAction = st.right_direction ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
-        //    }
-        //    else
-        //    {
-        //        currentAction = st.right_direction ? Moves.ROLL_LEFT : Moves.ROLL_RIGHT;
-        //    }
-
-        //    return currentAction;
-        //}
-
-        //public Moves GetCurrentAction(RectangleRepresentation rI, State st)
-        //{
-
-        //    int stateNum = GetStateNum(rI, st.position.x, st.right_direction);
-
-        //    int currentActionNum;
-
-        //    float distanceX = Math.Abs(rI.X - st.position.x);
-
-        //    if (distanceX <= -MAX_D)
-        //    {
-        //        currentActionNum = ACCELERATE;
-        //    }
-        //    else if (distanceX >= MAX_D)
-        //    {
-        //        currentActionNum = DEACCELERATE;
-        //    }
-        //    else
-        //    {
-        //        currentActionNum = GetOptimalActionNum(stateNum, st.horizontal_velocity);
-        //    }
-
-        //    Moves currentAction;
-
-        //    if (currentActionNum == ACCELERATE)
-        //    {
-        //        currentAction = st.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
-        //    }
-        //    else
-        //    {
-        //        currentAction = st.right_direction ? Moves.MOVE_LEFT : Moves.MOVE_RIGHT;
-        //    }
-
-        //    return currentAction;
-        //}
-
-        public Moves GetCurrentAction(CircleRepresentation cI, int targetPointX, int targetVelocityX, bool rightMove)
-        {
-            int stateNum = GetStateNum(cI, targetPointX, rightMove);
+            int stateNum = GetStateNum(st, targetPointX, rightMove);
 
             int currentActionNum;
 
-            float distanceX = rightMove ? cI.X - targetPointX : targetPointX - cI.X;
+            float distanceX = rightMove ? st.x - targetPointX : targetPointX - st.x;
 
             if (distanceX <= -MAX_D)
             {
@@ -207,46 +99,10 @@ namespace GeometryFriendsAgents
             return currentAction;
         }
 
-        public Moves GetCurrentAction(RectangleRepresentation rI, int targetPointX, int targetVelocityX, bool rightMove)
-        {
-
-            int stateNum = GetStateNum(rI, targetPointX, rightMove);
-
-            int currentActionNum;
-
-            float distanceX = rightMove ? rI.X - targetPointX : targetPointX - rI.X;
-
-            if (distanceX <= -MAX_D)
-            {
-                currentActionNum = ACCELERATE;
-            }
-            else if (distanceX >= MAX_D)
-            {
-                currentActionNum = DEACCELERATE;
-            }
-            else
-            {
-                currentActionNum = GetOptimalActionNum(stateNum, targetVelocityX);
-            }
-
-            Moves currentAction;
-
-            if (currentActionNum == ACCELERATE)
-            {
-                currentAction = rightMove ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
-            }
-            else
-            {
-                currentAction = rightMove ? Moves.MOVE_LEFT : Moves.MOVE_RIGHT;
-            }
-
-            return currentAction;
-        }
-
-        public int GetStateNum(CircleRepresentation cI, int targetPointX, bool rightMove)
+        public int GetStateNum(State st, int targetPointX, bool rightMove)
         {
             // discretized target velocity
-            int discretized_V = (int)((rightMove ? cI.VelocityX : -cI.VelocityX) + MAX_V) / DISCRETIZATION_V;
+            int discretized_V = (int)((rightMove ? st.v_x : -st.v_x) + MAX_V) / DISCRETIZATION_V;
             if (discretized_V < 0)
             {
                 discretized_V = 0;
@@ -257,7 +113,7 @@ namespace GeometryFriendsAgents
             }
 
             // discretized distance to target
-            int discretized_D = (int)((rightMove ? cI.X - targetPointX : targetPointX - cI.X) + MAX_D) / DISCRETIZATION_D;
+            int discretized_D = (int)((rightMove ? st.x - targetPointX : targetPointX - st.x) + MAX_D) / DISCRETIZATION_D;
             if (discretized_D < 0)
             {
                 discretized_D = 0;
@@ -269,47 +125,6 @@ namespace GeometryFriendsAgents
 
             // state number
             return discretized_V + discretized_D * MAX_DISCRETIZED_V;
-        }
-
-        public int GetStateNum(RectangleRepresentation rI, int targetPointX, bool rightMove)
-        {
-
-            // discretized target velocity
-            int discretized_V = (int)((rightMove ? rI.VelocityX : -rI.VelocityX) + MAX_V) / DISCRETIZATION_V;
-            if (discretized_V < 0)
-            {
-                discretized_V = 0;
-            }
-            else if (discretized_V >= MAX_DISCRETIZED_V)
-            {
-                discretized_V = MAX_DISCRETIZED_V - 1;
-            }
-
-            // discretized distance to target
-            int discretized_D = (int)((rightMove ? rI.X - targetPointX : targetPointX - rI.X) + MAX_D) / DISCRETIZATION_D;
-            if (discretized_D < 0)
-            {
-                discretized_D = 0;
-            }
-            else if (discretized_D >= MAX_DISCRETIZED_D)
-            {
-                discretized_D = MAX_DISCRETIZED_D - 1;
-            }
-
-            // discretized height to target
-            //int discretized_H = (int) ((targetHeight - rI.Height) + MAX_H) / DISCRETIZATION_H;
-            //if (discretized_H < 0)
-            //{
-            //    discretized_H = GameInfo.MIN_RECTANGLE_HEIGHT;
-            //}
-            //else if (discretized_H >= MAX_DISCRETIZED_H)
-            //{
-            //    discretized_H = MAX_DISCRETIZED_H - 1;
-            //}
-
-            // state number
-            return discretized_V + discretized_D * MAX_DISCRETIZED_V;
-            //return discretized_V + discretized_D * MAX_DISCRETIZED_V + discretized_H * MAX_DISCRETIZED_V * MAX_DISCRETIZED_D;
         }
 
         private int GetOptimalActionNum(int stateNum, int targetVelocityX)

@@ -61,17 +61,26 @@ namespace GeometryFriendsAgents
 
         public struct State
         {
+            public int x;
+            public int y;
+            public int v_x;
+            public int v_y;
             public int height;
-            public Point position;
             public bool right_direction;
-            public int horizontal_velocity;
 
-            public State(Point position, int height, int horizontal_velocity, bool right_direction)
+            public State(int x, int y, int v_x, int v_y, int height, bool right_direction)
             {
+                this.x = x;
+                this.y = y;
+                this.v_x = v_x;
+                this.v_y = v_y;
                 this.height = height;
-                this.position = position;
                 this.right_direction = right_direction;
-                this.horizontal_velocity = horizontal_velocity;
+            }
+
+            public Point GetPosition()
+            {
+                return new Point(x, y);
             }
         }
 
@@ -155,18 +164,18 @@ namespace GeometryFriendsAgents
         {
             int neededLengthToAccelerate;
 
-            neededLengthToAccelerate = LENGTH_TO_ACCELERATE[state.horizontal_velocity / VELOCITYX_STEP];
+            neededLengthToAccelerate = LENGTH_TO_ACCELERATE[state.v_x / VELOCITYX_STEP];
 
             if (state.right_direction)
             {
-                if (state.position.x - fromPlatform.leftEdge < neededLengthToAccelerate)
+                if (state.x - fromPlatform.leftEdge < neededLengthToAccelerate)
                 {
                     return false;
                 }
             }
             else
             {
-                if (fromPlatform.rightEdge - state.position.x < neededLengthToAccelerate)
+                if (fromPlatform.rightEdge - state.x < neededLengthToAccelerate)
                 {
                     return false;
                 }
@@ -251,7 +260,7 @@ namespace GeometryFriendsAgents
                             continue;
                         }
 
-                        if (mI.state.horizontal_velocity > i.state.horizontal_velocity)
+                        if (mI.state.v_x > i.state.v_x)
                         {
                             continue;
                         }
@@ -274,7 +283,7 @@ namespace GeometryFriendsAgents
                             continue;
                         }
 
-                        if (mI.state.horizontal_velocity < i.state.horizontal_velocity)
+                        if (mI.state.v_x < i.state.v_x)
                         {
                             continue;
                         }
@@ -326,7 +335,7 @@ namespace GeometryFriendsAgents
 
                     if (mI.type != movementType.COLLECT && i.type != movementType.COLLECT)
                     {
-                        if (mI.state.right_direction == i.state.right_direction || (mI.type == movementType.JUMP && i.type == movementType.JUMP && (mI.state.horizontal_velocity == 0 || i.state.horizontal_velocity == 0)))
+                        if (mI.state.right_direction == i.state.right_direction || (mI.type == movementType.JUMP && i.type == movementType.JUMP && (mI.state.v_x == 0 || i.state.v_x == 0)))
                         {
                             if (mI.type > i.type)
                             {
@@ -340,7 +349,7 @@ namespace GeometryFriendsAgents
                                 continue;
                             }
 
-                            if (i.state.horizontal_velocity == 0 && mI.state.horizontal_velocity > 0)
+                            if (i.state.v_x == 0 && mI.state.v_x > 0)
                             {
                                 priorityHighestFlag = false;
                                 continue;
@@ -358,13 +367,13 @@ namespace GeometryFriendsAgents
                                 continue;
                             }
 
-                            if (mI.state.horizontal_velocity > i.state.horizontal_velocity)
+                            if (mI.state.v_x > i.state.v_x)
                             {
                                 priorityHighestFlag = false;
                                 continue;
                             }
 
-                            if (mI.state.horizontal_velocity < i.state.horizontal_velocity)
+                            if (mI.state.v_x < i.state.v_x)
                             {
                                 moveInfoToRemove.Add(i);
                                 continue;

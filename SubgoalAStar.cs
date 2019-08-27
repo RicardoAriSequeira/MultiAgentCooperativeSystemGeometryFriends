@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 
 using GeometryFriends.AI.Perceptions.Information;
+using static GeometryFriendsAgents.LevelRepresentation;
 
 namespace GeometryFriendsAgents
 {
@@ -152,7 +153,7 @@ namespace GeometryFriendsAgents
                     obtainedCollectibles.CopyTo(reachableCollectibles, 0);
                 }
 
-                totalCost = targetState.totalCost + CalculateDistance(targetState.currentPoint, i.state.position) + i.pathLength;
+                totalCost = targetState.totalCost + CalculateDistance(targetState.currentPoint, new Point(i.state.x, i.state.y)) + i.pathLength;
                 moveHistory = new List<Graph.Move>(targetState.moveHistory);
                 moveHistory.Add(i);
 
@@ -162,7 +163,7 @@ namespace GeometryFriendsAgents
             return connectedStates;
         }
 
-        private int CalculateDistance(LevelRepresentation.Point p1, LevelRepresentation.Point p2)
+        private int CalculateDistance(Point p1, Point p2)
         {
             return (int)Math.Sqrt(Math.Pow(p1.x - p2.x, 2) + Math.Pow(p1.y - p2.y, 2));
         }

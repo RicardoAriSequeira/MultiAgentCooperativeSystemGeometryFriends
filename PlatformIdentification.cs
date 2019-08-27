@@ -1,8 +1,7 @@
-﻿using GeometryFriends.AI.Perceptions.Information;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+
 using static GeometryFriendsAgents.Graph;
 using static GeometryFriendsAgents.GameInfo;
 using static GeometryFriendsAgents.GraphRectangle;
@@ -235,8 +234,8 @@ namespace GeometryFriendsAgents
                     {
                         var itemToRemove = p.moves.Single(r => r.type == m.type &&
                                                                 r.reachablePlatform.id == m.reachablePlatform.id &&
-                                                                r.state.position.x == m.state.position.x &&
-                                                                r.state.position.y == m.state.position.y);
+                                                                r.state.x == m.state.x &&
+                                                                r.state.y == m.state.y);
                         p.moves.Remove(itemToRemove);
                     }
                 }
@@ -255,29 +254,29 @@ namespace GeometryFriendsAgents
 
         }
 
-        public static List<Platform> DeleteUnreachablePlatforms(List<Platform> rectanglePlatforms, RectangleRepresentation initialRectangle)
+        public static List<Platform> DeleteUnreachablePlatforms(List<Platform> rectangle_platforms, State initial_rectangle_state)
         {
-            Platform? currentPlatform = GetPlatform(rectanglePlatforms, new Point((int)initialRectangle.X, (int)initialRectangle.Y), initialRectangle.Height);
+            Platform? currentPlatform = GetPlatform(rectangle_platforms, initial_rectangle_state.GetPosition(), initial_rectangle_state.height);
 
             if (currentPlatform.HasValue)
             {
-                bool[] platformsChecked = VisitPlatform(new bool[rectanglePlatforms.Count], currentPlatform.Value);
+                bool[] platformsChecked = VisitPlatform(new bool[rectangle_platforms.Count], currentPlatform.Value);
 
                 for (int p = platformsChecked.Length - 1; p >= 0; p--)
                 {
                     if (!platformsChecked[p])
                     {
-                        rectanglePlatforms.Remove(rectanglePlatforms[p]);
+                        rectangle_platforms.Remove(rectangle_platforms[p]);
                     }
                 }
             }
 
-            foreach (Platform p in rectanglePlatforms)
+            foreach (Platform p in rectangle_platforms)
             {
                 p.moves.Clear();
             }
 
-            return rectanglePlatforms;
+            return rectangle_platforms;
         }
 
         private static bool[] VisitPlatform(bool[] platformsChecked, Platform platform)

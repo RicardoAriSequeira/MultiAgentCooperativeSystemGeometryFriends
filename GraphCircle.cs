@@ -11,9 +11,9 @@ namespace GeometryFriendsAgents
 {
     class GraphCircle : Graph
     {
-        bool[] platformsChecked;
+        bool[] checked_platforms;
         int[,] previous_levelArray;
-        public RectangleRepresentation initialRectangleInfo;
+        public State initial_rectangle_state;
 
         public GraphCircle() : base(CIRCLE_AREA, new int[1] { CIRCLE_HEIGHT }, GREEN) { }
 
@@ -23,7 +23,7 @@ namespace GeometryFriendsAgents
 
             platforms = SetPlatforms_Rectangle(levelArray);
             Setup_Rectangle(this);
-            platforms = DeleteUnreachablePlatforms(platforms, initialRectangleInfo);
+            platforms = DeleteUnreachablePlatforms(platforms, initial_rectangle_state);
 
             OBSTACLE_COLOUR = GREEN;
 
@@ -35,7 +35,7 @@ namespace GeometryFriendsAgents
             Array.Copy(levelArray, previous_levelArray, levelArray.Length);
             levelArray = SetCooperation(levelArray, platforms);
 
-            platformsChecked = new bool[platforms.Count];
+            checked_platforms = new bool[platforms.Count];
         }
 
         public override void SetupMoves()
@@ -52,14 +52,14 @@ namespace GeometryFriendsAgents
             }
         }
 
-        public void SetPossibleCollectibles(CircleRepresentation initial_cI)
+        public void SetPossibleCollectibles(State st)
         {
 
-            Platform? platform = GetPlatform(new Point((int)initial_cI.X, (int)initial_cI.Y), CIRCLE_HEIGHT);
+            Platform? platform = GetPlatform(st.GetPosition(), st.height);
 
             if (platform.HasValue)
             {
-                platformsChecked = CheckCollectiblesPlatform(platformsChecked, platform.Value);
+                checked_platforms = CheckCollectiblesPlatform(checked_platforms, platform.Value);
             }
         }
 
@@ -96,7 +96,7 @@ namespace GeometryFriendsAgents
 
             bool[] collectibles = cooperationMove.collectibles_onPath;
 
-            platformsChecked = CheckCollectiblesPlatform(platformsChecked, cooperationMove.reachablePlatform, true);
+            checked_platforms = CheckCollectiblesPlatform(checked_platforms, cooperationMove.reachablePlatform, true);
 
             collectibles = Utilities.GetOrMatrix(collectibles, Utilities.GetXorMatrix(collectiblesWithoutCooperation, possibleCollectibles));
 
