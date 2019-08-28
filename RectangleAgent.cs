@@ -87,8 +87,8 @@ namespace GeometryFriendsAgents
             graph.Setup(levelInfo.GetLevelArray(), colI.Length);
 
             // Initial Information
-            circle_state = new State ((int)cI.X, (int)cI.Y, (int)cI.VelocityX, (int)cI.VelocityY, (int)cI.Radius * 2, cI.VelocityX >= 0);
-            rectangle_state = new State((int)rI.X, (int)rI.Y, (int)rI.VelocityX, (int)rI.VelocityY, (int)rI.Height, rI.VelocityX >= 0);
+            circle_state = new State ((int)cI.X, (int)cI.Y, (int)cI.VelocityX, (int)cI.VelocityY, (int)cI.Radius * 2);
+            rectangle_state = new State((int)rI.X, (int)rI.Y, (int)rI.VelocityX, (int)rI.VelocityY, (int)rI.Height);
             targetPointX_InAir = (int)rectangle_state.x;
             previousCollectibles = levelInfo.GetObtainedCollectibles();
 
@@ -105,8 +105,8 @@ namespace GeometryFriendsAgents
         //implements abstract rectangle interface: registers updates from the agent's sensors that it is up to date with the latest environment information
         public override void SensorsUpdated(int nC, RectangleRepresentation rI, CircleRepresentation cI, CollectibleRepresentation[] colI)
         {
-            circle_state = new State((int)cI.X, (int)cI.Y, (int)cI.VelocityX, (int)cI.VelocityY, (int)cI.Radius * 2, cI.VelocityX >= 0);
-            rectangle_state = new State((int)rI.X, (int)rI.Y, (int)rI.VelocityX, (int)rI.VelocityY, (int)rI.Height, rI.VelocityX >= 0);
+            circle_state = new State((int)cI.X, (int)cI.Y, (int)cI.VelocityX, (int)cI.VelocityY, (int)cI.Radius * 2);
+            rectangle_state = new State((int)rI.X, (int)rI.Y, (int)rI.VelocityX, (int)rI.VelocityY, (int)rI.Height);
 
             levelInfo.collectibles = colI;
         }
@@ -192,8 +192,8 @@ namespace GeometryFriendsAgents
 
                             if (cooperation == CooperationStatus.RIDING_HELP)
                             {
-                                int targetX = nextMove.Value.state.right_direction ? circle_state.x + 120 : circle_state.x - 120;
-                                currentAction = actionSelector.GetCurrentAction(rectangle_state, targetX, 0, nextMove.Value.state.right_direction);
+                                int targetX = nextMove.Value.ToTheRight() ? circle_state.x + 120 : circle_state.x - 120;
+                                currentAction = actionSelector.GetCurrentAction(rectangle_state, targetX, 0, nextMove.Value.ToTheRight());
                             }
 
                             else if (nextMove.Value.type == movementType.FALL && nextMove.Value.state.v_x == 0 &&
@@ -219,10 +219,10 @@ namespace GeometryFriendsAgents
 
                             else if (nextMove.Value.type == movementType.TRANSITION)
                             {
-                                currentAction = nextMove.Value.state.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                                currentAction = nextMove.Value.ToTheRight() ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                             }
 
-                            else currentAction = actionSelector.GetCurrentAction(rectangle_state, nextMove.Value.state.x, nextMove.Value.state.v_x, nextMove.Value.state.right_direction);
+                            else currentAction = actionSelector.GetCurrentAction(rectangle_state, nextMove.Value.state.x, nextMove.Value.state.v_x, nextMove.Value.ToTheRight());
 
 
                         }
@@ -239,7 +239,7 @@ namespace GeometryFriendsAgents
                     {
 
                         if (nextMove.Value.type == movementType.TRANSITION)
-                            currentAction = nextMove.Value.state.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                            currentAction = nextMove.Value.ToTheRight() ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
 
                         else currentAction = actionSelector.GetCurrentAction(rectangle_state, targetPointX_InAir, 0, true);
 
@@ -255,7 +255,7 @@ namespace GeometryFriendsAgents
                 if (actionSelector.IsGoal(rectangle_state, nextMove.Value.state) && Math.Abs(rectangle_state.v_y) <= MAX_VELOCITYY)
                 {
 
-                    targetPointX_InAir = (nextMove.Value.reachablePlatform.leftEdge + nextMove.Value.reachablePlatform.rightEdge) / 2;
+                    targetPointX_InAir = (nextMove.Value.to.leftEdge + nextMove.Value.to.rightEdge) / 2;
 
                     if (rectangle_state.height >= Math.Max(nextMove.Value.state.height, 53) &&
                         (nextMove.Value.type == movementType.RIDE || nextMove.Value.type == movementType.TRANSITION))
@@ -273,7 +273,7 @@ namespace GeometryFriendsAgents
                     }
 
                     else if (nextMove.Value.type == movementType.TRANSITION)
-                        currentAction = nextMove.Value.state.right_direction ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
+                        currentAction = nextMove.Value.ToTheRight() ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
 
                     else if (cooperation == CooperationStatus.RIDING)
                         cooperation = CooperationStatus.SYNCHRONIZED;
@@ -412,7 +412,7 @@ namespace GeometryFriendsAgents
                             if (from.HasValue)
                             {
                                 bool[] cols = Utilities.GetXorMatrix(graph.possibleCollectibles, move.collectibles);
-                                Move newMove = new Move(from.Value, st, st.GetPosition(), movementType.RIDE, cols, 0, move.collideCeiling);
+                                Move newMove = new Move(from.Value, st, st.GetPosition(), movementType.RIDE, cols, 0, move.ceiling);
                                 graph.AddMove(from.Value, newMove);
                                 graph.Change();
                             }
@@ -505,14 +505,14 @@ namespace GeometryFriendsAgents
 
                 int rectangleWidth = RECTANGLE_AREA / rectangle_state.height;
 
-                if (nextMove.Value.state.right_direction &&
+                if (nextMove.Value.ToTheRight() &&
                     circle_state.x >= rectangle_state.x &&
                     circle_state.x <= nextMove.Value.state.x + rectangleWidth + CIRCLE_RADIUS)
                 {
                     return true;
                 }
 
-                if (!nextMove.Value.state.right_direction &&
+                if (!nextMove.Value.ToTheRight() &&
                     circle_state.x <= rectangle_state.x &&
                     circle_state.x >= nextMove.Value.state.x - rectangleWidth - CIRCLE_RADIUS)
                 {

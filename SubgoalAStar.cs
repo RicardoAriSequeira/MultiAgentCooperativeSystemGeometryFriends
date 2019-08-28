@@ -153,11 +153,11 @@ namespace GeometryFriendsAgents
                     obtainedCollectibles.CopyTo(reachableCollectibles, 0);
                 }
 
-                totalCost = targetState.totalCost + CalculateDistance(targetState.currentPoint, new Point(i.state.x, i.state.y)) + i.pathLength;
+                totalCost = targetState.totalCost + CalculateDistance(targetState.currentPoint, new Point(i.state.x, i.state.y)) + i.length;
                 moveHistory = new List<Graph.Move>(targetState.moveHistory);
                 moveHistory.Add(i);
 
-                connectedStates.Add(new State(i.reachablePlatform, i.landPoint, obtainedCollectibles, numObtainedCollectibles, totalCost, moveHistory));
+                connectedStates.Add(new State(i.to, i.land, obtainedCollectibles, numObtainedCollectibles, totalCost, moveHistory));
             }
 
             return connectedStates;

@@ -23,7 +23,7 @@ namespace GeometryFriendsAgents
 
         public static void Jump(Graph graph, Platform from)
         {
-            Parallel.For(0, (MAX_VELOCITYX / VELOCITYX_STEP), k =>
+            Parallel.For((-MAX_VELOCITYX / VELOCITYX_STEP) + 1, (MAX_VELOCITYX / VELOCITYX_STEP), k =>
             {
                 int start = from.leftEdge + (from.leftEdge - LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2);
                 int end = from.rightEdge - (from.rightEdge - LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2);
@@ -35,16 +35,11 @@ namespace GeometryFriendsAgents
 
                     Parallel.For(0, (end - start) / (PIXEL_LENGTH * 2) + 1, j =>
                     {
-                        State state = new State(start + j * PIXEL_LENGTH * 2, from.height - CIRCLE_RADIUS, VELOCITYX_STEP * k, 0, CIRCLE_HEIGHT, true);
-                        Trajectory(graph, from, state, movementType.JUMP);
-                        state.right_direction = false;
+                        State state = new State(start + j * PIXEL_LENGTH * 2, from.height - CIRCLE_RADIUS, VELOCITYX_STEP * k, 0, CIRCLE_HEIGHT);
                         Trajectory(graph, from, state, movementType.JUMP);
 
-                        state = new State(start + j * PIXEL_LENGTH * 2, from.height - 50 - CIRCLE_RADIUS, VELOCITYX_STEP * k, 0, CIRCLE_HEIGHT, true);
+                        state = new State(start + j * PIXEL_LENGTH * 2, from.height - 50 - CIRCLE_RADIUS, VELOCITYX_STEP * k, 0, CIRCLE_HEIGHT);
                         Trajectory(graph, from, state, movementType.JUMP);
-                        state.right_direction = false;
-                        Trajectory(graph, from, state, movementType.JUMP);
-
                     });
                 }
 
@@ -52,9 +47,7 @@ namespace GeometryFriendsAgents
                 {
                     Parallel.For(0, (end - start) / (PIXEL_LENGTH * 2) + 1, j =>
                     {
-                        State state = new State(start + j * PIXEL_LENGTH * 2, from.height - CIRCLE_RADIUS, VELOCITYX_STEP * k, 0, CIRCLE_HEIGHT, true);
-                        Trajectory(graph, from, state, movementType.JUMP);
-                        state.right_direction = false;
+                        State state = new State(start + j * PIXEL_LENGTH * 2, from.height - CIRCLE_RADIUS, VELOCITYX_STEP * k, 0, CIRCLE_HEIGHT);
                         Trajectory(graph, from, state, movementType.JUMP);
                     });
                 }
@@ -76,13 +69,13 @@ namespace GeometryFriendsAgents
                     Parallel.For(0, (end - start) / (PIXEL_LENGTH * 2) + 1, j =>
                     {
                         // RIGHT FALL FROM HORIZONTAL RECTANGLE
-                        State st = new State(0, from.height - CIRCLE_RADIUS, VELOCITYX_STEP * k, 0, CIRCLE_HEIGHT, true);
+                        State st = new State(0, from.height - CIRCLE_RADIUS, VELOCITYX_STEP * k, 0, CIRCLE_HEIGHT);
                         st.x = (start + j * PIXEL_LENGTH * 2) + (MAX_RECTANGLE_HEIGHT/2) + PIXEL_LENGTH;
                         Trajectory(graph, from, st, movementType.FALL);
 
                         // LEFT FALL FROM HORIZONTAL RECTANGLE
+                        st = new State(0, from.height - CIRCLE_RADIUS, - (VELOCITYX_STEP * k), 0, CIRCLE_HEIGHT);
                         st.x = (start + j * PIXEL_LENGTH * 2) - (MAX_RECTANGLE_HEIGHT / 2) - PIXEL_LENGTH;
-                        st.right_direction = false;
                         Trajectory(graph, from, st, movementType.FALL);
                     });
 
@@ -92,13 +85,13 @@ namespace GeometryFriendsAgents
                     Parallel.For(0, (end - start) / (PIXEL_LENGTH * 2) + 1, j =>
                     {
                         // RIGHT FALL FROM SQUARE
-                        State st = new State(0, from.height - 50 - CIRCLE_RADIUS, VELOCITYX_STEP * k, 0, CIRCLE_HEIGHT, true);
+                        State st = new State(0, from.height - 50 - CIRCLE_RADIUS, VELOCITYX_STEP * k, 0, CIRCLE_HEIGHT);
                         st.x = (start + j * PIXEL_LENGTH * 2) + (SQUARE_HEIGHT / 2) + PIXEL_LENGTH;
                         Trajectory(graph, from, st, movementType.FALL);
 
                         // LEFT FALL FROM SQUARE
+                        st = new State(0, from.height - 50 - CIRCLE_RADIUS, -(VELOCITYX_STEP * k), 0, CIRCLE_HEIGHT);
                         st.x = (start + j * PIXEL_LENGTH * 2) - (SQUARE_HEIGHT / 2) - PIXEL_LENGTH;
-                        st.right_direction = false;
                         Trajectory(graph, from, st, movementType.FALL);
 
                     });
@@ -108,11 +101,11 @@ namespace GeometryFriendsAgents
                 if (from.type != platformType.RECTANGLE)
                 {
                     // RIGHT FALL FROM NORMAL PLATFORM
-                    State state = new State(from.rightEdge + PIXEL_LENGTH, from.height - (height / 2), VELOCITYX_STEP * k, 0, height, true);
+                    State state = new State(from.rightEdge + PIXEL_LENGTH, from.height - (height / 2), VELOCITYX_STEP * k, 0, height);
                     Trajectory(graph, from, state, movementType.FALL);
 
                     // LEFT FALL FROM NORMAL PLATFORM
-                    state = new State(from.leftEdge - PIXEL_LENGTH, from.height - (height / 2), VELOCITYX_STEP * k, 0, height, false);
+                    state = new State(from.leftEdge - PIXEL_LENGTH, from.height - (height / 2), -(VELOCITYX_STEP * k), 0, height);
                     Trajectory(graph, from, state, movementType.FALL);
                 }
 
@@ -124,17 +117,17 @@ namespace GeometryFriendsAgents
             int start = from.leftEdge + (from.leftEdge - LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2);
             int end = from.rightEdge - (from.rightEdge - LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2);
 
-            Parallel.For(0, (end - start) / (PIXEL_LENGTH * 2) + 1, j =>
+            Parallel.ForEach(graph.POSSIBLE_HEIGHTS, h =>
             {
-                Parallel.ForEach(graph.POSSIBLE_HEIGHTS, h =>
-               {
+                Parallel.For(0, (end - start) / (PIXEL_LENGTH * 2) + 1, j =>
+                {
                    Point movePoint = new Point(start + j * PIXEL_LENGTH * 2, from.height - (h / 2));
                    List<ArrayPoint> pixels = graph.GetFormPixels(movePoint, h);
 
                    if (!graph.ObstacleOnPixels(pixels))
                    {
                        bool[] collectible_onPath = graph.CollectiblesOnPixels(pixels);
-                       State new_state = new State(movePoint.x, movePoint.y, 0, 0, h, true);
+                       State new_state = new State(movePoint.x, movePoint.y, 0, 0, h);
                        Move new_move = new Move(from, new_state, movePoint, movementType.COLLECT, collectible_onPath, 0, false);
                        graph.AddMove(from, new_move);
                    }
@@ -164,8 +157,8 @@ namespace GeometryFriendsAgents
             Point landPoint = new Point(right_direction ? to.leftEdge : to.rightEdge, to.height);
 
             int length = (from.height - to.height) + Math.Abs(movePoint.x - landPoint.x);
-            State state = new State(movePoint.x, movePoint.y, 0, 0, height, right_direction);
-            State partner_state = new State(movePoint.x, movePoint.y, 0, 0, MIN_RECTANGLE_HEIGHT, right_direction);
+            State state = new State(movePoint.x, movePoint.y, 0, 0, height);
+            State partner_state = new State(movePoint.x, movePoint.y, 0, 0, MIN_RECTANGLE_HEIGHT);
             Move move = new Move(to, state, landPoint, movementType.TRANSITION, collectibles, length, false, partner_state);
             graph.AddMove(from, move);
         }
@@ -200,7 +193,7 @@ namespace GeometryFriendsAgents
             Point end = new Point(end_x, to.height - (required_height / 2));
 
             // TRANSITION PLATFORMS
-            State new_state = new State(start.x, start.y, 0, 0, required_height, right_direction);
+            State new_state = new State(start.x, start.y, right_direction ? 1 : -1, 0, required_height);
             Move new_move = new Move(to, new_state, end, movementType.TRANSITION, new bool[graph.nCollectibles], Math.Abs(end.x - start.x), false);
             graph.AddMove(from, new_move);
 
@@ -210,7 +203,7 @@ namespace GeometryFriendsAgents
                 int gap_size = (to.rightEdge - to.leftEdge);
                 int fall_height = RECTANGLE_AREA / Math.Min(gap_size - (2 * PIXEL_LENGTH), MIN_RECTANGLE_HEIGHT);
                 start = new Point(to.leftEdge + (gap_size / 2), to.height - (fall_height / 2));
-                State state = new State(start.x, start.y, 0, 0, fall_height, right_direction);
+                State state = new State(start.x, start.y, 0, 0, fall_height);
                 Trajectory(graph, from, state, movementType.FALL);
             }
 
@@ -239,7 +232,7 @@ namespace GeometryFriendsAgents
                 Point end = new Point(right_direction ? to.leftEdge : to.rightEdge, to.height);
                 int length = (from.height - to.height) + Math.Abs(start.x - end.x);
 
-                State new_state = new State(start.x, start.y, 150, 0, MAX_RECTANGLE_HEIGHT, right_direction);
+                State new_state = new State(start.x, start.y, right_direction? 150 : -150, 0, MAX_RECTANGLE_HEIGHT);
                 Move new_move = new Move(to, new_state, end, movementType.TRANSITION, new bool[graph.nCollectibles], length, false);
                 graph.AddMove(from, new_move);
             }
@@ -256,7 +249,7 @@ namespace GeometryFriendsAgents
             bool[] collectibles = new bool[graph.nCollectibles];
             int fake_radius = Math.Min(graph.AREA / state.height, state.height) / 2;
             float velocity_y = (type == movementType.JUMP) ? JUMP_VELOCITYY : FALL_VELOCITYY;
-            float velocity_x = state.right_direction ? state.v_x : -state.v_x;
+            float velocity_x = state.v_x;
 
             Point start = new Point(state.x, state.y);
             Point collision = start, prev_collision = collision;
@@ -298,7 +291,7 @@ namespace GeometryFriendsAgents
                     if (to.HasValue)
                     {
                         if (type == movementType.FALL)
-                            start.x = state.right_direction ? start.x - PIXEL_LENGTH : start.x + PIXEL_LENGTH;
+                            start.x = (state.v_x >= 0) ? start.x - PIXEL_LENGTH : start.x + PIXEL_LENGTH;
 
                         State? partner_state = null;
                         bool possible_rectangle = collision_type == collideType.RECTANGLE && (Math.Abs(collision.x - start.x) >= 140 || from.id == to.Value.id);
@@ -309,9 +302,9 @@ namespace GeometryFriendsAgents
                             if (from.type == platformType.RECTANGLE && type == movementType.FALL)
                             {
                                 int rectangle_height = 50 + (from.height - (state.y + CIRCLE_RADIUS));
-                                int rectangle_x = Math.Min(Math.Max(state.x, 137), 1063) + (state.right_direction ? (-130) : 130);
+                                int rectangle_x = Math.Min(Math.Max(state.x, 137), 1063) + ((state.v_x >= 0) ? (-130) : 130);
                                 int rectangle_y = state.y + CIRCLE_RADIUS + (rectangle_height / 2);
-                                partner_state = new State(rectangle_x, rectangle_y, 0, 0, rectangle_height, state.right_direction);
+                                partner_state = new State(rectangle_x, rectangle_y, 0, 0, rectangle_height);
                             }
 
                             else if (from.type == platformType.RECTANGLE && type == movementType.JUMP)
@@ -319,17 +312,17 @@ namespace GeometryFriendsAgents
                                 int rectangle_height = 50 + (from.height - (state.y + CIRCLE_RADIUS));
                                 int rectangle_x = Math.Min(Math.Max(state.x, 136), 1064);
                                 int rectangle_y = state.y + CIRCLE_RADIUS + (rectangle_height / 2);
-                                partner_state = new State(rectangle_x, rectangle_y, 0, 0, rectangle_height, state.right_direction);
+                                partner_state = new State(rectangle_x, rectangle_y, 0, 0, rectangle_height);
                             }
 
                             else if (possible_rectangle)
                             {
                                 int rectangle_x = Math.Min(Math.Max(collision.x, 136), 1064);
                                 int rectangle_y = collision.y + CIRCLE_RADIUS + (MIN_RECTANGLE_HEIGHT / 2);
-                                partner_state = new State(rectangle_x, rectangle_y, 0, 0, MIN_RECTANGLE_HEIGHT, state.right_direction);
+                                partner_state = new State(rectangle_x, rectangle_y, 0, 0, MIN_RECTANGLE_HEIGHT);
                             }
 
-                            State new_state = new State(start.x, start.y, state.v_x, state.v_y, state.height, state.right_direction);
+                            State new_state = new State(start.x, start.y, state.v_x, state.v_y, state.height);
                             Move new_move = new Move(to.Value, new_state, collision, type, collectibles, (int)length, ceiling, partner_state);
                             graph.AddMove(from, new_move);
                         }

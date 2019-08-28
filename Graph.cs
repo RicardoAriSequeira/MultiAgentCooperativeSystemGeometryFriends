@@ -67,16 +67,14 @@ namespace GeometryFriendsAgents
             public int v_x;
             public int v_y;
             public int height;
-            public bool right_direction;
 
-            public State(int x, int y, int v_x, int v_y, int height, bool right_direction)
+            public State(int x, int y, int v_x, int v_y, int height)
             {
                 this.x = x;
                 this.y = y;
                 this.v_x = v_x;
                 this.v_y = v_y;
                 this.height = height;
-                this.right_direction = right_direction;
             }
 
             public Point GetPosition()
@@ -87,31 +85,33 @@ namespace GeometryFriendsAgents
 
         public struct Move
         {
+            public int length;
+            public Point land;
             public State state;
-            public int pathLength;
-            public Point landPoint;
+            public Platform to;
+            public bool ceiling;
             public movementType type;
             public State partner_state;
-            public bool collideCeiling;
             public bool[] collectibles;
-            public Platform reachablePlatform;
 
-            public Move(Platform reachablePlatform, State state, Point landPoint, movementType type, bool[] collectibles, int pathLength, bool collideCeiling, State? partner_state = null)
+            public Move(Platform t, State st, Point l, movementType mov_t, bool[] cols, int lgth, bool c, State? p_st = null)
             {
-                this.type = type;
-                this.state = state;
-                this.landPoint = landPoint;
-                this.pathLength = pathLength;
-                this.collectibles = collectibles;
-                this.collideCeiling = collideCeiling;
-                this.reachablePlatform = reachablePlatform;
-                this.partner_state = partner_state ?? new State();
+                to = t;
+                land = l;
+                state = st;
+                ceiling = c;
+                type = mov_t;
+                length = lgth;
+                collectibles = cols;
+                partner_state = p_st ?? new State();
             }
 
             public Move Copy()
             {
-                return new Move(reachablePlatform, state, landPoint, type, collectibles, pathLength, collideCeiling, partner_state);
+                return new Move(to, state, land, type, collectibles, length, ceiling, partner_state);
             }
+
+            public bool ToTheRight() { return state.v_x >= 0; }
 
 
         }
@@ -214,13 +214,13 @@ namespace GeometryFriendsAgents
                 foreach (Move m in p.moves)
                 {
 
-                    if (m.reachablePlatform.type != platformType.RECTANGLE || m.reachablePlatform.id == p.id)
+                    if (m.to.type != platformType.RECTANGLE || m.to.id == p.id)
                     {
                         possibleCollectibles = Utilities.GetOrMatrix(possibleCollectibles, m.collectibles);
 
-                        if (!platformsChecked[m.reachablePlatform.id - 1])
+                        if (!platformsChecked[m.to.id - 1])
                         {
-                            platformsChecked = CheckCollectiblesPlatform(platformsChecked, m.reachablePlatform);
+                            platformsChecked = CheckCollectiblesPlatform(platformsChecked, m.to);
                         }
                     }
 
@@ -232,11 +232,10 @@ namespace GeometryFriendsAgents
 
         public static bool EnoughLength(Platform fromPlatform, State state)
         {
-            int neededLengthToAccelerate;
 
-            neededLengthToAccelerate = LENGTH_TO_ACCELERATE[state.v_x / VELOCITYX_STEP];
+            int neededLengthToAccelerate = LENGTH_TO_ACCELERATE[Math.Abs(state.v_x) / VELOCITYX_STEP];
 
-            if (state.right_direction)
+            if (state.v_x >= 0)
             {
                 if (state.x - fromPlatform.leftEdge < neededLengthToAccelerate)
                 {
@@ -258,7 +257,7 @@ namespace GeometryFriendsAgents
         {
 
             // if the move is to the same platform and there is no collectible
-            if (fromPlatform.id == mI.reachablePlatform.id && !Utilities.IsTrueValue_inMatrix(mI.collectibles))
+            if (fromPlatform.id == mI.to.id && !Utilities.IsTrueValue_inMatrix(mI.collectibles))
             {
                 return false;
             }
@@ -269,7 +268,7 @@ namespace GeometryFriendsAgents
             {
 
                 // finds the reachable platform
-                if (!(mI.reachablePlatform.id == i.reachablePlatform.id))
+                if (!(mI.to.id == i.to.id))
                 {
                     continue;
                 }
@@ -334,9 +333,9 @@ namespace GeometryFriendsAgents
                 {
                     if (mI.type == movementType.COLLECT && i.type == movementType.COLLECT)
                     {
-                        int middlePos = (mI.reachablePlatform.rightEdge + mI.reachablePlatform.leftEdge) / 2;
+                        int middlePos = (mI.to.rightEdge + mI.to.leftEdge) / 2;
 
-                        if (Math.Abs(middlePos - mI.landPoint.x) > Math.Abs(middlePos - i.landPoint.x))
+                        if (Math.Abs(middlePos - mI.land.x) > Math.Abs(middlePos - i.land.x))
                         {
                             priorityHighestFlag = false;
                             continue;
@@ -367,7 +366,7 @@ namespace GeometryFriendsAgents
 
                     if (mI.type != movementType.COLLECT && i.type != movementType.COLLECT)
                     {
-                        if (mI.state.right_direction == i.state.right_direction || (mI.type == movementType.JUMP && i.type == movementType.JUMP && (mI.state.v_x == 0 || i.state.v_x == 0)))
+                        if (mI.ToTheRight() == i.ToTheRight() || (mI.type == movementType.JUMP && i.type == movementType.JUMP && (mI.state.v_x == 0 || i.state.v_x == 0)))
                         {
                             if (mI.type > i.type)
                             {
@@ -399,21 +398,21 @@ namespace GeometryFriendsAgents
                                 continue;
                             }
 
-                            if (mI.state.v_x > i.state.v_x)
+                            if (Math.Abs(mI.state.v_x) > Math.Abs(i.state.v_x))
                             {
                                 priorityHighestFlag = false;
                                 continue;
                             }
 
-                            if (mI.state.v_x < i.state.v_x)
+                            if (Math.Abs(mI.state.v_x) < Math.Abs(i.state.v_x))
                             {
                                 moveInfoToRemove.Add(i);
                                 continue;
                             }
 
-                            int middlePos = (mI.reachablePlatform.rightEdge + mI.reachablePlatform.leftEdge) / 2;
+                            int middlePos = (mI.to.rightEdge + mI.to.leftEdge) / 2;
 
-                            if (Math.Abs(middlePos - mI.landPoint.x) > Math.Abs(middlePos - i.landPoint.x))
+                            if (Math.Abs(middlePos - mI.land.x) > Math.Abs(middlePos - i.land.x))
                             {
                                 priorityHighestFlag = false;
                                 continue;

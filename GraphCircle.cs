@@ -19,12 +19,16 @@ namespace GeometryFriendsAgents
         public override void SetupPlatforms()
         {
             OBSTACLE_COLOUR = YELLOW;
+            AREA = RECTANGLE_AREA;
+            POSSIBLE_HEIGHTS = new int[3] { MIN_RECTANGLE_HEIGHT, SQUARE_HEIGHT, MAX_RECTANGLE_HEIGHT };
 
             platforms = SetPlatforms_Rectangle(levelArray);
             Setup_Rectangle(this);
             platforms = DeleteUnreachablePlatforms(platforms, initial_rectangle_state);
 
             OBSTACLE_COLOUR = GREEN;
+            AREA = CIRCLE_AREA;
+            POSSIBLE_HEIGHTS = new int[1] { CIRCLE_HEIGHT };
 
             List<Platform> platformsCircle = SetPlatforms_Circle(levelArray);
             platforms = JoinPlatforms(platformsCircle, platforms);
@@ -95,7 +99,7 @@ namespace GeometryFriendsAgents
 
             bool[] collectibles = cooperationMove.collectibles;
 
-            checked_platforms = CheckCollectiblesPlatform(checked_platforms, cooperationMove.reachablePlatform, true);
+            checked_platforms = CheckCollectiblesPlatform(checked_platforms, cooperationMove.to, true);
 
             collectibles = Utilities.GetOrMatrix(collectibles, Utilities.GetXorMatrix(collectiblesWithoutCooperation, possibleCollectibles));
 

@@ -37,23 +37,25 @@ namespace GeometryFriendsAgents
         }
 
         public bool IsGoal(State st, State goal)
-        {        
-            float distanceX = goal.right_direction ? st.x - goal.x : goal.x - st.x;
+        {
+            int target_velocity = Math.Abs(goal.v_x);
+
+            float distanceX = (goal.v_x >= 0) ? st.x - goal.x : goal.x - st.x;
 
             if (-DISCRETIZATION_D * 2 < distanceX && distanceX <= 0)
             {
-                float relativeVelocityX = goal.right_direction ? st.v_x : - st.v_x;
+                float relativeVelocityX = (goal.v_x >= 0) ? st.v_x : -st.v_x;
 
-                if (goal.v_x == 0)
+                if (target_velocity == 0)
                 {
-                    if (goal.v_x - DISCRETIZATION_V <= relativeVelocityX && relativeVelocityX < goal.v_x + DISCRETIZATION_V)
+                    if (target_velocity - DISCRETIZATION_V <= relativeVelocityX && relativeVelocityX < target_velocity + DISCRETIZATION_V)
                     {
                         return true;
                     }
                 }
                 else
                 {
-                    if (goal.v_x <= relativeVelocityX && relativeVelocityX < goal.v_x + DISCRETIZATION_V * 2)
+                    if (target_velocity <= relativeVelocityX && relativeVelocityX < target_velocity + DISCRETIZATION_V * 2)
                     {
                         return true;
                     }
@@ -117,7 +119,7 @@ namespace GeometryFriendsAgents
             int maxColumnNum = 0;
             float maxValue = float.MinValue;
 
-            int from = (targetVelocityX / (DISCRETIZATION_V * 2)) * 2;
+            int from = (Math.Abs(targetVelocityX) / (DISCRETIZATION_V * 2)) * 2;
             int to = from + NUM_POSSIBLE_MOVES;
 
             for (int i = from; i < to; i++)

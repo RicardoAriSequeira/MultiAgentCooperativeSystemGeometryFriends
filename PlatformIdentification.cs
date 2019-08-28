@@ -230,10 +230,10 @@ namespace GeometryFriendsAgents
             {
                 foreach (Move m in p.moves)
                 {
-                    if (m.reachablePlatform.type == platformType.RECTANGLE)
+                    if (m.to.type == platformType.RECTANGLE)
                     {
                         var itemToRemove = p.moves.Single(r => r.type == m.type &&
-                                                                r.reachablePlatform.id == m.reachablePlatform.id &&
+                                                                r.to.id == m.to.id &&
                                                                 r.state.x == m.state.x &&
                                                                 r.state.y == m.state.y);
                         p.moves.Remove(itemToRemove);
@@ -285,9 +285,9 @@ namespace GeometryFriendsAgents
 
             foreach (Move m in platform.moves)
             {
-                if (!platformsChecked[m.reachablePlatform.id - 1])
+                if (!platformsChecked[m.to.id - 1])
                 {
-                    platformsChecked = VisitPlatform(platformsChecked, m.reachablePlatform);
+                    platformsChecked = VisitPlatform(platformsChecked, m.to);
                 }
             }
 
