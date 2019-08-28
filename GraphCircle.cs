@@ -1,5 +1,4 @@
-﻿using GeometryFriends.AI.Perceptions.Information;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 using static GeometryFriendsAgents.GameInfo;
@@ -43,7 +42,7 @@ namespace GeometryFriendsAgents
             foreach (Platform from in platforms)
             {
                 foreach (Platform to in platforms)
-                    StairOrGap(this, from, to, CIRCLE_HEIGHT);
+                    Transition(this, from, to, CIRCLE_HEIGHT);
 
                 Fall(this, from, CIRCLE_HEIGHT);
                 Jump(this, from);
@@ -94,7 +93,7 @@ namespace GeometryFriendsAgents
             bool[] collectiblesWithoutCooperation = new bool[nCollectibles];
             Array.Copy(possibleCollectibles, collectiblesWithoutCooperation, possibleCollectibles.Length);
 
-            bool[] collectibles = cooperationMove.collectibles_onPath;
+            bool[] collectibles = cooperationMove.collectibles;
 
             checked_platforms = CheckCollectiblesPlatform(checked_platforms, cooperationMove.reachablePlatform, true);
 

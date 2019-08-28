@@ -21,7 +21,7 @@ namespace GeometryFriendsAgents
             public int totalCost;
             public List<Graph.Move> moveHistory;
 
-            public State(Graph.Platform currentPlatform, LevelRepresentation.Point currentPoint, bool[] obtainedCollectibles, int numObtainedCollectibles, int totalCost, List<Graph.Move> moveHistory)
+            public State(Graph.Platform currentPlatform, Point currentPoint, bool[] obtainedCollectibles, int numObtainedCollectibles, int totalCost, List<Graph.Move> moveHistory)
             {
                 this.currentPlatform = currentPlatform;
                 this.currentPoint = currentPoint;
@@ -39,7 +39,7 @@ namespace GeometryFriendsAgents
             sw = new Stopwatch();
         }
 
-        public Graph.Move? CalculateShortestPath(Graph.Platform currentPlatform, LevelRepresentation.Point currentPoint, bool[] goalCollectibles, bool[] obtainedCollectibles, CollectibleRepresentation[] initialCollectibles)
+        public Graph.Move? CalculateShortestPath(Graph.Platform currentPlatform, Point currentPoint, bool[] goalCollectibles, bool[] obtainedCollectibles, CollectibleRepresentation[] initialCollectibles)
         {
             sw.Restart();
 
@@ -139,10 +139,10 @@ namespace GeometryFriendsAgents
 
                 for (int j = 0; j < obtainedCollectibles.Length; j++)
                 {
-                    obtainedCollectibles[j] = targetState.obtainedCollectibles[j] || i.collectibles_onPath[j];
-                    reachableCollectibles[j] = reachableCollectibles[j] || i.collectibles_onPath[j];
+                    obtainedCollectibles[j] = targetState.obtainedCollectibles[j] || i.collectibles[j];
+                    reachableCollectibles[j] = reachableCollectibles[j] || i.collectibles[j];
 
-                    if (!targetState.obtainedCollectibles[j] && i.collectibles_onPath[j])
+                    if (!targetState.obtainedCollectibles[j] && i.collectibles[j])
                     {
                         numObtainedCollectibles++;
                     }

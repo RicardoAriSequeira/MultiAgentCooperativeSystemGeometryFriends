@@ -30,8 +30,9 @@ namespace GeometryFriendsAgents
         public const float TIME_STEP = 0.01f;
         protected const int STAIR_MAXWIDTH = 48;
         protected const int STAIR_MAXHEIGHT = 16;
-        protected int[] LENGTH_TO_ACCELERATE = new int[10] { 1, 5, 13, 20, 31, 49, 70, 95, 128, 166 };
+        protected static int[] LENGTH_TO_ACCELERATE = new int[10] { 1, 5, 13, 20, 31, 49, 70, 95, 128, 166 };
 
+        public bool dynamic_change = false;
         public int[,] levelArray;
         public int AREA, nCollectibles;
         public List<Platform> platforms;
@@ -92,20 +93,27 @@ namespace GeometryFriendsAgents
             public movementType type;
             public State partner_state;
             public bool collideCeiling;
-            public bool[] collectibles_onPath;
+            public bool[] collectibles;
             public Platform reachablePlatform;
 
-            public Move(Platform reachablePlatform, State state, Point landPoint, movementType type, bool[] collectibles_onPath, int pathLength, bool collideCeiling, State? partner_state = null)
+            public Move(Platform reachablePlatform, State state, Point landPoint, movementType type, bool[] collectibles, int pathLength, bool collideCeiling, State? partner_state = null)
             {
                 this.type = type;
                 this.state = state;
                 this.landPoint = landPoint;
                 this.pathLength = pathLength;
+                this.collectibles = collectibles;
                 this.collideCeiling = collideCeiling;
                 this.reachablePlatform = reachablePlatform;
-                this.collectibles_onPath = collectibles_onPath;
                 this.partner_state = partner_state ?? new State();
             }
+
+            public Move Copy()
+            {
+                return new Move(reachablePlatform, state, landPoint, type, collectibles, pathLength, collideCeiling, partner_state);
+            }
+
+
         }
 
         public Graph(int area, int[] possible_heights, int obstacle_colour)
@@ -115,7 +123,31 @@ namespace GeometryFriendsAgents
             POSSIBLE_HEIGHTS = possible_heights;
         }
 
-        public void SetupGraph(int[,] levelArray, int nCollectibles)
+        public abstract void SetupPlatforms();
+
+        public abstract void SetupMoves();
+
+        public abstract List<ArrayPoint> GetFormPixels(Point center, int height);
+
+        public void AddMove(Platform fromPlatform, Move mI)
+        {
+            lock (platforms)
+            {
+                List<Move> moveInfoToRemove = new List<Move>();
+
+                if (IsPriorityHighest(fromPlatform, mI, ref moveInfoToRemove))
+                {
+                    fromPlatform.moves.Add(mI);
+                }
+
+                foreach (Move i in moveInfoToRemove)
+                {
+                    fromPlatform.moves.Remove(i);
+                }
+            }
+        }
+
+        public void Setup(int[,] levelArray, int nCollectibles)
         {
             this.levelArray = levelArray;
             this.nCollectibles = nCollectibles;
@@ -124,10 +156,6 @@ namespace GeometryFriendsAgents
             SetupMoves();
         }
 
-        public abstract void SetupPlatforms();
-        public abstract void SetupMoves();
-        public abstract List<ArrayPoint> GetFormPixels(Point center, int height);
-
         public Platform? GetPlatform(Point center, float height, int velocityY = 0)
         {
             if (Math.Abs(velocityY) <= GameInfo.MAX_VELOCITYY)
@@ -135,6 +163,17 @@ namespace GeometryFriendsAgents
                     if (i.leftEdge <= center.x && center.x <= i.rightEdge && (i.height - center.y >= (height / 2) - 8) && (i.height - center.y <= (height / 2) + 8))
                         return i;
             return null;
+        }
+
+        public bool HasChanged() { return dynamic_change; }
+
+        public void Change() { dynamic_change = true; }
+
+        public void Process() { dynamic_change = false; }
+
+        public bool ObstacleOnPixels(List<ArrayPoint> checkPixels)
+        {
+            return ObstacleOnPixels(levelArray, checkPixels, OBSTACLE_COLOUR);
         }
 
         public bool IsStairOrGap(Platform fromPlatform, Platform toPlatform, ref bool rightMove)
@@ -160,7 +199,38 @@ namespace GeometryFriendsAgents
             return false;
         }
 
-        public bool EnoughLength(Platform fromPlatform, State state)
+        public bool[] CollectiblesOnPixels(List<ArrayPoint> pixels)
+        {
+            return CollectiblesOnPixels(levelArray, pixels, nCollectibles);
+        }
+
+        public bool[] CheckCollectiblesPlatform(bool[] platformsChecked, Platform p, bool cooperation = false)
+        {
+
+            if (p.type != platformType.RECTANGLE || cooperation)
+            {
+                platformsChecked[p.id - 1] = true;
+
+                foreach (Move m in p.moves)
+                {
+
+                    if (m.reachablePlatform.type != platformType.RECTANGLE || m.reachablePlatform.id == p.id)
+                    {
+                        possibleCollectibles = Utilities.GetOrMatrix(possibleCollectibles, m.collectibles);
+
+                        if (!platformsChecked[m.reachablePlatform.id - 1])
+                        {
+                            platformsChecked = CheckCollectiblesPlatform(platformsChecked, m.reachablePlatform);
+                        }
+                    }
+
+                }
+            }
+
+            return platformsChecked;
+        }
+
+        public static bool EnoughLength(Platform fromPlatform, State state)
         {
             int neededLengthToAccelerate;
 
@@ -184,49 +254,11 @@ namespace GeometryFriendsAgents
             return true;
         }
 
-        public bool[] CollectiblesOnPixels(List<ArrayPoint> pixels)
-        {
-            return CollectiblesOnPixels(levelArray, pixels, nCollectibles);
-        }
-
-        public static bool[] CollectiblesOnPixels(int[,] levelArray, List<ArrayPoint> pixels, int nCollectibles)
-        {
-            bool[] collectible_onPath = new bool[nCollectibles];
-
-            foreach (ArrayPoint i in pixels)
-            {
-                if (levelArray[i.yArray, i.xArray] > 0)
-                {
-                    collectible_onPath[levelArray[i.yArray, i.xArray] - 1] = true;
-                }
-            }
-
-            return collectible_onPath;
-        }
-
-        public void AddMove(Platform fromPlatform, Move mI)
-        {
-            lock (platforms)
-            {
-                List<Move> moveInfoToRemove = new List<Move>();
-
-                if (IsPriorityHighest(fromPlatform, mI, ref moveInfoToRemove))
-                {
-                    fromPlatform.moves.Add(mI);
-                }
-
-                foreach (Move i in moveInfoToRemove)
-                {
-                    fromPlatform.moves.Remove(i);
-                }
-            }
-        }
-
-        protected static bool IsPriorityHighest(Platform fromPlatform, Move mI, ref List<Move> moveInfoToRemove)
+        public static bool IsPriorityHighest(Platform fromPlatform, Move mI, ref List<Move> moveInfoToRemove)
         {
 
             // if the move is to the same platform and there is no collectible
-            if (fromPlatform.id == mI.reachablePlatform.id && !Utilities.IsTrueValue_inMatrix(mI.collectibles_onPath))
+            if (fromPlatform.id == mI.reachablePlatform.id && !Utilities.IsTrueValue_inMatrix(mI.collectibles))
             {
                 return false;
             }
@@ -242,7 +274,7 @@ namespace GeometryFriendsAgents
                     continue;
                 }
 
-                Utilities.numTrue trueNum = Utilities.CompTrueNum(mI.collectibles_onPath, i.collectibles_onPath);
+                Utilities.numTrue trueNum = Utilities.CompTrueNum(mI.collectibles, i.collectibles);
 
                 if (trueNum == Utilities.numTrue.MORETRUE)
                 {
@@ -398,6 +430,39 @@ namespace GeometryFriendsAgents
             return priorityHighestFlag;
         }
 
+        public static bool ObstacleOnPixels(int[,] levelArray, List<ArrayPoint> checkPixels, int obstacle_colour)
+        {
+            if (checkPixels.Count == 0)
+            {
+                return true;
+            }
+
+            foreach (ArrayPoint i in checkPixels)
+            {
+                if (levelArray[i.yArray, i.xArray] == BLACK || levelArray[i.yArray, i.xArray] == obstacle_colour)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static bool[] CollectiblesOnPixels(int[,] levelArray, List<ArrayPoint> pixels, int nCollectibles)
+        {
+            bool[] collectible_onPath = new bool[nCollectibles];
+
+            foreach (ArrayPoint i in pixels)
+            {
+                if (levelArray[i.yArray, i.xArray] > 0)
+                {
+                    collectible_onPath[levelArray[i.yArray, i.xArray] - 1] = true;
+                }
+            }
+
+            return collectible_onPath;
+        }
+
         public static Point GetCurrentCenter(Point movePoint, float velocityX, float velocityY, float currentTime)
         {
             float distanceX = velocityX * currentTime;
@@ -442,60 +507,6 @@ namespace GeometryFriendsAgents
             }
 
             return circlePixels;
-        }
-
-        protected bool[] CheckCollectiblesPlatform(bool[] platformsChecked, Platform p, bool cooperation = false)
-        {
-
-            if (p.type != platformType.RECTANGLE || cooperation)
-            {
-                platformsChecked[p.id - 1] = true;
-
-                foreach (Move m in p.moves)
-                {
-
-                    if (m.reachablePlatform.type != platformType.RECTANGLE || m.reachablePlatform.id == p.id)
-                    {
-                        possibleCollectibles = Utilities.GetOrMatrix(possibleCollectibles, m.collectibles_onPath);
-
-                        if (!platformsChecked[m.reachablePlatform.id - 1])
-                        {
-                            platformsChecked = CheckCollectiblesPlatform(platformsChecked, m.reachablePlatform);
-                        }
-                    }
-
-                }
-            }
-
-            return platformsChecked;
-        }
-
-        public static Move CopyMove(Move m)
-        {
-            return new Move(m.reachablePlatform, m.state, m.landPoint, m.type, m.collectibles_onPath, m.pathLength, m.collideCeiling, m.partner_state);
-        }
-
-        public bool ObstacleOnPixels(List<ArrayPoint> checkPixels)
-        {
-            return ObstacleOnPixels(levelArray, checkPixels, OBSTACLE_COLOUR);
-        }
-
-        public static bool ObstacleOnPixels(int[,] levelArray, List<ArrayPoint> checkPixels, int obstacle_colour)
-        {
-            if (checkPixels.Count == 0)
-            {
-                return true;
-            }
-
-            foreach (ArrayPoint i in checkPixels)
-            {
-                if (levelArray[i.yArray, i.xArray] == BLACK || levelArray[i.yArray, i.xArray] == obstacle_colour)
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
 
     }

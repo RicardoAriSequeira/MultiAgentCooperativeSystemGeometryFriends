@@ -7,8 +7,8 @@ using GeometryFriends.AI;
 using GeometryFriends.AI.Interfaces;
 using GeometryFriends.AI.Communication;
 using GeometryFriends.AI.Perceptions.Information;
-using static GeometryFriendsAgents.GameInfo;
 using static GeometryFriendsAgents.Graph;
+using static GeometryFriendsAgents.GameInfo;
 using static GeometryFriendsAgents.LevelRepresentation;
 
 namespace GeometryFriendsAgents
@@ -80,7 +80,7 @@ namespace GeometryFriendsAgents
 
             // Create Graph
             graph.initial_rectangle_state = rectangle_state;
-            graph.SetupGraph(levelInfo.GetLevelArray(), colI.Length);
+            graph.Setup(levelInfo.GetLevelArray(), colI.Length);
             graph.SetPossibleCollectibles(circle_state);
 
             if (rI.X < 0 || rI.Y < 0)
@@ -122,7 +122,7 @@ namespace GeometryFriendsAgents
         public override void Update(TimeSpan elapsedGameTime)
         {
 
-            if ((cooperation == CooperationStatus.UNSYNCHRONIZED || cooperation == CooperationStatus.RIDE || cooperation == CooperationStatus.RIDE_HELP) &&
+            if ((cooperation == CooperationStatus.UNSYNCHRONIZED || cooperation == CooperationStatus.RIDING || cooperation == CooperationStatus.RIDING_HELP) &&
                 actionSelector.IsGoal(rectangle_state, nextMove.Value.partner_state) &&
                 Math.Abs(rectangle_state.height - nextMove.Value.partner_state.height) < 8)
             {
@@ -151,7 +151,7 @@ namespace GeometryFriendsAgents
                     if (nextMove.HasValue)
                     {
 
-                        if (cooperation == CooperationStatus.RIDE)
+                        if (cooperation == CooperationStatus.RIDING)
                         {
                             currentAction = actionSelector.GetCurrentAction(circle_state, rectangle_state.x, 0, true);
                         }
@@ -190,7 +190,7 @@ namespace GeometryFriendsAgents
                 {
                     if (nextMove.HasValue)
                     {
-                        if ((cooperation == CooperationStatus.SYNCHRONIZED && nextMove.Value.reachablePlatform.type == platformType.RECTANGLE) || cooperation == CooperationStatus.RIDE_HELP)
+                        if ((cooperation == CooperationStatus.SYNCHRONIZED && nextMove.Value.reachablePlatform.type == platformType.RECTANGLE) || cooperation == CooperationStatus.RIDING_HELP)
                         {
                             currentAction = actionSelector.GetCurrentAction(circle_state, rectangle_state.x, 0, true);
                         }
@@ -222,9 +222,9 @@ namespace GeometryFriendsAgents
             if (nextMove.HasValue)
             {
 
-                if (cooperation == CooperationStatus.RIDE_HELP && currentPlatform.HasValue && currentPlatform.Value.type == platformType.RECTANGLE && IsRidingRectangle())
+                if (cooperation == CooperationStatus.RIDING_HELP && currentPlatform.HasValue && currentPlatform.Value.type == platformType.RECTANGLE && IsRidingRectangle())
                 {
-                    cooperation = CooperationStatus.RIDE;
+                    cooperation = CooperationStatus.RIDING;
                 }
 
                 if (actionSelector.IsGoal(circle_state, nextMove.Value.state) && Math.Abs(circle_state.v_y) <= MAX_VELOCITYY)
@@ -242,8 +242,8 @@ namespace GeometryFriendsAgents
 
                         if (nextMove.Value.collideCeiling)
                         {
-                            cooperation = CooperationStatus.RIDE_HELP;
-                            messages.Add(new AgentMessage(RIDE_HELP));
+                            cooperation = CooperationStatus.RIDING_HELP;
+                            messages.Add(new AgentMessage(RIDING_HELP));
                         }
 
                         else if (nextMove.Value.reachablePlatform.type == platformType.RECTANGLE)
@@ -279,13 +279,13 @@ namespace GeometryFriendsAgents
                         if (currentCollectibles[currentC])
                         {
 
-                            foreach (Graph.Platform p in graph.platforms)
+                            foreach (Platform p in graph.platforms)
                             {
 
-                                foreach (Graph.Move m in p.moves)
+                                foreach (Move m in p.moves)
                                 {
 
-                                    m.collectibles_onPath[currentC] = false;
+                                    m.collectibles[currentC] = false;
 
                                 }
 
@@ -329,7 +329,7 @@ namespace GeometryFriendsAgents
             Move? previousMove = nextMove;
 
             nextMove = null;
-            nextMove = subgoalAStar.CalculateShortestPath(currentPlatform.Value, new Point((int)circle_state.x, (int)circle_state.y),
+            nextMove = subgoalAStar.CalculateShortestPath(currentPlatform.Value, new LevelRepresentation.Point((int)circle_state.x, (int)circle_state.y),
                 Enumerable.Repeat<bool>(true, levelInfo.initialCollectibles.Length).ToArray(),
                 levelInfo.GetObtainedCollectibles(), levelInfo.initialCollectibles);
 
@@ -369,30 +369,17 @@ namespace GeometryFriendsAgents
         private void Cooperate()
         {
 
-            State partner_state = new State();
-
-            Move rectangle_move = CopyMove((Move)nextMove);
-            rectangle_move.collectibles_onPath = graph.GetCollectiblesFromCooperation(rectangle_move);
+            Move rectangle_move = ((Move)nextMove).Copy();
+            rectangle_move.collectibles = graph.GetCollectiblesFromCooperation(rectangle_move);
 
             Platform fromPlatform = currentPlatform.HasValue ? (Platform) currentPlatform : (Platform) previousPlatform;
 
             if (fromPlatform.type == platformType.RECTANGLE)
             {
-                int rectangle_height = 50 + (fromPlatform.height - (rectangle_move.state.y + CIRCLE_RADIUS));
-
-                int rectangle_x = Math.Min(Math.Max(rectangle_move.state.x, 137), 1063);
-
-                if (rectangle_move.type == movementType.FALL)
-                {
-                    rectangle_x += rectangle_move.state.right_direction ? (-120) : 120;
-                }
-
-                partner_state = new State(rectangle_x, rectangle_move.state.y, 0, 0, rectangle_height, rectangle_move.state.right_direction);
-                rectangle_move.state = partner_state;
-
-                messages.Add(new AgentMessage(RIDE, rectangle_move));
-                cooperation = CooperationStatus.RIDE;
+                messages.Add(new AgentMessage(RIDING, rectangle_move));
+                cooperation = CooperationStatus.RIDING;
             }
+
             else
             {
 
@@ -405,29 +392,17 @@ namespace GeometryFriendsAgents
                         if (m.reachablePlatform.id == rectangle_move.reachablePlatform.id && m.type == movementType.JUMP && m.state.right_direction != rectangle_move.state.right_direction)
                         {
                             nextMove = m;
-                            rectangle_move = CopyMove(m);
-                            rectangle_move.collectibles_onPath = graph.GetCollectiblesFromCooperation(m);
+                            rectangle_move = m.Copy();
+                            rectangle_move.collectibles = graph.GetCollectiblesFromCooperation(m);
                             break;
                         }
                     }
                 }
 
-                int rectangle_height = 50 + (rectangle_move.reachablePlatform.height - (rectangle_move.landPoint.y + CIRCLE_RADIUS));
-                int rectangle_x = Math.Min(Math.Max(rectangle_move.landPoint.x, 137), 1063);
-                int rectangle_y = rectangle_move.landPoint.y + CIRCLE_RADIUS + (rectangle_height / 2);
-                partner_state = new State(rectangle_x, rectangle_y, 0, 0, rectangle_height, rectangle_move.state.right_direction);
-
-                rectangle_move.type = movementType.RIDE;
-                rectangle_move.state = partner_state;
-
                 messages.Add(new AgentMessage(UNSYNCHRONIZED, rectangle_move));
                 cooperation = CooperationStatus.UNSYNCHRONIZED;
 
             }
-
-            Move new_nextMove = CopyMove((Move)nextMove);
-            new_nextMove.partner_state = partner_state;
-            nextMove = new_nextMove;
 
         }
 

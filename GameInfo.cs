@@ -31,11 +31,11 @@
         public const string COOPERATION_FINISHED = "Cooperation Finished";
         public const string JUMPED = "Jumped";
         public const string INDIVIDUAL_MOVE = "Taking Individual Move";
-        public const string RIDE_HELP = "Ride Help";
+        public const string RIDING_HELP = "Ride Help";
 
 
         public const string UNSYNCHRONIZED = "There is a cooperation move to be executed but the players have to assume their positions.";
-        public const string RIDE = "The players are in the ride position (circle is above the rectangle).";
+        public const string RIDING = "The players are in the ride position (circle is above the rectangle).";
 
 
         public enum CooperationStatus
@@ -43,8 +43,8 @@
             SINGLE,
             UNSYNCHRONIZED,
             SYNCHRONIZED,
-            RIDE,
-            RIDE_HELP
+            RIDING,
+            RIDING_HELP
         }
     }
 }
