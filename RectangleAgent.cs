@@ -171,6 +171,7 @@ namespace GeometryFriendsAgents
 
                 if (currentPlatform.HasValue)
                 {
+
                     if ((IsDifferentPlatform() || IsGetCollectible() || graph.HasChanged()) && cooperation == CooperationStatus.SINGLE)
                     {
                         targetPointX_InAir = (currentPlatform.Value.leftEdge + currentPlatform.Value.rightEdge) / 2;
@@ -382,78 +383,80 @@ namespace GeometryFriendsAgents
         {
             foreach (AgentMessage item in newMessages)
             {
-
-                if (item.Message.Equals(INDIVIDUAL_MOVE) && item.Attachment.GetType() == typeof(Move))
+                switch (item.Message)
                 {
-                    Move circleMove = (Move)item.Attachment;
 
-                    foreach (Platform p in graph.platforms)
-                    {
-                        foreach (Move m in p.moves)
+                    case INDIVIDUAL_MOVE:
+
+                        if (item.Attachment.GetType() == typeof(Move))
                         {
-                            for (int i = 0; i < m.collectibles.Length; i++)
+                            cooperation = CooperationStatus.SINGLE;
+                            Move move = (Move)item.Attachment;
+
+                            foreach (Platform p in graph.platforms)
+                                foreach (Move m in p.moves)
+                                    for (int i = 0; i < m.collectibles.Length; i++)
+                                        m.collectibles[i] = (move.collectibles[i] && m.collectibles[i]) ? true : m.collectibles[i];
+                        }
+
+                        break;
+
+                    case UNSYNCHRONIZED:
+
+                        if (item.Attachment.GetType() == typeof(Move))
+                        {
+                            Move move = (Move)item.Attachment;
+                            State st = move.partner_state;
+                            Platform? from = graph.GetPlatform(new LevelRepresentation.Point(st.x, st.y), st.height);
+
+                            if (from.HasValue)
                             {
-                                if (circleMove.collectibles[i] && m.collectibles[i])
-                                {
-                                    m.collectibles[i] = false;
-                                }
+                                bool[] cols = Utilities.GetXorMatrix(graph.possibleCollectibles, move.collectibles);
+                                Move newMove = new Move(from.Value, st, st.GetPosition(), movementType.RIDE, cols, 0, move.collideCeiling);
+                                graph.AddMove(from.Value, newMove);
+                                graph.Change();
                             }
                         }
-                    }
 
-                    cooperation = CooperationStatus.SINGLE;
+                        break;
+
+                    case RIDING:
+
+                        if (item.Attachment.GetType() == typeof(Move))
+                        {
+                            cooperation = CooperationStatus.RIDING;
+                            CleanRides();
+                            Move newMove = (Move)item.Attachment;
+                            newMove.type = movementType.RIDING;
+                            newMove.state = newMove.partner_state;
+                            nextMove = newMove;
+                        }
+                        break;
+
+                    case COOPERATION_FINISHED:
+
+                        cooperation = CooperationStatus.SINGLE;
+                        CleanRides();
+                        break;
+
+                    case JUMPED:
+
+                        if (nextMove.HasValue)
+                        {
+                            cooperation = CooperationStatus.RIDING;
+                            Move move = nextMove.Value.Copy();
+                            move.type = movementType.RIDE;
+                            move.state.height = MIN_RECTANGLE_HEIGHT;
+                            nextMove = move;
+                        }
+                        break;
+
+                    case RIDING_HELP:
+
+                        cooperation = CooperationStatus.RIDING_HELP;
+                        break;
+
                 }
-
-                if (item.Message.Equals(UNSYNCHRONIZED) && item.Attachment.GetType() == typeof(Move))
-                {
-                    Move circleMove = (Move) item.Attachment;
-                    State st = circleMove.partner_state;
-
-                    bool[] collectibles = Utilities.GetXorMatrix(graph.possibleCollectibles, circleMove.collectibles);
-                    Platform? from = graph.GetPlatform(new LevelRepresentation.Point(st.x, st.y), st.height);
-
-                    if (from.HasValue)
-                    {
-                        Move newMove = new Move((Platform)from, st, st.GetPosition(), movementType.RIDE, collectibles, 0, circleMove.collideCeiling);
-                        graph.AddMove((Platform)from, newMove);
-                        graph.Change();
-                    }
-
-                }
-
-                if (item.Message.Equals(RIDING) && item.Attachment.GetType() == typeof(Move))
-                {
-                    cooperation = CooperationStatus.RIDING;
-
-                    CleanRides();
-
-                    Move newMove = (Move)item.Attachment;
-                    newMove.type = movementType.RIDING;
-                    newMove.state = newMove.partner_state;
-                    nextMove = newMove;
-
-                }
-
-                if (item.Message.Equals(COOPERATION_FINISHED))
-                {
-                    cooperation = CooperationStatus.SINGLE;
-                    CleanRides();
-                }
-
-                if (item.Message.Equals(JUMPED) && nextMove.HasValue)
-                {
-                    Move newMove = ((Move)nextMove).Copy();
-                    newMove.type = movementType.RIDE;
-                    newMove.state.height = MIN_RECTANGLE_HEIGHT;
-                    nextMove = newMove;
-                    cooperation = CooperationStatus.RIDING;
-                }
-
-                if (item.Message.Equals(RIDING_HELP))
-                {
-                    cooperation = CooperationStatus.RIDING_HELP;
-                }
-
             }
 
             return;

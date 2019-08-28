@@ -36,7 +36,6 @@ namespace GeometryFriendsAgents
             Qmap = Utilities.ReadCsvFile(NUM_ROW_QMAP, NUM_COLUMN_QMAP, "Agents\\Qmap.csv");
         }
 
-
         public bool IsGoal(State st, State goal)
         {        
             float distanceX = goal.right_direction ? st.x - goal.x : goal.x - st.x;
@@ -99,29 +98,15 @@ namespace GeometryFriendsAgents
             return currentAction;
         }
 
-        public int GetStateNum(State st, int targetPointX, bool rightMove)
+        public int GetStateNum(State st, int targetPointX, bool right)
         {
             // discretized target velocity
-            int discretized_V = (int)((rightMove ? st.v_x : -st.v_x) + MAX_V) / DISCRETIZATION_V;
-            if (discretized_V < 0)
-            {
-                discretized_V = 0;
-            }
-            else if (discretized_V >= MAX_DISCRETIZED_V)
-            {
-                discretized_V = MAX_DISCRETIZED_V - 1;
-            }
+            int discretized_V = ((right ? st.v_x : -st.v_x) + MAX_V) / DISCRETIZATION_V;
+            discretized_V = Math.Min(Math.Max(discretized_V, 0), MAX_DISCRETIZED_V - 1);
 
             // discretized distance to target
-            int discretized_D = (int)((rightMove ? st.x - targetPointX : targetPointX - st.x) + MAX_D) / DISCRETIZATION_D;
-            if (discretized_D < 0)
-            {
-                discretized_D = 0;
-            }
-            else if (discretized_D >= MAX_DISCRETIZED_D)
-            {
-                discretized_D = MAX_DISCRETIZED_D - 1;
-            }
+            int discretized_D = ((right ? st.x - targetPointX : targetPointX - st.x) + MAX_D) / DISCRETIZATION_D;
+            discretized_D = Math.Min(Math.Max(discretized_D, 0), MAX_DISCRETIZED_D - 1);
 
             // state number
             return discretized_V + discretized_D * MAX_DISCRETIZED_V;
