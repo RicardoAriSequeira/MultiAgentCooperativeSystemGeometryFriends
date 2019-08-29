@@ -133,7 +133,7 @@ namespace GeometryFriendsAgents
             if ((DateTime.Now - lastMoveTime).TotalMilliseconds >= 20)
             {
 
-                currentPlatform = graph.GetPlatform(new Point(circle_state.x, circle_state.y), CIRCLE_HEIGHT, circle_state.v_y);
+                currentPlatform = graph.GetPlatform(circle_state.GetPosition(), CIRCLE_HEIGHT, circle_state.v_y);
 
                 if (!currentPlatform.HasValue && IsRidingRectangle())
                 {
@@ -247,9 +247,14 @@ namespace GeometryFriendsAgents
                             messages.Add(new AgentMessage(RIDING_HELP));
                         }
 
+                        //else if (nextMove.Value.to.type == platformType.RECTANGLE && Math.Min(Math.Max(nextMove.Value.land.x, 136), 1064) != nextMove.Value.partner_state.x)
+                        //{
+
+                        //}
+
                         else if (nextMove.Value.to.type == platformType.RECTANGLE)
                         {
-                            messages.Add(new AgentMessage(JUMPED));
+                            messages.Add(new AgentMessage(JUMPED, nextMove));
                         }
 
                     }

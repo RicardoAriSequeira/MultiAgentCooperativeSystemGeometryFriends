@@ -441,14 +441,31 @@ namespace GeometryFriendsAgents
 
                     case JUMPED:
 
-                        if (nextMove.HasValue)
+                        if (item.Attachment.GetType() == typeof(Move))
                         {
                             cooperation = CooperationStatus.RIDING;
-                            Move move = nextMove.Value.Copy();
+                            Move move = (Move)item.Attachment;
                             move.type = movementType.RIDE;
+                            move.state = move.partner_state;
+
+                            if (nextMove.Value.to.type == platformType.RECTANGLE && Math.Min(Math.Max(nextMove.Value.land.x, 136), 1064) != nextMove.Value.partner_state.x)
+                            {
+                                move.state.x = move.land.x;
+                            }
+
                             move.state.height = MIN_RECTANGLE_HEIGHT;
+                            CleanRides();
                             nextMove = move;
                         }
+
+                        //if (nextMove.HasValue)
+                        //{
+                        //    cooperation = CooperationStatus.RIDING;
+                        //    Move move = nextMove.Value.Copy();
+                        //    move.type = movementType.RIDE;
+                        //    move.state.height = MIN_RECTANGLE_HEIGHT;
+                        //    nextMove = move;
+                        //}
                         break;
 
                     case RIDING_HELP:

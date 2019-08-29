@@ -28,7 +28,7 @@ namespace GeometryFriendsAgents
                 int start = from.leftEdge + (from.leftEdge - LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2);
                 int end = from.rightEdge - (from.rightEdge - LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2);
 
-                if (from.type == platformType.RECTANGLE && k <= 5)
+                if (from.type == platformType.RECTANGLE && Math.Abs(k) <= 5)
                 {
                     start = from.leftEdge + (from.leftEdge - LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2) + 90;
                     end = from.rightEdge - (from.rightEdge - LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2) - 90;
@@ -40,6 +40,9 @@ namespace GeometryFriendsAgents
 
                         state = new State(start + j * PIXEL_LENGTH * 2, from.height - 50 - CIRCLE_RADIUS, VELOCITYX_STEP * k, 0, CIRCLE_HEIGHT);
                         Trajectory(graph, from, state, movementType.JUMP);
+
+                        //state = new State(start + j * PIXEL_LENGTH * 2, from.height - 150 - CIRCLE_RADIUS, VELOCITYX_STEP * k, 0, CIRCLE_HEIGHT);
+                        //Trajectory(graph, from, state, movementType.JUMP);
                     });
                 }
 
@@ -294,9 +297,8 @@ namespace GeometryFriendsAgents
                             start.x = (state.v_x >= 0) ? start.x - PIXEL_LENGTH : start.x + PIXEL_LENGTH;
 
                         State? partner_state = null;
-                        bool possible_rectangle = collision_type == collideType.RECTANGLE && (Math.Abs(collision.x - start.x) >= 140 || from.id == to.Value.id);
 
-                        if (collision_type == collideType.FLOOR || possible_rectangle)
+                        if (collision_type == collideType.FLOOR || collision_type == collideType.RECTANGLE)
                         {
 
                             if (from.type == platformType.RECTANGLE && type == movementType.FALL)
@@ -315,9 +317,14 @@ namespace GeometryFriendsAgents
                                 partner_state = new State(rectangle_x, rectangle_y, 0, 0, rectangle_height);
                             }
 
-                            else if (possible_rectangle)
+                            else if (collision_type == collideType.RECTANGLE)
                             {
                                 int rectangle_x = Math.Min(Math.Max(collision.x, 136), 1064);
+                                int difference = 140 - Math.Abs(collision.x - start.x);
+                                if (difference > 0)
+                                {
+                                    rectangle_x = Math.Min(Math.Max(rectangle_x + (state.v_x >= 0 ? difference : -difference), 136), 1064);
+                                }
                                 int rectangle_y = collision.y + CIRCLE_RADIUS + (MIN_RECTANGLE_HEIGHT / 2);
                                 partner_state = new State(rectangle_x, rectangle_y, 0, 0, MIN_RECTANGLE_HEIGHT);
                             }

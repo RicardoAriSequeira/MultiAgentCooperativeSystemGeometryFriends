@@ -366,8 +366,21 @@ namespace GeometryFriendsAgents
 
                     if (mI.type != movementType.COLLECT && i.type != movementType.COLLECT)
                     {
-                        if (mI.ToTheRight() == i.ToTheRight() || (mI.type == movementType.JUMP && i.type == movementType.JUMP && (mI.state.v_x == 0 || i.state.v_x == 0)))
+                        if (mI.ToTheRight() == i.ToTheRight() || (mI.type == movementType.JUMP && i.type == mI.type && (mI.state.v_x == 0 || i.state.v_x == 0)))
                         {
+
+                            if (mI.type == movementType.JUMP &&
+                                i.type == mI.type &&
+                                mI.to.type == platformType.RECTANGLE &&
+                                i.to.id == mI.to.id &&
+                                mI.land.x == i.land.x &&
+                                Math.Abs(i.land.x - i.state.x) < 140 &&
+                                Math.Abs(mI.land.x - mI.state.x) >= 140)
+                            {
+                                moveInfoToRemove.Add(i);
+                                continue;
+                            }
+
                             if (mI.type > i.type)
                             {
                                 priorityHighestFlag = false;
