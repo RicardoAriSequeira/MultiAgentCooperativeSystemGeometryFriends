@@ -8,17 +8,17 @@ namespace GeometryFriendsAgents
     public abstract class Graph
     {
 
-        public enum collideType
+        public enum CollideType
         {
             CEILING, FLOOR, RECTANGLE, OTHER
         };
 
-        public enum movementType
+        public enum MovementType
         {
-            COLLECT, RIDE, RIDING, TRANSITION, FALL, JUMP
+            COLLECT, TRANSITION, FALL, JUMP, COOPERATION
         };
 
-        public enum platformType
+        public enum PlatformType
         {
             NO_PLATFORM, BLACK, GREEN, YELLOW, GAP, RECTANGLE
         };
@@ -46,9 +46,9 @@ namespace GeometryFriendsAgents
             public int rightEdge;
             public int allowedHeight;
             public List<Move> moves;
-            public platformType type;
+            public PlatformType type;
 
-            public Platform(platformType type, int height, int leftEdge, int rightEdge, List<Move> moves, int allowedHeight, int id = 0)
+            public Platform(PlatformType type, int height, int leftEdge, int rightEdge, List<Move> moves, int allowedHeight, int id = 0)
             {
                 this.id = id;
                 this.type = type;
@@ -90,11 +90,11 @@ namespace GeometryFriendsAgents
             public State state;
             public Platform to;
             public bool ceiling;
-            public movementType type;
+            public MovementType type;
             public State partner_state;
             public bool[] collectibles;
 
-            public Move(Platform t, State st, Point l, movementType mov_t, bool[] cols, int lgth, bool c, State? p_st = null)
+            public Move(Platform t, State st, Point l, MovementType mov_t, bool[] cols, int lgth, bool c, State? p_st = null)
             {
                 to = t;
                 land = l;
@@ -207,14 +207,14 @@ namespace GeometryFriendsAgents
         public bool[] CheckCollectiblesPlatform(bool[] platformsChecked, Platform p, bool cooperation = false)
         {
 
-            if (p.type != platformType.RECTANGLE || cooperation)
+            if (p.type != PlatformType.RECTANGLE || cooperation)
             {
                 platformsChecked[p.id - 1] = true;
 
                 foreach (Move m in p.moves)
                 {
 
-                    if (m.to.type != platformType.RECTANGLE || m.to.id == p.id)
+                    if (m.to.type != PlatformType.RECTANGLE || m.to.id == p.id)
                     {
                         possibleCollectibles = Utilities.GetOrMatrix(possibleCollectibles, m.collectibles);
 
@@ -278,13 +278,13 @@ namespace GeometryFriendsAgents
                 if (trueNum == Utilities.numTrue.MORETRUE)
                 {
                     // actions have higher priority than no actions
-                    if (mI.type != movementType.COLLECT && i.type == movementType.COLLECT)
+                    if (mI.type != MovementType.COLLECT && i.type == MovementType.COLLECT)
                     {
                         continue;
                     }
 
                     // comparison between no action movements
-                    else if (mI.type != movementType.COLLECT && i.type != movementType.COLLECT)
+                    else if (mI.type != MovementType.COLLECT && i.type != MovementType.COLLECT)
                     {
                         if (mI.type > i.type)
                         {
@@ -303,11 +303,11 @@ namespace GeometryFriendsAgents
 
                 if (trueNum == Utilities.numTrue.LESSTRUE)
                 {
-                    if (mI.type == movementType.COLLECT && i.type != movementType.COLLECT)
+                    if (mI.type == MovementType.COLLECT && i.type != MovementType.COLLECT)
                     {
                         continue;
                     }
-                    else if (mI.type != movementType.COLLECT && i.type != movementType.COLLECT)
+                    else if (mI.type != MovementType.COLLECT && i.type != MovementType.COLLECT)
                     {
                         if (mI.type < i.type)
                         {
@@ -331,7 +331,7 @@ namespace GeometryFriendsAgents
 
                 if (trueNum == Utilities.numTrue.SAMETRUE)
                 {
-                    if (mI.type == movementType.COLLECT && i.type == movementType.COLLECT)
+                    if (mI.type == MovementType.COLLECT && i.type == MovementType.COLLECT)
                     {
                         int middlePos = (mI.to.rightEdge + mI.to.leftEdge) / 2;
 
@@ -352,26 +352,26 @@ namespace GeometryFriendsAgents
                         continue;
                     }
 
-                    if (mI.type == movementType.COLLECT && i.type != movementType.COLLECT)
+                    if (mI.type == MovementType.COLLECT && i.type != MovementType.COLLECT)
                     {
                         moveInfoToRemove.Add(i);
                         continue;
                     }
 
-                    if (mI.type != movementType.COLLECT && i.type == movementType.COLLECT)
+                    if (mI.type != MovementType.COLLECT && i.type == MovementType.COLLECT)
                     {
                         priorityHighestFlag = false;
                         continue;
                     }
 
-                    if (mI.type != movementType.COLLECT && i.type != movementType.COLLECT)
+                    if (mI.type != MovementType.COLLECT && i.type != MovementType.COLLECT)
                     {
-                        if (mI.ToTheRight() == i.ToTheRight() || (mI.type == movementType.JUMP && i.type == mI.type && (mI.state.v_x == 0 || i.state.v_x == 0)))
+                        if (mI.ToTheRight() == i.ToTheRight() || (mI.type == MovementType.JUMP && i.type == mI.type && (mI.state.v_x == 0 || i.state.v_x == 0)))
                         {
 
-                            if (mI.type == movementType.JUMP &&
+                            if (mI.type == MovementType.JUMP &&
                                 i.type == mI.type &&
-                                mI.to.type == platformType.RECTANGLE &&
+                                mI.to.type == PlatformType.RECTANGLE &&
                                 i.to.id == mI.to.id &&
                                 mI.land.x == i.land.x &&
                                 Math.Abs(i.land.x - i.state.x) < 140 &&

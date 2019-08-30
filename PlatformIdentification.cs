@@ -12,9 +12,9 @@ namespace GeometryFriendsAgents
     static class PlatformIdentification
     {
 
-        public static platformType[,] GetPlatformArray_Circle(int[,] levelArray)
+        public static PlatformType[,] GetPlatformArray_Circle(int[,] levelArray)
         {
-            platformType[,] platformArray = new platformType[levelArray.GetLength(0), levelArray.GetLength(1)];
+            PlatformType[,] platformArray = new PlatformType[levelArray.GetLength(0), levelArray.GetLength(1)];
 
             for (int y = 0; y < levelArray.GetLength(0); y++)
             {
@@ -29,11 +29,11 @@ namespace GeometryFriendsAgents
                     {
                         if (levelArray[y, x - 1] == BLACK || levelArray[y, x] == BLACK)
                         {
-                            platformArray[y, x] = platformType.BLACK;
+                            platformArray[y, x] = PlatformType.BLACK;
                         }
                         else if (levelArray[y, x - 1] == GREEN || levelArray[y, x] == GREEN)
                         {
-                            platformArray[y, x] = platformType.GREEN;
+                            platformArray[y, x] = PlatformType.GREEN;
                         }
                     }
                 });
@@ -43,9 +43,9 @@ namespace GeometryFriendsAgents
 
         }
 
-        public static platformType[,] GetPlatformArray_Rectangle(int[,] levelArray)
+        public static PlatformType[,] GetPlatformArray_Rectangle(int[,] levelArray)
         {
-            platformType[,] platformArray = new platformType[levelArray.GetLength(0), levelArray.GetLength(1)];
+            PlatformType[,] platformArray = new PlatformType[levelArray.GetLength(0), levelArray.GetLength(1)];
 
             for (int y = 0; y < levelArray.GetLength(0); y++)
             {
@@ -80,7 +80,7 @@ namespace GeometryFriendsAgents
                             }
                         }
 
-                        platformArray[y, x] = (levelArray[y, x] == BLACK) ? platformType.BLACK : platformType.YELLOW;
+                        platformArray[y, x] = (levelArray[y, x] == BLACK) ? PlatformType.BLACK : PlatformType.YELLOW;
                     }
 
                 });
@@ -94,18 +94,18 @@ namespace GeometryFriendsAgents
         {
             List<Platform> platforms = new List<Platform>();
 
-            platformType[,] platformArray = GetPlatformArray_Circle(levelArray);
+            PlatformType[,] platformArray = GetPlatformArray_Circle(levelArray);
 
             Parallel.For(0, levelArray.GetLength(0), i =>
             {
-                platformType currentPlatform = platformType.NO_PLATFORM;
+                PlatformType currentPlatform = PlatformType.NO_PLATFORM;
                 int leftEdge = 0;
 
                 for (int j = 0; j < platformArray.GetLength(1); j++)
                 {
-                    if (currentPlatform == platformType.NO_PLATFORM)
+                    if (currentPlatform == PlatformType.NO_PLATFORM)
                     {
-                        if (platformArray[i, j] == platformType.BLACK || platformArray[i, j] == platformType.GREEN)
+                        if (platformArray[i, j] == PlatformType.BLACK || platformArray[i, j] == PlatformType.GREEN)
                         {
                             leftEdge = ConvertValue_ArrayPointIntoPoint(j);
                             currentPlatform = platformArray[i, j];
@@ -121,7 +121,7 @@ namespace GeometryFriendsAgents
                             {
                                 lock (platforms)
                                 {
-                                    platforms.Add(new Platform(platformType.BLACK, ConvertValue_ArrayPointIntoPoint(i), leftEdge, rightEdge, new List<Move>(), CIRCLE_HEIGHT));
+                                    platforms.Add(new Platform(PlatformType.BLACK, ConvertValue_ArrayPointIntoPoint(i), leftEdge, rightEdge, new List<Move>(), CIRCLE_HEIGHT));
                                 }
                             }
 
@@ -139,7 +139,7 @@ namespace GeometryFriendsAgents
         {
 
             List<Platform> platforms = new List<Platform>();
-            platformType[,] platformArray = GetPlatformArray_Rectangle(levelArray);
+            PlatformType[,] platformArray = GetPlatformArray_Rectangle(levelArray);
 
             Parallel.For(8, 96, y =>
             {
@@ -147,14 +147,14 @@ namespace GeometryFriendsAgents
                 int leftEdge = 0, gap_size = 0;
                 int allowed_height = MAX_RECTANGLE_HEIGHT;
 
-                platformType currentPlatform = platformArray[y, 4];
+                PlatformType currentPlatform = platformArray[y, 4];
 
                 for (int x = 4; x < 155; x++)
                 {
 
                     // CALCULATION OF NEW ALLOWED HEIGHT
                     int new_allowed_height = allowed_height;
-                    if (platformArray[y, x] != platformType.NO_PLATFORM)
+                    if (platformArray[y, x] != PlatformType.NO_PLATFORM)
                     {
                         new_allowed_height = MIN_RECTANGLE_HEIGHT;
                         foreach (int h in RECTANGLE_HEIGHTS)
@@ -174,9 +174,9 @@ namespace GeometryFriendsAgents
                             // GAP
                             if (7 <= gap_size && gap_size <= 19)
                                 lock (platforms)
-                                    platforms.Add(new Platform(platformType.GAP, ConvertValue_ArrayPointIntoPoint(y), leftEdge, rightEdge, new List<Move>(), MIN_RECTANGLE_HEIGHT));
+                                    platforms.Add(new Platform(PlatformType.GAP, ConvertValue_ArrayPointIntoPoint(y), leftEdge, rightEdge, new List<Move>(), MIN_RECTANGLE_HEIGHT));
                             // PLATFORM
-                            else if (currentPlatform != platformType.NO_PLATFORM)
+                            else if (currentPlatform != PlatformType.NO_PLATFORM)
                                 lock (platforms)
                                     platforms.Add(new Platform(currentPlatform, ConvertValue_ArrayPointIntoPoint(y), leftEdge, rightEdge, new List<Move>(), allowed_height));
                         }
@@ -199,7 +199,7 @@ namespace GeometryFriendsAgents
 
             foreach (Platform p in platforms2)
             {
-                platforms1.Add(new Platform(platformType.RECTANGLE, p.height - GameInfo.MIN_RECTANGLE_HEIGHT, p.leftEdge, p.rightEdge, p.moves, p.allowedHeight, p.id));
+                platforms1.Add(new Platform(PlatformType.RECTANGLE, p.height - GameInfo.MIN_RECTANGLE_HEIGHT, p.leftEdge, p.rightEdge, p.moves, p.allowedHeight, p.id));
             }
 
             return SetPlatformsID(platforms1);
@@ -230,7 +230,7 @@ namespace GeometryFriendsAgents
             {
                 foreach (Move m in p.moves)
                 {
-                    if (m.to.type == platformType.RECTANGLE)
+                    if (m.to.type == PlatformType.RECTANGLE)
                     {
                         var itemToRemove = p.moves.Single(r => r.type == m.type &&
                                                                 r.to.id == m.to.id &&
@@ -243,7 +243,7 @@ namespace GeometryFriendsAgents
 
             foreach (Platform p in platforms)
             {
-                if (p.type == platformType.RECTANGLE)
+                if (p.type == PlatformType.RECTANGLE)
                 {
                     var itemToRemove = platforms.Single(r => r.id == p.id && r.type == p.type);
                     platforms.Remove(itemToRemove);

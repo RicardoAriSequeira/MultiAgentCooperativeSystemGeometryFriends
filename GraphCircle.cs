@@ -76,7 +76,7 @@ namespace GeometryFriendsAgents
             int p = 0;
             while (p < platforms.Count)
             {
-                if (platforms[p].type == platformType.RECTANGLE)
+                if (platforms[p].type == PlatformType.RECTANGLE)
                 {
                     platforms.Remove(platforms[p]);
                 }

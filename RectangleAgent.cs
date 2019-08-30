@@ -196,28 +196,28 @@ namespace GeometryFriendsAgents
                                 currentAction = actionSelector.GetCurrentAction(rectangle_state, targetX, 0, nextMove.Value.ToTheRight());
                             }
 
-                            else if (nextMove.Value.type == movementType.FALL && nextMove.Value.state.v_x == 0 &&
+                            else if (nextMove.Value.type == MovementType.FALL && nextMove.Value.state.v_x == 0 &&
                                      rectangle_state.height > Math.Max((RECTANGLE_AREA / nextMove.Value.state.height) - 1, MIN_RECTANGLE_HEIGHT + 3))
                             {
                                 currentAction = Moves.MORPH_DOWN;
                             }
 
-                            else if (nextMove.Value.type == movementType.RIDING && Math.Abs(rectangle_state.x - circle_state.x) > 60)
+                            else if (nextMove.Value.type == MovementType.COOPERATION && cooperation == CooperationStatus.RIDING && Math.Abs(rectangle_state.x - circle_state.x) > 60)
                             {
                                 currentAction = actionSelector.GetCurrentAction(rectangle_state, circle_state.x, 0, true);
                             }
 
-                            else if (nextMove.Value.type == movementType.TRANSITION && rectangle_state.height > Math.Max(nextMove.Value.state.height, 53))
+                            else if (nextMove.Value.type == MovementType.TRANSITION && rectangle_state.height > Math.Max(nextMove.Value.state.height, 53))
                             {
                                 currentAction = Moves.MORPH_DOWN;
                             }
 
-                            else if (nextMove.Value.type == movementType.TRANSITION && rectangle_state.height < nextMove.Value.state.height - PIXEL_LENGTH)
+                            else if (nextMove.Value.type == MovementType.TRANSITION && rectangle_state.height < nextMove.Value.state.height - PIXEL_LENGTH)
                             {
                                 currentAction = Moves.MORPH_UP;
                             }
 
-                            else if (nextMove.Value.type == movementType.TRANSITION)
+                            else if (nextMove.Value.type == MovementType.TRANSITION)
                             {
                                 currentAction = nextMove.Value.ToTheRight() ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                             }
@@ -238,7 +238,7 @@ namespace GeometryFriendsAgents
                     if (nextMove.HasValue)
                     {
 
-                        if (nextMove.Value.type == movementType.TRANSITION)
+                        if (nextMove.Value.type == MovementType.TRANSITION)
                             currentAction = nextMove.Value.ToTheRight() ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
 
                         else currentAction = actionSelector.GetCurrentAction(rectangle_state, targetPointX_InAir, 0, true);
@@ -258,21 +258,21 @@ namespace GeometryFriendsAgents
                     targetPointX_InAir = (nextMove.Value.to.leftEdge + nextMove.Value.to.rightEdge) / 2;
 
                     if (rectangle_state.height >= Math.Max(nextMove.Value.state.height, 53) &&
-                        (nextMove.Value.type == movementType.RIDE || nextMove.Value.type == movementType.TRANSITION))
+                        (nextMove.Value.type == MovementType.COOPERATION || nextMove.Value.type == MovementType.TRANSITION))
                     {
                         currentAction = Moves.MORPH_DOWN;
                     }
 
                     else if (rectangle_state.height < nextMove.Value.state.height - PIXEL_LENGTH &&
                              (cooperation == CooperationStatus.RIDING ||
-                             (nextMove.Value.type == movementType.FALL && nextMove.Value.state.v_x == 0) ||
-                             nextMove.Value.type == movementType.COLLECT ||
-                             nextMove.Value.type == movementType.TRANSITION))
+                             (nextMove.Value.type == MovementType.FALL && nextMove.Value.state.v_x == 0) ||
+                             nextMove.Value.type == MovementType.COLLECT ||
+                             nextMove.Value.type == MovementType.TRANSITION))
                     {
                         currentAction = Moves.MORPH_UP;
                     }
 
-                    else if (nextMove.Value.type == movementType.TRANSITION)
+                    else if (nextMove.Value.type == MovementType.TRANSITION)
                         currentAction = nextMove.Value.ToTheRight() ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
 
                     else if (cooperation == CooperationStatus.RIDING)
@@ -334,7 +334,7 @@ namespace GeometryFriendsAgents
             if (currentPlatform.HasValue)
             {
                 if (!previousPlatform.HasValue ||
-                    (currentPlatform.Value.id != previousPlatform.Value.id && currentPlatform.Value.type != platformType.GAP))
+                    (currentPlatform.Value.id != previousPlatform.Value.id && currentPlatform.Value.type != PlatformType.GAP))
                 {
                     previousPlatform = currentPlatform;
                     return true;
@@ -354,7 +354,7 @@ namespace GeometryFriendsAgents
                 levelInfo.GetObtainedCollectibles(), levelInfo.initialCollectibles);
             graph.Process();
 
-            if (nextMove.HasValue && nextMove.Value.type == movementType.RIDE && cooperation == CooperationStatus.SINGLE)
+            if (nextMove.HasValue && nextMove.Value.type == MovementType.COOPERATION && cooperation == CooperationStatus.SINGLE)
             {
                 cooperation = CooperationStatus.UNSYNCHRONIZED;
             }
@@ -412,7 +412,7 @@ namespace GeometryFriendsAgents
                             if (from.HasValue)
                             {
                                 bool[] cols = Utilities.GetXorMatrix(graph.possibleCollectibles, move.collectibles);
-                                Move newMove = new Move(from.Value, st, st.GetPosition(), movementType.RIDE, cols, 0, move.ceiling);
+                                Move newMove = new Move(from.Value, st, st.GetPosition(), MovementType.COOPERATION, cols, 0, move.ceiling);
                                 graph.AddMove(from.Value, newMove);
                                 graph.Change();
                             }
@@ -427,7 +427,7 @@ namespace GeometryFriendsAgents
                             cooperation = CooperationStatus.RIDING;
                             CleanRides();
                             Move newMove = (Move)item.Attachment;
-                            newMove.type = movementType.RIDING;
+                            newMove.type = MovementType.COOPERATION;
                             newMove.state = newMove.partner_state;
                             nextMove = newMove;
                         }
@@ -445,10 +445,10 @@ namespace GeometryFriendsAgents
                         {
                             cooperation = CooperationStatus.RIDING;
                             Move move = (Move)item.Attachment;
-                            move.type = movementType.RIDE;
+                            move.type = MovementType.COOPERATION;
                             move.state = move.partner_state;
 
-                            if (nextMove.Value.to.type == platformType.RECTANGLE && Math.Min(Math.Max(nextMove.Value.land.x, 136), 1064) != nextMove.Value.partner_state.x)
+                            if (nextMove.Value.to.type == PlatformType.RECTANGLE && Math.Min(Math.Max(nextMove.Value.land.x, 136), 1064) != nextMove.Value.partner_state.x)
                             {
                                 move.state.x = move.land.x;
                             }
@@ -544,28 +544,15 @@ namespace GeometryFriendsAgents
         public void CleanRides()
         {
 
-            if (nextMove.HasValue && (nextMove.Value.type == movementType.RIDE || nextMove.Value.type == movementType.RIDING))
-            {
-                nextMove = null;
-            }
-
             foreach (Platform p in graph.platforms)
-            {
-                int i = 0;
 
-                while (i < p.moves.Count)
-                {
-                    if (p.moves[i].type == movementType.RIDE || p.moves[i].type == movementType.RIDING)
+                for (int i = 0; i < p.moves.Count; i++)
+                
+                    if (p.moves[i].type == MovementType.COOPERATION)
                     {
                         p.moves.Remove(p.moves[i]);
+                        i--;
                     }
-                    else
-                    {
-                        i++;
-                    }
-
-                }
-            }
         }
     }
 }

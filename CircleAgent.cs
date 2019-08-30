@@ -164,7 +164,7 @@ namespace GeometryFriendsAgents
 
                         else if (Math.Abs(circle_state.v_y) <= MAX_VELOCITYY)
                         {
-                            if (nextMove.Value.type == movementType.TRANSITION)
+                            if (nextMove.Value.type == MovementType.TRANSITION)
                             {
                                 currentAction = nextMove.Value.ToTheRight() ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
                             }
@@ -180,7 +180,7 @@ namespace GeometryFriendsAgents
 
                     }
 
-                    else if (cooperation != CooperationStatus.SINGLE && currentPlatform.Value.type != platformType.RECTANGLE)
+                    else if (cooperation != CooperationStatus.SINGLE && currentPlatform.Value.type != PlatformType.RECTANGLE)
                     {
                         cooperation = CooperationStatus.SINGLE;
                         messages.Add(new AgentMessage(COOPERATION_FINISHED));
@@ -191,15 +191,15 @@ namespace GeometryFriendsAgents
                 {
                     if (nextMove.HasValue)
                     {
-                        if ((cooperation == CooperationStatus.SYNCHRONIZED && nextMove.Value.to.type == platformType.RECTANGLE) || cooperation == CooperationStatus.RIDING_HELP)
+                        if ((cooperation == CooperationStatus.SYNCHRONIZED && nextMove.Value.to.type == PlatformType.RECTANGLE) || cooperation == CooperationStatus.RIDING_HELP)
                         {
                             currentAction = actionSelector.GetCurrentAction(circle_state, rectangle_state.x, 0, true);
                         }
-                        else if (nextMove.Value.type == movementType.JUMP || nextMove.Value.type == movementType.FALL)
+                        else if (nextMove.Value.type == MovementType.JUMP || nextMove.Value.type == MovementType.FALL)
                         {
                             currentAction = Moves.NO_ACTION;
                         }
-                        else if (nextMove.Value.type == movementType.TRANSITION)
+                        else if (nextMove.Value.type == MovementType.TRANSITION)
                         {
                             currentAction = nextMove.Value.ToTheRight() ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
                         }
@@ -223,7 +223,7 @@ namespace GeometryFriendsAgents
             if (nextMove.HasValue)
             {
 
-                if (cooperation == CooperationStatus.RIDING_HELP && currentPlatform.HasValue && currentPlatform.Value.type == platformType.RECTANGLE && IsRidingRectangle())
+                if (cooperation == CooperationStatus.RIDING_HELP && currentPlatform.HasValue && currentPlatform.Value.type == PlatformType.RECTANGLE && IsRidingRectangle())
                 {
                     cooperation = CooperationStatus.RIDING;
                 }
@@ -232,12 +232,12 @@ namespace GeometryFriendsAgents
                 {
                     targetPointX_InAir = (nextMove.Value.to.leftEdge + nextMove.Value.to.rightEdge) / 2;
 
-                    if (nextMove.Value.type == movementType.JUMP && cooperation == CooperationStatus.SINGLE)
+                    if (nextMove.Value.type == MovementType.JUMP && cooperation == CooperationStatus.SINGLE)
                     {
                         currentAction = Moves.JUMP;
                     }
 
-                    if (nextMove.Value.type == movementType.JUMP && cooperation == CooperationStatus.SYNCHRONIZED)
+                    if (nextMove.Value.type == MovementType.JUMP && cooperation == CooperationStatus.SYNCHRONIZED)
                     {
                         currentAction = Moves.JUMP;
 
@@ -252,7 +252,7 @@ namespace GeometryFriendsAgents
 
                         //}
 
-                        else if (nextMove.Value.to.type == platformType.RECTANGLE)
+                        else if (nextMove.Value.to.type == PlatformType.RECTANGLE)
                         {
                             messages.Add(new AgentMessage(JUMPED, nextMove));
                         }
@@ -352,18 +352,18 @@ namespace GeometryFriendsAgents
                     messages.Add(new AgentMessage(COOPERATION_FINISHED));
                 }
 
-                if (nextMove.Value.to.type == platformType.RECTANGLE || IsRidingRectangle())
+                if (nextMove.Value.to.type == PlatformType.RECTANGLE || IsRidingRectangle())
                 {
                     Cooperate();
                 }
 
-                if (currentPlatform.HasValue && currentPlatform.Value.type != platformType.RECTANGLE && nextMove.Value.to.type != platformType.RECTANGLE)
+                if (currentPlatform.HasValue && currentPlatform.Value.type != PlatformType.RECTANGLE && nextMove.Value.to.type != PlatformType.RECTANGLE)
                 {
                     cooperation = CooperationStatus.SINGLE;
                     messages.Add(new AgentMessage(COOPERATION_FINISHED));
                 }
 
-                if (nextMove.Value.to.type != platformType.RECTANGLE && cooperation == CooperationStatus.SINGLE)
+                if (nextMove.Value.to.type != PlatformType.RECTANGLE && cooperation == CooperationStatus.SINGLE)
                 {
                     messages.Add(new AgentMessage(INDIVIDUAL_MOVE, nextMove));
                 }
@@ -380,7 +380,7 @@ namespace GeometryFriendsAgents
 
             Platform fromPlatform = currentPlatform.HasValue ? (Platform) currentPlatform : (Platform) previousPlatform;
 
-            if (fromPlatform.type == platformType.RECTANGLE)
+            if (fromPlatform.type == PlatformType.RECTANGLE)
             {
                 messages.Add(new AgentMessage(RIDING, rectangle_move));
                 cooperation = CooperationStatus.RIDING;
@@ -395,7 +395,7 @@ namespace GeometryFriendsAgents
                 {
                     foreach (Move m in fromPlatform.moves)
                     {
-                        if (m.to.id == rectangle_move.to.id && m.type == movementType.JUMP && m.ToTheRight() != rectangle_move.ToTheRight())
+                        if (m.to.id == rectangle_move.to.id && m.type == MovementType.JUMP && m.ToTheRight() != rectangle_move.ToTheRight())
                         {
                             nextMove = m;
                             rectangle_move = m.Copy();

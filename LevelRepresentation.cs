@@ -185,7 +185,7 @@ namespace GeometryFriendsAgents
             foreach (Graph.Platform p in platforms)
             {
 
-                if (p.type == Graph.platformType.RECTANGLE)
+                if (p.type == Graph.PlatformType.RECTANGLE)
                 {
                     int platformWidth = p.rightEdge - p.leftEdge;
                     int platformHeight = GameInfo.MIN_RECTANGLE_HEIGHT;
