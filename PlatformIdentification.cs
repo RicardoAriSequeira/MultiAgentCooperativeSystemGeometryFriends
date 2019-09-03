@@ -271,6 +271,15 @@ namespace GeometryFriendsAgents
                 }
             }
 
+            //for (int i = 0; i < rectangle_platforms.Count; i++)
+            //{
+            //    Platform new_platform = rectangle_platforms[i].Copy();
+            //    new_platform.moves.Clear();
+            //    new_platform.leftEdge = new_platform.leftEdge + 100;
+            //    new_platform.rightEdge = new_platform.rightEdge - 100;
+            //    rectangle_platforms[i] = new_platform;
+            //}
+
             foreach (Platform p in rectangle_platforms)
             {
                 p.moves.Clear();

@@ -202,7 +202,7 @@ namespace GeometryFriendsAgents
                                 currentAction = Moves.MORPH_DOWN;
                             }
 
-                            else if (nextMove.Value.type == movementType.RIDING && Math.Abs(rectangle_state.x - circle_state.x) > 60)
+                            else if (nextMove.Value.type == movementType.COOPERATION && cooperation == CooperationStatus.RIDING && Math.Abs(rectangle_state.x - circle_state.x) > 60)
                             {
                                 currentAction = actionSelector.GetCurrentAction(rectangle_state, circle_state.x, 0, true);
                             }
@@ -258,7 +258,7 @@ namespace GeometryFriendsAgents
                     targetPointX_InAir = (nextMove.Value.to.leftEdge + nextMove.Value.to.rightEdge) / 2;
 
                     if (rectangle_state.height >= Math.Max(nextMove.Value.state.height, 53) &&
-                        (nextMove.Value.type == movementType.RIDE || nextMove.Value.type == movementType.TRANSITION))
+                        (nextMove.Value.type == movementType.COOPERATION || nextMove.Value.type == movementType.TRANSITION))
                     {
                         currentAction = Moves.MORPH_DOWN;
                     }
@@ -354,7 +354,7 @@ namespace GeometryFriendsAgents
                 levelInfo.GetObtainedCollectibles(), levelInfo.initialCollectibles);
             graph.Process();
 
-            if (nextMove.HasValue && nextMove.Value.type == movementType.RIDE && cooperation == CooperationStatus.SINGLE)
+            if (nextMove.HasValue && nextMove.Value.type == movementType.COOPERATION && cooperation == CooperationStatus.SINGLE)
             {
                 cooperation = CooperationStatus.UNSYNCHRONIZED;
             }
@@ -412,7 +412,7 @@ namespace GeometryFriendsAgents
                             if (from.HasValue)
                             {
                                 bool[] cols = Utilities.GetXorMatrix(graph.possibleCollectibles, move.collectibles);
-                                Move newMove = new Move(from.Value, st, st.GetPosition(), movementType.RIDE, cols, 0, move.ceiling);
+                                Move newMove = new Move(from.Value, st, st.GetPosition(), movementType.COOPERATION, cols, 0, move.ceiling);
                                 graph.AddMove(from.Value, newMove);
                                 graph.Change();
                             }
@@ -427,7 +427,7 @@ namespace GeometryFriendsAgents
                             cooperation = CooperationStatus.RIDING;
                             CleanRides();
                             Move newMove = (Move)item.Attachment;
-                            newMove.type = movementType.RIDING;
+                            newMove.type = movementType.COOPERATION;
                             newMove.state = newMove.partner_state;
                             nextMove = newMove;
                         }
@@ -445,7 +445,7 @@ namespace GeometryFriendsAgents
                         {
                             cooperation = CooperationStatus.RIDING;
                             Move move = nextMove.Value.Copy();
-                            move.type = movementType.RIDE;
+                            move.type = movementType.COOPERATION;
                             move.state.height = MIN_RECTANGLE_HEIGHT;
                             nextMove = move;
                         }
@@ -527,7 +527,7 @@ namespace GeometryFriendsAgents
         public void CleanRides()
         {
 
-            if (nextMove.HasValue && (nextMove.Value.type == movementType.RIDE || nextMove.Value.type == movementType.RIDING))
+            if (nextMove.HasValue && nextMove.Value.type == movementType.COOPERATION)
             {
                 nextMove = null;
             }
@@ -538,7 +538,7 @@ namespace GeometryFriendsAgents
 
                 while (i < p.moves.Count)
                 {
-                    if (p.moves[i].type == movementType.RIDE || p.moves[i].type == movementType.RIDING)
+                    if (p.moves[i].type == movementType.COOPERATION)
                     {
                         p.moves.Remove(p.moves[i]);
                     }

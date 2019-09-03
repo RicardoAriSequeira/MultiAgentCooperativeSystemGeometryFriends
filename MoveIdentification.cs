@@ -294,10 +294,10 @@ namespace GeometryFriendsAgents
                             start.x = (state.v_x >= 0) ? start.x - PIXEL_LENGTH : start.x + PIXEL_LENGTH;
 
                         State? partner_state = null;
-                        bool possible_rectangle = collision_type == collideType.RECTANGLE && (Math.Abs(collision.x - start.x) >= 140 || from.id == to.Value.id);
+                        //bool possible_rectangle = collision_type == collideType.RECTANGLE && (Math.Abs(collision.x - start.x) >= 140 || from.id == to.Value.id);
 
-                        if (collision_type == collideType.FLOOR || possible_rectangle)
-                        {
+                        //if (collision_type == collideType.FLOOR || possible_rectangle)
+                        //{
 
                             if (from.type == platformType.RECTANGLE && type == movementType.FALL)
                             {
@@ -315,7 +315,8 @@ namespace GeometryFriendsAgents
                                 partner_state = new State(rectangle_x, rectangle_y, 0, 0, rectangle_height);
                             }
 
-                            else if (possible_rectangle)
+                            // else if (possible_rectangle)
+                            else if (collision_type == collideType.RECTANGLE)
                             {
                                 int rectangle_x = Math.Min(Math.Max(collision.x, 136), 1064);
                                 int rectangle_y = collision.y + CIRCLE_RADIUS + (MIN_RECTANGLE_HEIGHT / 2);
@@ -325,7 +326,7 @@ namespace GeometryFriendsAgents
                             State new_state = new State(start.x, start.y, state.v_x, state.v_y, state.height);
                             Move new_move = new Move(to.Value, new_state, collision, type, collectibles, (int)length, ceiling, partner_state);
                             graph.AddMove(from, new_move);
-                        }
+                        //}
                     }
                 }
 

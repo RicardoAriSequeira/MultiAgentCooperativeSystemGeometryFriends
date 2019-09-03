@@ -15,7 +15,7 @@ namespace GeometryFriendsAgents
 
         public enum movementType
         {
-            COLLECT, RIDE, RIDING, TRANSITION, FALL, JUMP
+            COLLECT, COOPERATION, TRANSITION, FALL, JUMP
         };
 
         public enum platformType
@@ -57,6 +57,11 @@ namespace GeometryFriendsAgents
                 this.leftEdge = leftEdge;
                 this.rightEdge = rightEdge;
                 this.allowedHeight = allowedHeight;
+            }
+
+            public Platform Copy()
+            {
+                return new Platform(type, height, leftEdge, rightEdge, moves, allowedHeight, id);
             }
         }
 
@@ -368,6 +373,68 @@ namespace GeometryFriendsAgents
                     {
                         if (mI.ToTheRight() == i.ToTheRight() || (mI.type == movementType.JUMP && i.type == movementType.JUMP && (mI.state.v_x == 0 || i.state.v_x == 0)))
                         {
+
+                            // JUMPS FROM PLATFORMS TO RECTANGLE (RIDE)
+                            if (fromPlatform.type != platformType.RECTANGLE &&
+                                mI.type == movementType.JUMP &&
+                                i.type == mI.type &&
+                                mI.to.type == platformType.RECTANGLE &&
+                                i.to.id == mI.to.id &&
+                                mI.ToTheRight() == i.ToTheRight())
+                            {
+
+                                // SAME JUMP POINT
+                                if (mI.state.x == i.state.x)
+                                {
+
+                                    if (Math.Abs(i.land.x - i.state.x) < 140)
+                                    {
+
+                                        if (Math.Abs(mI.land.x - mI.state.x) >= 140)
+                                        {
+                                            moveInfoToRemove.Add(i);
+                                            continue;
+                                        }
+
+                                        else if (Math.Abs(mI.state.v_x) < Math.Abs(i.state.v_x))
+                                        {
+                                            moveInfoToRemove.Add(i);
+                                            continue;
+                                        }
+
+                                        else
+                                        {
+                                            priorityHighestFlag = false;
+                                            continue;
+                                        }
+
+                                    }
+                                    else
+                                    {
+                                        if (Math.Abs(mI.land.x - mI.state.x) < 140)
+                                        {
+                                            priorityHighestFlag = false;
+                                            continue;
+                                        }
+
+                                        else if (Math.Abs(mI.state.v_x) < Math.Abs(i.state.v_x))
+                                        {
+                                            moveInfoToRemove.Add(i);
+                                            continue;
+                                        }
+
+                                        else
+                                        {
+                                            priorityHighestFlag = false;
+                                            continue;
+                                        }
+                                    }
+                                }
+
+                                continue;
+
+                            }
+
                             if (mI.type > i.type)
                             {
                                 priorityHighestFlag = false;
