@@ -1,6 +1,5 @@
-﻿using GeometryFriends.AI;
-using GeometryFriends.AI.Perceptions.Information;
-using System;
+﻿using System;
+using GeometryFriends.AI;
 using static GeometryFriendsAgents.Graph;
 
 namespace GeometryFriendsAgents

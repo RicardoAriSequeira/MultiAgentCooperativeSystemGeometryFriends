@@ -159,7 +159,16 @@ namespace GeometryFriendsAgents
 
                         else if (cooperation == CooperationStatus.UNSYNCHRONIZED)
                         {
-                            currentAction = Moves.NO_ACTION;
+                            if (nextMove.Value.type == movementType.JUMP && nextMove.Value.state.v_x != 0 && !IsRidingRectangle())
+                            {
+                                currentAction = actionSelector.GetCurrentAction(circle_state, nextMove.Value.GetXToAccelerate(), 0, false);
+                            }
+
+                            else
+                            {
+                                currentAction = Moves.NO_ACTION;
+                            }
+
                         }
 
                         else if (Math.Abs(circle_state.v_y) <= MAX_VELOCITYY)
@@ -185,6 +194,11 @@ namespace GeometryFriendsAgents
                         cooperation = CooperationStatus.SINGLE;
                         messages.Add(new AgentMessage(COOPERATION_FINISHED));
                     }
+
+                    else
+                    {
+                        currentAction = Moves.NO_ACTION;
+                    }
                 }
 
                 else
@@ -198,6 +212,7 @@ namespace GeometryFriendsAgents
                         else if (nextMove.Value.type == movementType.JUMP || nextMove.Value.type == movementType.FALL)
                         {
                             currentAction = Moves.NO_ACTION;
+                            //currentAction = actionSelector.GetCurrentAction(circle_state, nextMove.Value.land.x, 0, nextMove.Value.ToTheRight());
                         }
                         else if (nextMove.Value.type == movementType.TRANSITION)
                         {
@@ -384,20 +399,38 @@ namespace GeometryFriendsAgents
             else
             {
 
-                bool rectangleIsRight = (rectangle_state.x - circle_state.x > 0);
+                bool move_direction = nextMove.Value.ToTheRight();
+                bool rectangle_position = (rectangle_state.x - circle_state.x >= 0);
 
-                if (rectangleIsRight != rectangle_move.ToTheRight())
+                if (rectangle_position != move_direction)
                 {
+                    Move? new_move = null;
+
                     foreach (Move m in fromPlatform.moves)
                     {
-                        if (m.to.id == rectangle_move.to.id && m.type == movementType.JUMP && m.ToTheRight() != rectangle_move.ToTheRight())
+
+                        if (m.to.id == nextMove.Value.to.id && m.ToTheRight() != move_direction)
                         {
-                            nextMove = m;
-                            rectangle_move = m.Copy();
-                            rectangle_move.collectibles = graph.GetCollectiblesFromCooperation(m);
-                            break;
+                            new_move = new_move ?? m;
+
+                            Utilities.numTrue comp = Utilities.CompTrueNum(m.collectibles, new_move.Value.collectibles);
+
+                            if (comp == Utilities.numTrue.MORETRUE ||
+                               (comp == Utilities.numTrue.SAMETRUE && Math.Abs(m.land.x - m.state.x) > Math.Abs(new_move.Value.land.x - new_move.Value.state.x)))
+                            {
+                                new_move = m;
+                            }
+
                         }
                     }
+
+                    if (new_move.HasValue)
+                    {
+                        rectangle_move = new_move.Value.Copy();
+                        rectangle_move.collectibles = graph.GetCollectiblesFromCooperation(new_move.Value);
+                    }
+
+                    nextMove = rectangle_move;
                 }
 
                 messages.Add(new AgentMessage(UNSYNCHRONIZED, rectangle_move));

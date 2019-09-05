@@ -27,13 +27,10 @@ namespace GeometryFriendsAgents
 
                     if (!ObstacleOnPixels(levelArray, circlePixels, GREEN))
                     {
-                        if (levelArray[y, x - 1] == BLACK || levelArray[y, x] == BLACK)
+                        if (levelArray[y, x - 1] == BLACK || levelArray[y, x] == BLACK ||
+                            levelArray[y, x - 1] == GREEN || levelArray[y, x] == GREEN)
                         {
                             platformArray[y, x] = platformType.BLACK;
-                        }
-                        else if (levelArray[y, x - 1] == GREEN || levelArray[y, x] == GREEN)
-                        {
-                            platformArray[y, x] = platformType.GREEN;
                         }
                     }
                 });
@@ -80,7 +77,8 @@ namespace GeometryFriendsAgents
                             }
                         }
 
-                        platformArray[y, x] = (levelArray[y, x] == BLACK) ? platformType.BLACK : platformType.YELLOW;
+                        platformArray[y, x] = platformType.BLACK;
+                        //platformArray[y, x] = (levelArray[y, x] == BLACK) ? platformType.BLACK : platformType.YELLOW;
                     }
 
                 });
@@ -105,7 +103,7 @@ namespace GeometryFriendsAgents
                 {
                     if (currentPlatform == platformType.NO_PLATFORM)
                     {
-                        if (platformArray[i, j] == platformType.BLACK || platformArray[i, j] == platformType.GREEN)
+                        if (platformArray[i, j] == platformType.BLACK)
                         {
                             leftEdge = ConvertValue_ArrayPointIntoPoint(j);
                             currentPlatform = platformArray[i, j];
@@ -270,15 +268,6 @@ namespace GeometryFriendsAgents
                     }
                 }
             }
-
-            //for (int i = 0; i < rectangle_platforms.Count; i++)
-            //{
-            //    Platform new_platform = rectangle_platforms[i].Copy();
-            //    new_platform.moves.Clear();
-            //    new_platform.leftEdge = new_platform.leftEdge + 100;
-            //    new_platform.rightEdge = new_platform.rightEdge - 100;
-            //    rectangle_platforms[i] = new_platform;
-            //}
 
             foreach (Platform p in rectangle_platforms)
             {

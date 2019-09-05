@@ -10,7 +10,7 @@ namespace GeometryFriendsAgents
 {
     class GraphCircle : Graph
     {
-        bool[] checked_platforms;
+
         int[,] previous_levelArray;
         public State initial_rectangle_state;
 
@@ -55,16 +55,6 @@ namespace GeometryFriendsAgents
             }
         }
 
-        public void SetPossibleCollectibles(State st)
-        {
-
-            Platform? platform = GetPlatform(st.GetPosition(), st.height);
-
-            if (platform.HasValue)
-            {
-                checked_platforms = CheckCollectiblesPlatform(checked_platforms, platform.Value);
-            }
-        }
 
         public override List<ArrayPoint> GetFormPixels(Point center, int height)
         {

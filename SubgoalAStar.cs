@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 
 using GeometryFriends.AI.Perceptions.Information;
+using static GeometryFriendsAgents.Graph;
 using static GeometryFriendsAgents.LevelRepresentation;
 
 namespace GeometryFriendsAgents
@@ -14,14 +15,14 @@ namespace GeometryFriendsAgents
 
         public struct State
         {
-            public Graph.Platform currentPlatform;
-            public LevelRepresentation.Point currentPoint;
+            public Platform currentPlatform;
+            public Point currentPoint;
             public bool[] obtainedCollectibles;
             public int numObtainedCollectibles;
             public int totalCost;
-            public List<Graph.Move> moveHistory;
+            public List<Move> moveHistory;
 
-            public State(Graph.Platform currentPlatform, Point currentPoint, bool[] obtainedCollectibles, int numObtainedCollectibles, int totalCost, List<Graph.Move> moveHistory)
+            public State(Platform currentPlatform, Point currentPoint, bool[] obtainedCollectibles, int numObtainedCollectibles, int totalCost, List<Move> moveHistory)
             {
                 this.currentPlatform = currentPlatform;
                 this.currentPoint = currentPoint;
@@ -39,13 +40,13 @@ namespace GeometryFriendsAgents
             sw = new Stopwatch();
         }
 
-        public Graph.Move? CalculateShortestPath(Graph.Platform currentPlatform, Point currentPoint, bool[] goalCollectibles, bool[] obtainedCollectibles, CollectibleRepresentation[] initialCollectibles)
+        public Move? CalculateShortestPath(Platform currentPlatform, Point currentPoint, bool[] goalCollectibles, bool[] obtainedCollectibles, CollectibleRepresentation[] initialCollectibles)
         {
             sw.Restart();
 
             List<State> openList = new List<State>();
             List<State> closedList = new List<State>();
-            openList.Add(new State(currentPlatform, currentPoint, obtainedCollectibles, 0, 0, new List<Graph.Move>()));
+            openList.Add(new State(currentPlatform, currentPoint, obtainedCollectibles, 0, 0, new List<Move>()));
             bool[] reachableCollectibles = new bool[initialCollectibles.Length];
             int numReachableCollectibles = 0;
 

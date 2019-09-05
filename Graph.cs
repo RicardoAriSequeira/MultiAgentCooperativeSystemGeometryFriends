@@ -20,7 +20,7 @@ namespace GeometryFriendsAgents
 
         public enum platformType
         {
-            NO_PLATFORM, BLACK, GREEN, YELLOW, GAP, RECTANGLE
+            NO_PLATFORM, BLACK, GAP, RECTANGLE
         };
 
 
@@ -32,6 +32,7 @@ namespace GeometryFriendsAgents
         protected const int STAIR_MAXHEIGHT = 16;
         protected static int[] LENGTH_TO_ACCELERATE = new int[10] { 1, 5, 13, 20, 31, 49, 70, 95, 128, 166 };
 
+        public bool[] checked_platforms;
         public bool dynamic_change = false;
         public int[,] levelArray;
         public int AREA, nCollectibles;
@@ -111,12 +112,18 @@ namespace GeometryFriendsAgents
                 partner_state = p_st ?? new State();
             }
 
+            public bool ToTheRight() { return state.v_x >= 0; }
+
             public Move Copy()
             {
                 return new Move(to, state, land, type, collectibles, length, ceiling, partner_state);
             }
 
-            public bool ToTheRight() { return state.v_x >= 0; }
+            public int GetXToAccelerate()
+            {
+                int length = LENGTH_TO_ACCELERATE[Math.Abs(state.v_x) / VELOCITYX_STEP];
+                return state.x + (ToTheRight() ? (- length) : length);
+            }
 
 
         }
@@ -207,6 +214,17 @@ namespace GeometryFriendsAgents
         public bool[] CollectiblesOnPixels(List<ArrayPoint> pixels)
         {
             return CollectiblesOnPixels(levelArray, pixels, nCollectibles);
+        }
+
+        public void SetPossibleCollectibles(State st)
+        {
+
+            Platform? platform = GetPlatform(st.GetPosition(), st.height);
+
+            if (platform.HasValue)
+            {
+                checked_platforms = CheckCollectiblesPlatform(checked_platforms, platform.Value);
+            }
         }
 
         public bool[] CheckCollectiblesPlatform(bool[] platformsChecked, Platform p, bool cooperation = false)

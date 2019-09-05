@@ -13,6 +13,7 @@ namespace GeometryFriendsAgents
         {
             platforms = PlatformIdentification.SetPlatforms_Rectangle(levelArray);
             platforms = PlatformIdentification.SetPlatformsID(platforms);
+            checked_platforms = new bool[platforms.Count];
         }
 
         public override void SetupMoves()

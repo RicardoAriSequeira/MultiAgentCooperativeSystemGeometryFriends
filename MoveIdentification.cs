@@ -28,7 +28,7 @@ namespace GeometryFriendsAgents
                 int start = from.leftEdge + (from.leftEdge - LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2);
                 int end = from.rightEdge - (from.rightEdge - LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2);
 
-                if (from.type == platformType.RECTANGLE && k <= 5)
+                if (from.type == platformType.RECTANGLE && Math.Abs(k) <= 5)
                 {
                     start = from.leftEdge + (from.leftEdge - LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2) + 90;
                     end = from.rightEdge - (from.rightEdge - LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2) - 90;
