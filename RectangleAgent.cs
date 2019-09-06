@@ -312,6 +312,11 @@ namespace GeometryFriendsAgents
                         cooperation = CooperationStatus.SYNCHRONIZED;
 
                 }
+
+                else if (cooperation == CooperationStatus.SYNCHRONIZED)
+                {
+                    cooperation = CooperationStatus.UNSYNCHRONIZED;
+                }
             }
 
         }
@@ -494,6 +499,7 @@ namespace GeometryFriendsAgents
                             move.state.height = MIN_RECTANGLE_HEIGHT;
                             nextMove = move;
                         }
+
                         break;
 
                     case RIDING_HELP:

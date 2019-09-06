@@ -271,9 +271,23 @@ namespace GeometryFriendsAgents
                 }
             }
 
-            foreach (Platform p in rectangle_platforms)
+            for (int p = rectangle_platforms.Count - 1; p >= 0; p--)
             {
-                p.moves.Clear();
+
+                if (p >= 1 && rectangle_platforms[p].height == rectangle_platforms[p-1].height &&
+                    rectangle_platforms[p].allowedHeight >= 136 &&
+                    rectangle_platforms[p-1].allowedHeight >= 136 &&
+                    rectangle_platforms[p-1].rightEdge == rectangle_platforms[p].leftEdge)
+                {
+                    Platform new_platform = rectangle_platforms[p - 1].Copy();
+                    new_platform.allowedHeight = Math.Min(rectangle_platforms[p - 1].allowedHeight, rectangle_platforms[p].allowedHeight);
+                    new_platform.rightEdge = rectangle_platforms[p].rightEdge;
+                    rectangle_platforms[p - 1] = new_platform;
+                    rectangle_platforms.RemoveAt(p);
+                }
+
+                else rectangle_platforms[p].moves.Clear();
+
             }
 
             return rectangle_platforms;

@@ -262,10 +262,7 @@ namespace GeometryFriendsAgents
                             messages.Add(new AgentMessage(RIDING_HELP));
                         }
 
-                        else if (nextMove.Value.to.type == platformType.RECTANGLE)
-                        {
-                            messages.Add(new AgentMessage(JUMPED));
-                        }
+                        messages.Add(new AgentMessage(JUMPED));
 
                     }
                 }

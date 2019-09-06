@@ -38,11 +38,11 @@ namespace GeometryFriendsAgents
                         State state = new State(start + j * PIXEL_LENGTH * 2, from.height - CIRCLE_RADIUS, VELOCITYX_STEP * k, 0, CIRCLE_HEIGHT);
                         Trajectory(graph, from, state, movementType.JUMP);
 
-                        //if (CanRectangleMorphUp(graph.levelArray, new Point(start + j * PIXEL_LENGTH * 2, from.height)))
-                        //{
+                        if (CanRectangleMorphUp(graph.levelArray, new Point(start + j * PIXEL_LENGTH * 2, from.height)))
+                        {
                         state = new State(start + j * PIXEL_LENGTH * 2, from.height - 50 - CIRCLE_RADIUS, VELOCITYX_STEP * k, 0, CIRCLE_HEIGHT);
                         Trajectory(graph, from, state, movementType.JUMP);
-                        //}
+                        }
 
                     });
                 }
