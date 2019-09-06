@@ -124,7 +124,7 @@ namespace GeometryFriendsAgents
                 int length = LENGTH_TO_ACCELERATE[Math.Abs(state.v_x) / VELOCITYX_STEP];
                 return state.x + (ToTheRight() ? (- length) : length);
             }
-
+        
 
         }
 
@@ -591,6 +591,39 @@ namespace GeometryFriendsAgents
             }
 
             return circlePixels;
+        }
+
+        public static bool CanRectangleMorphUp(int[,] levelArray, Point position)
+        {
+
+            List<ArrayPoint> pixelsToMorph = new List<ArrayPoint>();
+
+            int lowestY = PointToArrayPoint(position.y + (GameInfo.MIN_RECTANGLE_HEIGHT / 2), false);
+            int highestY = PointToArrayPoint(position.y - (200 - (GameInfo.MIN_RECTANGLE_HEIGHT / 2)), false);
+
+            int rectangleWidth = GameInfo.RECTANGLE_AREA / GameInfo.MIN_RECTANGLE_HEIGHT;
+
+            int lowestLeft = PointToArrayPoint(position.x - (rectangleWidth / 2), false);
+            int highestLeft = PointToArrayPoint(position.x - (GameInfo.MIN_RECTANGLE_HEIGHT / 2), false);
+
+            int lowestRight = PointToArrayPoint(position.x + (GameInfo.MIN_RECTANGLE_HEIGHT / 2), false);
+            int highestRight = PointToArrayPoint(position.x + (rectangleWidth / 2), false);
+
+            for (int y = highestY; y <= lowestY; y++)
+            {
+                for (int x = lowestLeft; x <= highestLeft; x++)
+                {
+                    pixelsToMorph.Add(new ArrayPoint(x, y));
+                }
+
+                for (int x = lowestRight; x <= highestRight; x++)
+                {
+                    pixelsToMorph.Add(new ArrayPoint(x, y));
+                }
+
+            }
+
+            return !ObstacleOnPixels(levelArray, pixelsToMorph, YELLOW);
         }
 
     }

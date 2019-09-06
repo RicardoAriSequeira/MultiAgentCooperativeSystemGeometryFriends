@@ -6,6 +6,7 @@ using static GeometryFriendsAgents.Graph;
 using static GeometryFriendsAgents.GameInfo;
 using static GeometryFriendsAgents.GraphRectangle;
 using static GeometryFriendsAgents.LevelRepresentation;
+using System;
 
 namespace GeometryFriendsAgents
 {
@@ -78,7 +79,6 @@ namespace GeometryFriendsAgents
                         }
 
                         platformArray[y, x] = platformType.BLACK;
-                        //platformArray[y, x] = (levelArray[y, x] == BLACK) ? platformType.BLACK : platformType.YELLOW;
                     }
 
                 });
@@ -155,7 +155,9 @@ namespace GeometryFriendsAgents
                     if (platformArray[y, x] != platformType.NO_PLATFORM)
                     {
                         new_allowed_height = MIN_RECTANGLE_HEIGHT;
-                        foreach (int h in RECTANGLE_HEIGHTS)
+
+                        //foreach (int h in RECTANGLE_HEIGHTS)
+                        for (int h = MIN_RECTANGLE_HEIGHT; h <= MAX_RECTANGLE_HEIGHT; h += PIXEL_LENGTH)
                         {
                             if (y - (h / PIXEL_LENGTH) < 0 || levelArray[y - (h / PIXEL_LENGTH), x] == BLACK || levelArray[y - (h / PIXEL_LENGTH), x] == YELLOW)
                                 break;

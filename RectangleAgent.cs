@@ -507,38 +507,6 @@ namespace GeometryFriendsAgents
             return;
         }
 
-        public bool CanMorphUp()
-        {
-
-            List<ArrayPoint> pixelsToMorph = new List<ArrayPoint>();
-
-            int lowestY = PointToArrayPoint((int) rectangle_state.y + (rectangle_state.height / 2), false);
-            int highestY = PointToArrayPoint(rectangle_state.y - (200 - (rectangle_state.height / 2)), false);
-
-            int rectangleWidth = RECTANGLE_AREA / rectangle_state.height;
-
-            int lowestLeft = PointToArrayPoint(rectangle_state.x - (rectangleWidth / 2), false);
-            int highestLeft = PointToArrayPoint(rectangle_state.x - (MIN_RECTANGLE_HEIGHT / 2), false);
-
-            int lowestRight = PointToArrayPoint(rectangle_state.x + (MIN_RECTANGLE_HEIGHT / 2), false);
-            int highestRight = PointToArrayPoint(rectangle_state.x + (rectangleWidth / 2), false);
-
-            for (int y = highestY; y <= lowestY; y++)
-            {
-                for (int x = lowestLeft; x <= highestLeft; x++)
-                {
-                    pixelsToMorph.Add(new ArrayPoint(x, y));
-                }
-
-                for (int x = lowestRight; x <= highestRight; x++)
-                {
-                    pixelsToMorph.Add(new ArrayPoint(x, y));
-                }
-
-            }
-
-            return !graph.ObstacleOnPixels(pixelsToMorph);
-        }
 
         public bool IsCircleInTheWay()
         {
