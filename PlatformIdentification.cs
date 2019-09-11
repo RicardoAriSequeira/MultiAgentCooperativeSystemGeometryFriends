@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
@@ -6,7 +7,6 @@ using static GeometryFriendsAgents.Graph;
 using static GeometryFriendsAgents.GameInfo;
 using static GeometryFriendsAgents.GraphRectangle;
 using static GeometryFriendsAgents.LevelRepresentation;
-using System;
 
 namespace GeometryFriendsAgents
 {
@@ -135,7 +135,6 @@ namespace GeometryFriendsAgents
 
         public static List<Platform> SetPlatforms_Rectangle(int[,] levelArray)
         {
-
             List<Platform> platforms = new List<Platform>();
             platformType[,] platformArray = GetPlatformArray_Rectangle(levelArray);
 
@@ -156,8 +155,7 @@ namespace GeometryFriendsAgents
                     {
                         new_allowed_height = MIN_RECTANGLE_HEIGHT;
 
-                        //foreach (int h in RECTANGLE_HEIGHTS)
-                        for (int h = MIN_RECTANGLE_HEIGHT; h <= MAX_RECTANGLE_HEIGHT; h += PIXEL_LENGTH)
+                        foreach (int h in ALLOWED_HEIGHTS)
                         {
                             if (y - (h / PIXEL_LENGTH) < 0 || levelArray[y - (h / PIXEL_LENGTH), x] == BLACK || levelArray[y - (h / PIXEL_LENGTH), x] == YELLOW)
                                 break;
@@ -172,7 +170,7 @@ namespace GeometryFriendsAgents
                         if (rightEdge > leftEdge)
                         {
                             // GAP
-                            if (7 <= gap_size && gap_size <= 19)
+                            if (7 <= gap_size && gap_size <= 12)
                                 lock (platforms)
                                     platforms.Add(new Platform(platformType.GAP, ConvertValue_ArrayPointIntoPoint(y), leftEdge, rightEdge, new List<Move>(), MIN_RECTANGLE_HEIGHT));
                             // PLATFORM
@@ -275,8 +273,8 @@ namespace GeometryFriendsAgents
             {
 
                 if (p >= 1 && rectangle_platforms[p].height == rectangle_platforms[p-1].height &&
-                    rectangle_platforms[p].allowedHeight >= 136 &&
-                    rectangle_platforms[p-1].allowedHeight >= 136 &&
+                    rectangle_platforms[p].allowedHeight >= RIDE_HEIGHT &&
+                    rectangle_platforms[p-1].allowedHeight >= RIDE_HEIGHT &&
                     rectangle_platforms[p-1].rightEdge == rectangle_platforms[p].leftEdge)
                 {
                     Platform new_platform = rectangle_platforms[p - 1].Copy();

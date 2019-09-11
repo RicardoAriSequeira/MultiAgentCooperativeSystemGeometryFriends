@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-
+using System.Collections.Generic;
 using GeometryFriends.AI.Perceptions.Information;
+
 using static GeometryFriendsAgents.Graph;
 using static GeometryFriendsAgents.LevelRepresentation;
 
@@ -131,9 +131,9 @@ namespace GeometryFriendsAgents
 
             
             int totalCost;
-            List<Graph.Move> moveHistory;
+            List<Move> moveHistory;
 
-            foreach (Graph.Move i in targetState.currentPlatform.moves)
+            foreach (Move i in targetState.currentPlatform.moves)
             {
                 bool[] obtainedCollectibles = new bool[targetState.obtainedCollectibles.Length];
                 int numObtainedCollectibles = targetState.numObtainedCollectibles;
@@ -155,7 +155,7 @@ namespace GeometryFriendsAgents
                 }
 
                 totalCost = targetState.totalCost + CalculateDistance(targetState.currentPoint, new Point(i.state.x, i.state.y)) + i.length;
-                moveHistory = new List<Graph.Move>(targetState.moveHistory);
+                moveHistory = new List<Move>(targetState.moveHistory);
                 moveHistory.Add(i);
 
                 connectedStates.Add(new State(i.to, i.land, obtainedCollectibles, numObtainedCollectibles, totalCost, moveHistory));

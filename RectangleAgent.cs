@@ -269,12 +269,14 @@ namespace GeometryFriendsAgents
                 {
                     if (nextMove.HasValue)
                     {
+                        //if (rectangle_state.v_y == 0)
+                        //    currentAction = GetRandomAction();
 
                         if (nextMove.Value.type == movementType.TRANSITION)
                             currentAction = nextMove.Value.ToTheRight() ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
 
                         else if (cooperation == CooperationStatus.SINGLE)
-                            currentAction = actionSelector.GetCurrentAction(rectangle_state, targetPointX_InAir, 0, true);
+                            currentAction = Moves.NO_ACTION;
 
                     }
                 }
@@ -291,7 +293,7 @@ namespace GeometryFriendsAgents
                     targetPointX_InAir = (nextMove.Value.to.leftEdge + nextMove.Value.to.rightEdge) / 2;
 
                     if (rectangle_state.height >= nextMove.Value.state.height &&
-                        (nextMove.Value.type == movementType.COOPERATION || nextMove.Value.type == movementType.TRANSITION))
+                        (nextMove.Value.type == movementType.COOPERATION || nextMove.Value.type == movementType.TRANSITION || nextMove.Value.type == movementType.COLLECT))
                     {
                         currentAction = Moves.MORPH_DOWN;
                     }
@@ -569,6 +571,17 @@ namespace GeometryFriendsAgents
 
                 }
             }
+        }
+
+        public Moves GetRandomAction()
+        {
+            Random rnd = new Random();
+            int action = rnd.Next(5, 9);
+            if (action == 5) return Moves.MOVE_LEFT;
+            if (action == 6) return Moves.MOVE_RIGHT;
+            if (action == 7) return Moves.MORPH_UP;
+            if (action == 8) return Moves.MORPH_DOWN;
+            return Moves.NO_ACTION;
         }
     }
 }

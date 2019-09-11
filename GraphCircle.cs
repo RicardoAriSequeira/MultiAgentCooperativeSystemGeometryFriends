@@ -18,17 +18,17 @@ namespace GeometryFriendsAgents
 
         public override void SetupPlatforms()
         {
-            OBSTACLE_COLOUR = YELLOW;
-            AREA = RECTANGLE_AREA;
-            POSSIBLE_HEIGHTS = new int[3] { MIN_RECTANGLE_HEIGHT, SQUARE_HEIGHT, MAX_RECTANGLE_HEIGHT };
+            obstacle_colour = YELLOW;
+            area = RECTANGLE_AREA;
+            possible_heights = new int[3] { MIN_RECTANGLE_HEIGHT, SQUARE_HEIGHT, MAX_RECTANGLE_HEIGHT };
 
             platforms = SetPlatforms_Rectangle(levelArray);
             Setup_Rectangle(this);
             platforms = DeleteUnreachablePlatforms(platforms, initial_rectangle_state);
 
-            OBSTACLE_COLOUR = GREEN;
-            AREA = CIRCLE_AREA;
-            POSSIBLE_HEIGHTS = new int[1] { CIRCLE_HEIGHT };
+            obstacle_colour = GREEN;
+            area = CIRCLE_AREA;
+            possible_heights = new int[1] { CIRCLE_HEIGHT };
 
             List<Platform> platformsCircle = SetPlatforms_Circle(levelArray);
             platforms = JoinPlatforms(platformsCircle, platforms);

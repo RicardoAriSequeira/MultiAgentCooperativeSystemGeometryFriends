@@ -25,13 +25,11 @@ namespace GeometryFriendsAgents
         {
             Parallel.For((-MAX_VELOCITYX / VELOCITYX_STEP) + 1, (MAX_VELOCITYX / VELOCITYX_STEP), k =>
             {
-                int start = from.leftEdge + (from.leftEdge - LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2);
-                int end = from.rightEdge - (from.rightEdge - LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2);
 
                 if (from.type == platformType.RECTANGLE && Math.Abs(k) <= 5)
                 {
-                    start = from.leftEdge + (from.leftEdge - LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2) + 90;
-                    end = from.rightEdge - (from.rightEdge - LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2) - 90;
+                    int start = from.leftEdge + (from.leftEdge - LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2) + 90;
+                    int end = from.rightEdge - (from.rightEdge - LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2) - 90;
 
                     Parallel.For(0, (end - start) / (PIXEL_LENGTH * 2) + 1, j =>
                     {
@@ -40,15 +38,18 @@ namespace GeometryFriendsAgents
 
                         if (CanRectangleMorphUp(graph.levelArray, new Point(start + j * PIXEL_LENGTH * 2, from.height)))
                         {
-                        state = new State(start + j * PIXEL_LENGTH * 2, from.height - 50 - CIRCLE_RADIUS, VELOCITYX_STEP * k, 0, CIRCLE_HEIGHT);
-                        Trajectory(graph, from, state, movementType.JUMP);
+                            state = new State(start + j * PIXEL_LENGTH * 2, from.height - 50 - CIRCLE_RADIUS, VELOCITYX_STEP * k, 0, CIRCLE_HEIGHT);
+                            Trajectory(graph, from, state, movementType.JUMP);
                         }
 
                     });
                 }
 
-                else if (from.type != platformType.RECTANGLE)
+                if (from.type != platformType.RECTANGLE)
                 {
+                    int start = from.leftEdge + (from.leftEdge - LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2);
+                    int end = from.rightEdge - (from.rightEdge - LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2);
+
                     Parallel.For(0, (end - start) / (PIXEL_LENGTH * 2) + 1, j =>
                     {
                         State state = new State(start + j * PIXEL_LENGTH * 2, from.height - CIRCLE_RADIUS, VELOCITYX_STEP * k, 0, CIRCLE_HEIGHT);
@@ -121,7 +122,7 @@ namespace GeometryFriendsAgents
             int start = from.leftEdge + (from.leftEdge - LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2);
             int end = from.rightEdge - (from.rightEdge - LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2);
 
-            Parallel.ForEach(graph.POSSIBLE_HEIGHTS, h =>
+            Parallel.ForEach(graph.possible_heights, h =>
             {
                 Parallel.For(0, (end - start) / (PIXEL_LENGTH * 2) + 1, j =>
                 {
@@ -251,7 +252,7 @@ namespace GeometryFriendsAgents
             bool ceiling = false;
             collideType collision_type = collideType.OTHER;
             bool[] collectibles = new bool[graph.nCollectibles];
-            int fake_radius = Math.Min(graph.AREA / state.height, state.height) / 2;
+            int fake_radius = Math.Min(graph.area / state.height, state.height) / 2;
             float velocity_y = (type == movementType.JUMP) ? JUMP_VELOCITYY : FALL_VELOCITYY;
             float velocity_x = state.v_x;
 
@@ -294,7 +295,7 @@ namespace GeometryFriendsAgents
 
                     if (to.HasValue)
                     {
-                        if (type == movementType.FALL && state.v_x != 0)
+                        if (type == movementType.FALL && Math.Abs(state.v_x) > 1)
                             start.x = (state.v_x > 0) ? start.x - PIXEL_LENGTH : start.x + PIXEL_LENGTH;
 
                         State? partner_state = null;
@@ -323,14 +324,6 @@ namespace GeometryFriendsAgents
                         }
 
                         State new_state = new State(start.x, start.y, state.v_x, state.v_y, state.height);
-
-                        //Platform? possible_gap = graph.GetPlatform(new Point(state.x, state.y), state.height);
-
-                        //if (possible_gap.HasValue && possible_gap.Value.type == platformType.GAP && state.v_x == 0)
-                        //{
-                        //    new_state.v_x = (from.rightEdge == possible_gap.Value.leftEdge) ? 1 : -1;
-                        //}
-
                         Move new_move = new Move(to.Value, new_state, collision, type, collectibles, (int)length, ceiling, partner_state);
                         graph.AddMove(from, new_move);
 
@@ -349,7 +342,7 @@ namespace GeometryFriendsAgents
 
             if (graph.ObstacleOnPixels(pixels) || (velocityY < 0 && collide_type != collideType.RECTANGLE && graph.levelArray[lowestY, centerArray.xArray] == RECTANGLE))
             {
-                if (velocityY < 0 && (graph.levelArray[lowestY, centerArray.xArray] == BLACK || graph.levelArray[lowestY, centerArray.xArray] == graph.OBSTACLE_COLOUR))
+                if (velocityY < 0 && (graph.levelArray[lowestY, centerArray.xArray] == BLACK || graph.levelArray[lowestY, centerArray.xArray] == graph.obstacle_colour))
                 {
                     collide_type = collideType.FLOOR;
                 }
@@ -359,7 +352,7 @@ namespace GeometryFriendsAgents
                     collide_type = collideType.RECTANGLE;
                 }
 
-                else if (graph.levelArray[highestY, centerArray.xArray] == BLACK || graph.levelArray[highestY, centerArray.xArray] == graph.OBSTACLE_COLOUR)
+                else if (graph.levelArray[highestY, centerArray.xArray] == BLACK || graph.levelArray[highestY, centerArray.xArray] == graph.obstacle_colour)
                 {
                     collide_type = collideType.CEILING;
                 }

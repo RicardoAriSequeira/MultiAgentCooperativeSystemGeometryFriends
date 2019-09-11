@@ -146,7 +146,7 @@ namespace GeometryFriendsAgents
                     if (IsDifferentPlatform() || IsGetCollectible())
                     {
                         targetPointX_InAir = (currentPlatform.Value.leftEdge + currentPlatform.Value.rightEdge) / 2;
-                        Task.Factory.StartNew(SetNextEdge);
+                        Task.Factory.StartNew(() => SetNextEdge());
                     }
 
                     if (nextMove.HasValue)
@@ -336,15 +336,25 @@ namespace GeometryFriendsAgents
             return false;
         }
 
-        private void SetNextEdge()
+        private void SetNextEdge(List<Move> hidden_moves = null)
         {
 
             Move? previousMove = nextMove;
 
             nextMove = null;
-            nextMove = subgoalAStar.CalculateShortestPath(currentPlatform.Value, new Point((int)circle_state.x, (int)circle_state.y),
+            nextMove = subgoalAStar.CalculateShortestPath(currentPlatform.Value, new Point(circle_state.x, circle_state.y),
                 Enumerable.Repeat<bool>(true, levelInfo.initialCollectibles.Length).ToArray(),
                 levelInfo.GetObtainedCollectibles(), levelInfo.initialCollectibles);
+
+            if (hidden_moves != null && hidden_moves.Count > 0)
+            {
+                foreach (Move m in hidden_moves)
+                {
+                    currentPlatform.Value.moves.Add(m);
+                }
+
+                hidden_moves.Clear();
+            }
 
             if (nextMove.HasValue)
             {
@@ -401,33 +411,24 @@ namespace GeometryFriendsAgents
 
                 if (rectangle_position != move_direction)
                 {
-                    Move? new_move = null;
 
-                    foreach (Move m in fromPlatform.moves)
+                    List<Move> hidden_moves = new List<Move>();
+
+                    for (int m = fromPlatform.moves.Count - 1; m >= 0; m--)
                     {
 
-                        if (m.to.id == nextMove.Value.to.id && m.ToTheRight() != move_direction)
+                        if (fromPlatform.moves[m].to.id == nextMove.Value.to.id &&
+                            (fromPlatform.moves[m].ToTheRight() == move_direction ||
+                            (move_direction && fromPlatform.moves[m].state.x < 276) ||
+                            (!move_direction && fromPlatform.moves[m].state.x > 924)))
                         {
-                            new_move = new_move ?? m;
-
-                            Utilities.numTrue comp = Utilities.CompTrueNum(m.collectibles, new_move.Value.collectibles);
-
-                            if (comp == Utilities.numTrue.MORETRUE ||
-                               (comp == Utilities.numTrue.SAMETRUE && Math.Abs(m.land.x - m.state.x) > Math.Abs(new_move.Value.land.x - new_move.Value.state.x)))
-                            {
-                                new_move = m;
-                            }
-
+                            hidden_moves.Add(fromPlatform.moves[m]);
+                            fromPlatform.moves.RemoveAt(m);
                         }
                     }
 
-                    if (new_move.HasValue)
-                    {
-                        rectangle_move = new_move.Value.Copy();
-                        rectangle_move.collectibles = graph.GetCollectiblesFromCooperation(new_move.Value);
-                    }
-
-                    nextMove = rectangle_move;
+                    Task.Factory.StartNew( () => SetNextEdge(hidden_moves));
+                    return;
                 }
 
                 messages.Add(new AgentMessage(UNSYNCHRONIZED, rectangle_move));

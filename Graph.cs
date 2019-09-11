@@ -8,6 +8,12 @@ namespace GeometryFriendsAgents
     public abstract class Graph
     {
 
+        public const int VELOCITYX_STEP = 20;
+        public const float TIME_STEP = 0.01f;
+        protected const int STAIR_MAXWIDTH = 48;
+        protected const int STAIR_MAXHEIGHT = 16;
+        protected static int[] LENGTH_TO_ACCELERATE = new int[10] { 1, 5, 13, 20, 31, 49, 70, 95, 128, 166 };
+
         public enum collideType
         {
             CEILING, FLOOR, RECTANGLE, OTHER
@@ -22,22 +28,6 @@ namespace GeometryFriendsAgents
         {
             NO_PLATFORM, BLACK, GAP, RECTANGLE
         };
-
-
-        public int OBSTACLE_COLOUR;
-        public int[] POSSIBLE_HEIGHTS;
-        public const int VELOCITYX_STEP = 20;
-        public const float TIME_STEP = 0.01f;
-        protected const int STAIR_MAXWIDTH = 48;
-        protected const int STAIR_MAXHEIGHT = 16;
-        protected static int[] LENGTH_TO_ACCELERATE = new int[10] { 1, 5, 13, 20, 31, 49, 70, 95, 128, 166 };
-
-        public bool[] checked_platforms;
-        public bool dynamic_change = false;
-        public int[,] levelArray;
-        public int AREA, nCollectibles;
-        public List<Platform> platforms;
-        public bool[] possibleCollectibles;
 
         public struct Platform
         {
@@ -128,11 +118,20 @@ namespace GeometryFriendsAgents
 
         }
 
+        public int[,] levelArray;
+        public int obstacle_colour;
+        public int[] possible_heights;
+        public int area, nCollectibles;
+        public List<Platform> platforms;
+        public bool[] checked_platforms;
+        public bool dynamic_change = false;
+        public bool[] possibleCollectibles;
+
         public Graph(int area, int[] possible_heights, int obstacle_colour)
         {
-            AREA = area;
-            OBSTACLE_COLOUR = obstacle_colour;
-            POSSIBLE_HEIGHTS = possible_heights;
+            this.area = area;
+            this.obstacle_colour = obstacle_colour;
+            this.possible_heights = possible_heights;
         }
 
         public abstract void SetupPlatforms();
@@ -185,7 +184,7 @@ namespace GeometryFriendsAgents
 
         public bool ObstacleOnPixels(List<ArrayPoint> checkPixels)
         {
-            return ObstacleOnPixels(levelArray, checkPixels, OBSTACLE_COLOUR);
+            return ObstacleOnPixels(levelArray, checkPixels, obstacle_colour);
         }
 
         public bool IsStairOrGap(Platform fromPlatform, Platform toPlatform, ref bool rightMove)
@@ -402,8 +401,8 @@ namespace GeometryFriendsAgents
                             {
 
                                 // SAME JUMP POINT
-                                if (mI.state.x == i.state.x)
-                                {
+                                //if (mI.state.x == i.state.x)
+                                //{
 
                                     if (Math.Abs(i.land.x - i.state.x) < 140)
                                     {
@@ -447,9 +446,9 @@ namespace GeometryFriendsAgents
                                             continue;
                                         }
                                     }
-                                }
+                                //}
 
-                                continue;
+                                //continue;
 
                             }
 
