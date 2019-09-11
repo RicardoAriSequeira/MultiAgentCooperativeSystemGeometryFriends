@@ -39,6 +39,8 @@ namespace GeometryFriendsAgents
         {
             int target_velocity = Math.Abs(goal.v_x);
 
+            target_velocity = (Math.Abs(target_velocity) <= 1) ? 0 : target_velocity;
+
             float distanceX = (goal.v_x >= 0) ? st.x - goal.x : goal.x - st.x;
 
             if (-DISCRETIZATION_D * 2 < distanceX && distanceX <= 0)

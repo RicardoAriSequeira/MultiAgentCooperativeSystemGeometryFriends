@@ -6,7 +6,7 @@
         public const int CIRCLE_HEIGHT = 80;
 
         public const int SQUARE_HEIGHT = 100;
-        public const int MIN_RECTANGLE_HEIGHT = 52;
+        public const int MIN_RECTANGLE_HEIGHT = 54;
         public const int MAX_RECTANGLE_HEIGHT = 196;
         public static int[] RECTANGLE_HEIGHTS = new int[3] { MIN_RECTANGLE_HEIGHT, SQUARE_HEIGHT, MAX_RECTANGLE_HEIGHT };
 

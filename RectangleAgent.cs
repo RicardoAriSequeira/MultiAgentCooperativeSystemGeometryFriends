@@ -84,7 +84,7 @@ namespace GeometryFriendsAgents
             levelInfo.CreateLevelArray(colI, oI, rPI, cPI);
 
             // Initial Information
-            circle_state = new State ((int)cI.X, (int)cI.Y, (int)cI.VelocityX, (int)cI.VelocityY, (int)cI.Radius * 2);
+            circle_state = new State((int)cI.X, (int)cI.Y, (int)cI.VelocityX, (int)cI.VelocityY, (int)cI.Radius * 2);
             rectangle_state = new State((int)rI.X, (int)rI.Y, (int)rI.VelocityX, (int)rI.VelocityY, (int)rI.Height);
             targetPointX_InAir = rectangle_state.x;
             previousCollectibles = levelInfo.GetObtainedCollectibles();
@@ -194,7 +194,7 @@ namespace GeometryFriendsAgents
                             if (cooperation == CooperationStatus.RIDING_HELP)
                             {
 
-                                if (nextMove.Value.type == movementType.COOPERATION && rectangle_state.height > Math.Max(nextMove.Value.state.height, 53))
+                                if (nextMove.Value.type == movementType.COOPERATION && rectangle_state.height > nextMove.Value.state.height)
                                 {
                                     currentAction = Moves.MORPH_DOWN;
                                 }
@@ -214,10 +214,10 @@ namespace GeometryFriendsAgents
                                     }
 
                                 }
-                                
+
                             }
 
-                            else if (nextMove.Value.type == movementType.FALL && nextMove.Value.state.v_x == 0 &&
+                            else if (nextMove.Value.type == movementType.FALL && Math.Abs(nextMove.Value.state.v_x) == 1 &&
                                      rectangle_state.height > Math.Max((RECTANGLE_AREA / nextMove.Value.state.height) - 1, MIN_RECTANGLE_HEIGHT + 3))
                             {
                                 currentAction = Moves.MORPH_DOWN;
@@ -229,7 +229,7 @@ namespace GeometryFriendsAgents
                                 currentAction = actionSelector.GetCurrentAction(rectangle_state, circle_state.x, 0, true);
                             }
 
-                            else if (nextMove.Value.type == movementType.COOPERATION && cooperation == CooperationStatus.UNSYNCHRONIZED && rectangle_state.height > Math.Max(nextMove.Value.state.height, 53))
+                            else if (nextMove.Value.type == movementType.COOPERATION && cooperation == CooperationStatus.UNSYNCHRONIZED && rectangle_state.height > nextMove.Value.state.height)
                             {
                                 currentAction = Moves.MORPH_DOWN;
                             }
@@ -239,7 +239,7 @@ namespace GeometryFriendsAgents
                                 currentAction = Moves.MORPH_UP;
                             }
 
-                            else if (nextMove.Value.type == movementType.TRANSITION && rectangle_state.height > Math.Max(nextMove.Value.state.height, 53))
+                            else if (nextMove.Value.type == movementType.TRANSITION && rectangle_state.height > nextMove.Value.state.height)
                             {
                                 currentAction = Moves.MORPH_DOWN;
                             }
@@ -290,7 +290,7 @@ namespace GeometryFriendsAgents
 
                     targetPointX_InAir = (nextMove.Value.to.leftEdge + nextMove.Value.to.rightEdge) / 2;
 
-                    if (rectangle_state.height >= Math.Max(nextMove.Value.state.height, 53) &&
+                    if (rectangle_state.height >= nextMove.Value.state.height &&
                         (nextMove.Value.type == movementType.COOPERATION || nextMove.Value.type == movementType.TRANSITION))
                     {
                         currentAction = Moves.MORPH_DOWN;
@@ -298,7 +298,7 @@ namespace GeometryFriendsAgents
 
                     else if (rectangle_state.height < nextMove.Value.state.height - PIXEL_LENGTH &&
                              (cooperation == CooperationStatus.RIDING ||
-                             (nextMove.Value.type == movementType.FALL && nextMove.Value.state.v_x == 0) ||
+                             (nextMove.Value.type == movementType.FALL && Math.Abs(nextMove.Value.state.v_x) == 1) ||
                              nextMove.Value.type == movementType.COLLECT ||
                              nextMove.Value.type == movementType.TRANSITION))
                     {
@@ -326,7 +326,8 @@ namespace GeometryFriendsAgents
 
             bool[] currentCollectibles = levelInfo.GetObtainedCollectibles();
 
-            if (previousCollectibles.SequenceEqual(currentCollectibles)) {
+            if (previousCollectibles.SequenceEqual(currentCollectibles))
+            {
                 return false;
             }
 
@@ -376,7 +377,7 @@ namespace GeometryFriendsAgents
                 {
                     previousPlatform = currentPlatform;
                     return true;
-                } 
+                }
 
             }
 
@@ -518,22 +519,22 @@ namespace GeometryFriendsAgents
         {
 
             if (nextMove.HasValue &&
-                circle_state.y <= rectangle_state.y + (rectangle_state.height/2) &&
-                circle_state.y >= rectangle_state.y - (rectangle_state.height/2))
+                circle_state.y <= rectangle_state.y + (rectangle_state.height / 2) &&
+                circle_state.y >= rectangle_state.y - (rectangle_state.height / 2))
             {
 
                 int rectangleWidth = RECTANGLE_AREA / rectangle_state.height;
 
                 if (nextMove.Value.ToTheRight() &&
                     circle_state.x >= rectangle_state.x &&
-                    circle_state.x <= nextMove.Value.state.x + (rectangleWidth/2) + CIRCLE_RADIUS)
+                    circle_state.x <= nextMove.Value.state.x + (rectangleWidth / 2) + CIRCLE_RADIUS)
                 {
                     return true;
                 }
 
                 if (!nextMove.Value.ToTheRight() &&
                     circle_state.x <= rectangle_state.x &&
-                    circle_state.x >= nextMove.Value.state.x - (rectangleWidth/2) - CIRCLE_RADIUS)
+                    circle_state.x >= nextMove.Value.state.x - (rectangleWidth / 2) - CIRCLE_RADIUS)
                 {
                     return true;
                 }

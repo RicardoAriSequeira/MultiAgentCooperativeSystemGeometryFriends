@@ -207,7 +207,7 @@ namespace GeometryFriendsAgents
                 int gap_size = (to.rightEdge - to.leftEdge);
                 int fall_height = RECTANGLE_AREA / Math.Min(gap_size - (2 * PIXEL_LENGTH), MIN_RECTANGLE_HEIGHT);
                 start = new Point(to.leftEdge + (gap_size / 2), to.height - (fall_height / 2));
-                State state = new State(start.x, start.y, 0, 0, fall_height);
+                State state = new State(start.x, start.y, right_direction ? 1 : -1, 0, fall_height);
                 Trajectory(graph, from, state, movementType.FALL);
             }
 
@@ -294,8 +294,8 @@ namespace GeometryFriendsAgents
 
                     if (to.HasValue)
                     {
-                        if (type == movementType.FALL)
-                            start.x = (state.v_x >= 0) ? start.x - PIXEL_LENGTH : start.x + PIXEL_LENGTH;
+                        if (type == movementType.FALL && state.v_x != 0)
+                            start.x = (state.v_x > 0) ? start.x - PIXEL_LENGTH : start.x + PIXEL_LENGTH;
 
                         State? partner_state = null;
 
@@ -323,6 +323,14 @@ namespace GeometryFriendsAgents
                         }
 
                         State new_state = new State(start.x, start.y, state.v_x, state.v_y, state.height);
+
+                        //Platform? possible_gap = graph.GetPlatform(new Point(state.x, state.y), state.height);
+
+                        //if (possible_gap.HasValue && possible_gap.Value.type == platformType.GAP && state.v_x == 0)
+                        //{
+                        //    new_state.v_x = (from.rightEdge == possible_gap.Value.leftEdge) ? 1 : -1;
+                        //}
+
                         Move new_move = new Move(to.Value, new_state, collision, type, collectibles, (int)length, ceiling, partner_state);
                         graph.AddMove(from, new_move);
 
