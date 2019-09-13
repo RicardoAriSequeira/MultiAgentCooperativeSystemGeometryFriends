@@ -82,6 +82,11 @@ namespace GeometryFriendsAgents
             {
                 return x == s.x && y == s.y && v_x == s.v_x && v_y == s.v_y && height == s.height;
             }
+
+            public State Copy()
+            {
+                return new State(x, y, v_x, v_y, height);
+            }
         }
 
         public struct Move
@@ -629,6 +634,19 @@ namespace GeometryFriendsAgents
             }
 
             return !ObstacleOnPixels(levelArray, pixelsToMorph, YELLOW);
+        }
+
+        public Platform? GetRectanglePlatform(int x, int y, int height)
+        {
+            foreach (Platform p in platforms)
+            {
+                if (p.type == platformType.RECTANGLE && x >= p.leftEdge && x <= p.rightEdge && Math.Abs(y - (height / 2) - p.height) <= 8)
+                {
+                    return p;
+                }
+            }
+
+            return null;
         }
 
     }

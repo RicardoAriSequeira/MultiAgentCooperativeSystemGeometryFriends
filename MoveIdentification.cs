@@ -41,6 +41,12 @@ namespace GeometryFriendsAgents
                         {
                             state = new State(start + j * PIXEL_LENGTH * 2, from.height - 50 - CIRCLE_RADIUS, VELOCITYX_STEP * k, 0, CIRCLE_HEIGHT);
                             Trajectory(graph, from, state, movementType.JUMP);
+
+                            if (Math.Abs(k) <= 1)
+                            {
+                                state = new State(start + j * PIXEL_LENGTH * 2, from.height - 140 - CIRCLE_RADIUS, VELOCITYX_STEP * k, 0, CIRCLE_HEIGHT);
+                                Trajectory(graph, from, state, movementType.JUMP);
+                            }
                         }
 
                     });
@@ -321,6 +327,11 @@ namespace GeometryFriendsAgents
                         {
                             int rectangle_x = Math.Min(Math.Max(collision.x, 136), 1064);
                             int rectangle_y = collision.y + CIRCLE_RADIUS + (MIN_RECTANGLE_HEIGHT / 2);
+                            Platform? rectangle_platform = graph.GetRectanglePlatform(rectangle_x, rectangle_y, MIN_RECTANGLE_HEIGHT);
+                            if (rectangle_platform.HasValue)
+                            {
+                                rectangle_x = Math.Min(Math.Max(rectangle_x, rectangle_platform.Value.leftEdge + 40), rectangle_platform.Value.rightEdge - 40);
+                            }
                             partner_state = new State(rectangle_x, rectangle_y, 0, 0, MIN_RECTANGLE_HEIGHT);
                         }
 

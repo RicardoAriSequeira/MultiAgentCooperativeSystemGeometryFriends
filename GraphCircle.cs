@@ -54,7 +54,6 @@ namespace GeometryFriendsAgents
             }
         }
 
-
         public override List<ArrayPoint> GetFormPixels(Point center, int height)
         {
             return GetCirclePixels(center, height/2);

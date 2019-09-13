@@ -216,10 +216,8 @@ namespace GeometryFriendsAgents
                                         targetX = targetX + (nextMove.Value.partner_state.v_x >= 0 ? 120 : -120);
                                     }
 
-                                    if (currentPlatform.Value.leftEdge <= targetX && targetX <= currentPlatform.Value.rightEdge)
-                                    {
-                                        currentAction = actionSelector.GetCurrentAction(rectangle_state, targetX, 0, nextMove.Value.ToTheRight());
-                                    }
+                                    targetX = Math.Min(Math.Max(targetX, currentPlatform.Value.leftEdge + 40), currentPlatform.Value.rightEdge - 40);
+                                    currentAction = actionSelector.GetCurrentAction(rectangle_state, targetX, 0, nextMove.Value.ToTheRight());
 
                                 }
 
@@ -452,7 +450,7 @@ namespace GeometryFriendsAgents
                         if (item.Attachment.GetType() == typeof(Move))
                         {
                             Move move = (Move)item.Attachment;
-                            State st = move.partner_state;
+                            State st = move.partner_state.Copy();
                             Platform? from = graph.GetPlatform(new LevelRepresentation.Point(st.x, st.y), st.height);
 
                             if (from.HasValue)
@@ -483,17 +481,19 @@ namespace GeometryFriendsAgents
 
                     case COOPERATION_FINISHED:
 
-                        cooperation = CooperationStatus.SINGLE;
-                        CleanRides();
-
-                        currentPlatform = graph.GetPlatform(new LevelRepresentation.Point(rectangle_state.x, rectangle_state.y), rectangle_state.height);
-
-                        if (currentPlatform.HasValue)
+                        if (cooperation != CooperationStatus.SINGLE)
                         {
-                            targetPointX_InAir = (currentPlatform.Value.leftEdge + currentPlatform.Value.rightEdge) / 2;
-                            Task.Factory.StartNew(SetNextMove);
-                        }
+                            cooperation = CooperationStatus.SINGLE;
+                            CleanRides();
 
+                            currentPlatform = graph.GetPlatform(new LevelRepresentation.Point(rectangle_state.x, rectangle_state.y), rectangle_state.height);
+
+                            if (currentPlatform.HasValue)
+                            {
+                                targetPointX_InAir = (currentPlatform.Value.leftEdge + currentPlatform.Value.rightEdge) / 2;
+                                Task.Factory.StartNew(SetNextMove);
+                            }
+                        }
                         break;
 
                     case JUMPED:

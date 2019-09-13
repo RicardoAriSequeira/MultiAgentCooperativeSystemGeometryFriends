@@ -260,6 +260,13 @@ namespace GeometryFriendsAgents
                     {
                         currentAction = Moves.JUMP;
 
+                        if (nextMove.Value.to.type != platformType.RECTANGLE)
+                        {
+                            cooperation = CooperationStatus.SINGLE;
+                            messages.Add(new AgentMessage(COOPERATION_FINISHED));
+                            return;
+                        }
+
                         if (nextMove.Value.ceiling)
                         {
                             cooperation = CooperationStatus.RIDING_HELP;
@@ -408,6 +415,11 @@ namespace GeometryFriendsAgents
                     messages.Add(new AgentMessage(INDIVIDUAL_MOVE, nextMove));
                 }
 
+            }
+
+            else 
+            {
+                messages.Add(new AgentMessage(COOPERATION_FINISHED));
             }
 
         }
