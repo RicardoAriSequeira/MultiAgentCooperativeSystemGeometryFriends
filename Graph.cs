@@ -112,7 +112,11 @@ namespace GeometryFriendsAgents
                 partner_state = p_st ?? new State();
             }
 
-            public bool ToTheRight() { return state.v_x >= 0; }
+            public bool ToTheRight()
+            {
+                if (state.v_x == 0) return (land.x - state.x >= 0);
+                return state.v_x >= 0;
+            }
 
             public Move Copy()
             {

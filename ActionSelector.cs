@@ -43,6 +43,8 @@ namespace GeometryFriendsAgents
 
             float distanceX = (goal.v_x >= 0) ? st.x - goal.x : goal.x - st.x;
 
+            distanceX = (goal.v_x == 0) ? - Math.Abs(distanceX) : distanceX;
+
             if (-DISCRETIZATION_D * 2 < distanceX && distanceX <= 0)
             {
                 float relativeVelocityX = (goal.v_x >= 0) ? st.v_x : -st.v_x;

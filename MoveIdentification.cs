@@ -18,7 +18,7 @@ namespace GeometryFriendsAgents
                 TransitionRectangle(graph, fromPlatform);
                 if (fromPlatform.type == platformType.GAP) continue;
                 Fall(graph, fromPlatform, SQUARE_HEIGHT);
-                Collect(graph, fromPlatform);
+                Collect(graph, fromPlatform, true);
             }
         }
 
@@ -27,7 +27,7 @@ namespace GeometryFriendsAgents
             Parallel.For((-MAX_VELOCITYX / VELOCITYX_STEP) + 1, (MAX_VELOCITYX / VELOCITYX_STEP), k =>
             {
 
-                if (from.type == platformType.RECTANGLE && Math.Abs(k) <= 5)
+                if (from.type == platformType.RECTANGLE && Math.Abs(k) <= 6)
                 {
                     int start = from.leftEdge + (from.leftEdge - LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2) + 90;
                     int end = from.rightEdge - (from.rightEdge - LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2) - 90;
@@ -39,7 +39,7 @@ namespace GeometryFriendsAgents
 
                         if (CanRectangleMorphUp(graph.levelArray, new Point(start + j * PIXEL_LENGTH * 2, from.height)))
                         {
-                            state = new State(start + j * PIXEL_LENGTH * 2, from.height - 50 - CIRCLE_RADIUS, VELOCITYX_STEP * k, 0, CIRCLE_HEIGHT);
+                            state = new State(start + j * PIXEL_LENGTH * 2, from.height - 45 - CIRCLE_RADIUS, VELOCITYX_STEP * k, 0, CIRCLE_HEIGHT);
                             Trajectory(graph, from, state, movementType.JUMP);
 
                             if (Math.Abs(k) <= 1)
@@ -124,13 +124,20 @@ namespace GeometryFriendsAgents
             });
         }
 
-        public static void Collect(Graph graph, Platform from)
+        public static void Collect(Graph graph, Platform from, bool rectangle = false)
         {
+
+            int min_h = rectangle ? MIN_RECTANGLE_HEIGHT - 2 : CIRCLE_HEIGHT;
+            int max_h = rectangle ? MAX_RECTANGLE_HEIGHT : CIRCLE_HEIGHT;
+            
             int start = from.leftEdge + (from.leftEdge - LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2);
             int end = from.rightEdge - (from.rightEdge - LEVEL_ORIGINAL) % (PIXEL_LENGTH * 2);
 
-            Parallel.ForEach(graph.possible_heights, h =>
+            for (int h = min_h; h <= max_h; h += PIXEL_LENGTH)
             {
+
+                h = Math.Max(h, MIN_RECTANGLE_HEIGHT);
+
                 Parallel.For(0, (end - start) / (PIXEL_LENGTH * 2) + 1, j =>
                 {
                    Point movePoint = new Point(start + j * PIXEL_LENGTH * 2, from.height - (h / 2));
@@ -144,7 +151,7 @@ namespace GeometryFriendsAgents
                        graph.AddMove(from, new_move);
                    }
                });
-            });
+            }
 
         }
 
@@ -161,8 +168,8 @@ namespace GeometryFriendsAgents
             for (int k = start; k <= end; k += PIXEL_LENGTH)
             {
                 List<ArrayPoint> pixels = graph.GetFormPixels(new Point(k, to.height - height), height);
-                if (graph.ObstacleOnPixels(pixels)) return;
                 collectibles = Utilities.GetOrMatrix(collectibles, graph.CollectiblesOnPixels(pixels));
+                if (graph.ObstacleOnPixels(pixels) && !Utilities.IsTrueValue_inMatrix(collectibles)) return;
             }
 
             Point movePoint = new Point(right_direction ? from.rightEdge : from.leftEdge, from.height);

@@ -190,7 +190,7 @@ namespace GeometryFriendsAgents
                     if (nextMove.HasValue)
                     {
 
-                        if (cooperation == CooperationStatus.SYNCHRONIZED || IsCircleInTheWay())
+                        if (cooperation == CooperationStatus.SYNCHRONIZED || IsThereConflict())
                         {
                             currentAction = Moves.NO_ACTION;
                             return;
@@ -456,6 +456,12 @@ namespace GeometryFriendsAgents
                             if (from.HasValue)
                             {
                                 bool[] cols = Utilities.GetXorMatrix(graph.possibleCollectibles, move.collectibles);
+
+                                if (!Utilities.IsTrueValue_inMatrix(graph.possibleCollectibles))
+                                {
+                                    cols = Enumerable.Repeat(true, graph.nCollectibles).ToArray();
+                                }
+
                                 Move newMove = new Move(from.Value, st, st.GetPosition(), movementType.COOPERATION, cols, 0, move.ceiling, move.state);
                                 graph.AddMove(from.Value, newMove);
                                 graph.Change();
@@ -520,7 +526,7 @@ namespace GeometryFriendsAgents
             return;
         }
 
-        public bool IsCircleInTheWay()
+        public bool IsThereConflict()
         {
 
             if (nextMove.HasValue &&

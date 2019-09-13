@@ -321,7 +321,7 @@ namespace GeometryFriendsAgents
 
             foreach (Platform i in platformsList)
             {
-                if (i.leftEdge <= center.x && center.x <= i.rightEdge && (i.height - center.y >= (height / 2) - 8) && (i.height - center.y <= (height / 2) + 8))
+                if (i.leftEdge <= center.x && center.x <= i.rightEdge && center.y + (height/2) <= i.height + 2)
                 {
                     return i;
                 }
