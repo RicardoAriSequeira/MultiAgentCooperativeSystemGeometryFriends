@@ -155,11 +155,21 @@ namespace GeometryFriendsAgents
                     {
                         new_allowed_height = MIN_RECTANGLE_HEIGHT;
 
-                        foreach (int h in ALLOWED_HEIGHTS)
+                        for (int h = MIN_RECTANGLE_HEIGHT; h <= MAX_RECTANGLE_HEIGHT + 2; h += PIXEL_LENGTH)
                         {
                             if (y - (h / PIXEL_LENGTH) < 0 || levelArray[y - (h / PIXEL_LENGTH), x] == BLACK || levelArray[y - (h / PIXEL_LENGTH), x] == YELLOW)
                                 break;
-                            new_allowed_height = h;
+
+                            if (h < MAX_RECTANGLE_HEIGHT)
+                                if (h < RIDE_HEIGHT)
+                                    if (h < SQUARE_HEIGHT)
+                                        new_allowed_height = MIN_RECTANGLE_HEIGHT;
+                                    else new_allowed_height = SQUARE_HEIGHT;
+                                else new_allowed_height = RIDE_HEIGHT;
+                            else new_allowed_height = MAX_RECTANGLE_HEIGHT;
+
+                            //new_allowed_height = (h < RIDE_HEIGHT) ? MIN_RECTANGLE_HEIGHT : h;
+
                         }
                     }
 

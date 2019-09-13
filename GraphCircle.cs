@@ -12,7 +12,6 @@ namespace GeometryFriendsAgents
     {
 
         int[,] previous_levelArray;
-        public State initial_rectangle_state;
 
         public GraphCircle() : base(CIRCLE_AREA, new int[1] { CIRCLE_HEIGHT }, GREEN) { }
 

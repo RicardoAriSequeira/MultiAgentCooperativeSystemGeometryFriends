@@ -77,6 +77,11 @@ namespace GeometryFriendsAgents
             {
                 return new Point(x, y);
             }
+
+            public bool Equals(State s)
+            {
+                return x == s.x && y == s.y && v_x == s.v_x && v_y == s.v_y && height == s.height;
+            }
         }
 
         public struct Move
@@ -126,6 +131,7 @@ namespace GeometryFriendsAgents
         public bool[] checked_platforms;
         public bool dynamic_change = false;
         public bool[] possibleCollectibles;
+        public State initial_rectangle_state;
 
         public Graph(int area, int[] possible_heights, int obstacle_colour)
         {

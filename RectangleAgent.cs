@@ -43,26 +43,32 @@ namespace GeometryFriendsAgents
         private CooperationStatus cooperation;
 
         // Auxiliary
+        private int stuckness;
         private Move? nextMove;
         private Moves currentAction;
         private DateTime lastMoveTime;
         private int targetPointX_InAir;
         private bool[] previousCollectibles;
+        private Queue<Moves> previous_actions;
+        private Queue<State> previous_states;
         private Platform? previousPlatform, currentPlatform;
 
         public RectangleAgent()
         {
+            stuckness = 0;
             nextMove = null;
             currentPlatform = null;
             previousPlatform = null;
             lastMoveTime = DateTime.Now;
             currentAction = Moves.NO_ACTION;
+            previous_states = new Queue<State>(AGENTS_MEMORY_SIZE);
+            previous_actions = new Queue<Moves>(AGENTS_MEMORY_SIZE);
 
             graph = new GraphRectangle();
+            timeRL = DateTime.Now.Second;
             subgoalAStar = new SubgoalAStar();
             actionSelector = new ActionSelector();
             levelInfo = new LevelRepresentation();
-            timeRL = DateTime.Now.Second;
 
             messages = new List<AgentMessage>();
             cooperation = CooperationStatus.SINGLE;
@@ -90,6 +96,7 @@ namespace GeometryFriendsAgents
             previousCollectibles = levelInfo.GetObtainedCollectibles();
 
             // Create Graph
+            graph.initial_rectangle_state = rectangle_state;
             graph.Setup(levelInfo.GetLevelArray(), colI.Length);
             graph.SetPossibleCollectibles(rectangle_state);
 
@@ -130,6 +137,7 @@ namespace GeometryFriendsAgents
             //return training ? RL.GetAction(rectangle_state) : currentAction;
             currentAction = (currentAction == Moves.ROLL_LEFT) ? Moves.MOVE_LEFT : currentAction;
             currentAction = (currentAction == Moves.ROLL_RIGHT) ? Moves.MOVE_RIGHT : currentAction;
+
             return currentAction;
         }
 
@@ -224,7 +232,7 @@ namespace GeometryFriendsAgents
                             }
 
 
-                            else if (nextMove.Value.type == movementType.COOPERATION && cooperation == CooperationStatus.RIDING && Math.Abs(rectangle_state.x - circle_state.x) > 60)
+                            else if (nextMove.Value.type == movementType.COOPERATION && cooperation == CooperationStatus.RIDING && Math.Abs(rectangle_state.x - circle_state.x) > 50)
                             {
                                 currentAction = actionSelector.GetCurrentAction(rectangle_state, circle_state.x, 0, true);
                             }
@@ -269,19 +277,15 @@ namespace GeometryFriendsAgents
                 {
                     if (nextMove.HasValue)
                     {
-                        //if (rectangle_state.v_y == 0)
-                        //    currentAction = GetRandomAction();
-
                         if (nextMove.Value.type == movementType.TRANSITION)
                             currentAction = nextMove.Value.ToTheRight() ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
-
                         else if (cooperation == CooperationStatus.SINGLE)
                             currentAction = Moves.NO_ACTION;
-
                     }
                 }
 
                 lastMoveTime = DateTime.Now;
+                IsStuck();
             }
 
             if (nextMove.HasValue && cooperation != CooperationStatus.RIDING_HELP)
@@ -516,7 +520,6 @@ namespace GeometryFriendsAgents
             return;
         }
 
-
         public bool IsCircleInTheWay()
         {
 
@@ -573,10 +576,61 @@ namespace GeometryFriendsAgents
             }
         }
 
+        public void IsStuck()
+        {
+
+            if (stuckness > 0)
+            {
+                currentAction = previous_actions.Last();
+                previous_states.Dequeue();
+                previous_actions.Dequeue();
+                previous_actions.Enqueue(currentAction);
+                previous_states.Enqueue(rectangle_state);
+                stuckness--;
+                return;
+            }
+
+            bool stuck = true;
+
+            if (previous_states.Count == AGENTS_MEMORY_SIZE && stuckness == 0)
+            {
+
+                for (int s = 1; s < previous_states.Count && stuck; s++)
+                {
+                    if (!(Math.Abs(previous_states.ElementAt(s).x - previous_states.First().x) == 0 &&
+                        Math.Abs(previous_states.ElementAt(s).y - previous_states.First().y) <= 1 &&
+                        Math.Abs(previous_states.ElementAt(s).v_x - previous_states.First().v_x) <= 2 &&
+                        Math.Abs(previous_states.ElementAt(s).v_y - previous_states.First().v_y) <= 2 &&
+                        !rectangle_state.GetPosition().Equals(graph.initial_rectangle_state.GetPosition()) &&
+                        (!nextMove.HasValue || !actionSelector.IsGoal(rectangle_state, nextMove.Value.state)) &&
+                        (cooperation == CooperationStatus.UNSYNCHRONIZED || cooperation == CooperationStatus.SINGLE) &&
+                        ((currentPlatform.HasValue && previous_actions.ElementAt(s) == previous_actions.First() && previous_actions.First() != Moves.NO_ACTION) ||
+                        (!currentPlatform.HasValue && previous_actions.ElementAt(s) == previous_actions.First() && previous_actions.First() == Moves.NO_ACTION))))
+                    {
+                        stuck = false;
+                    }
+
+                }
+
+                previous_states.Dequeue();
+                previous_actions.Dequeue();
+
+                if (stuck)
+                {
+                    stuckness = STUCKNESS_FACTOR;
+                    currentAction = GetRandomAction();
+                }
+
+            }
+
+            previous_actions.Enqueue(currentAction);
+            previous_states.Enqueue(rectangle_state);
+        }
+
         public Moves GetRandomAction()
         {
             Random rnd = new Random();
-            int action = rnd.Next(5, 9);
+            int action = rnd.Next(5, 7);
             if (action == 5) return Moves.MOVE_LEFT;
             if (action == 6) return Moves.MOVE_RIGHT;
             if (action == 7) return Moves.MORPH_UP;

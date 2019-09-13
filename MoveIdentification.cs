@@ -1,6 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+
 using static GeometryFriendsAgents.Graph;
 using static GeometryFriendsAgents.GameInfo;
 using static GeometryFriendsAgents.LevelRepresentation;
