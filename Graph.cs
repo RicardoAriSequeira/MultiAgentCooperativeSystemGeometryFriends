@@ -411,13 +411,12 @@ namespace GeometryFriendsAgents
                                 mI.type == movementType.JUMP &&
                                 i.type == mI.type &&
                                 mI.to.type == platformType.RECTANGLE &&
-                                i.to.id == mI.to.id &&
-                                mI.ToTheRight() == i.ToTheRight())
+                                i.to.id == mI.to.id)
                             {
 
-                                // SAME JUMP POINT
-                                //if (mI.state.x == i.state.x)
-                                //{
+                                //SAME JUMP POINT
+                                if (mI.state.x == i.state.x && mI.ToTheRight() == i.ToTheRight())
+                                {
 
                                     if (Math.Abs(i.land.x - i.state.x) < 140)
                                     {
@@ -461,9 +460,9 @@ namespace GeometryFriendsAgents
                                             continue;
                                         }
                                     }
-                                //}
+                                }
 
-                                //continue;
+                                continue;
 
                             }
 

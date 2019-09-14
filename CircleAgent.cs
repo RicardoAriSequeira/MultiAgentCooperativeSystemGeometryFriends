@@ -45,6 +45,8 @@ namespace GeometryFriendsAgents
         private bool[] previousCollectibles;
         private Platform? previousPlatform, currentPlatform;
 
+        private List<Tuple<Platform, Move>> hidden_moves;
+
         public CircleAgent()
         {
             nextMove = null;
@@ -61,12 +63,14 @@ namespace GeometryFriendsAgents
             rectangle_ping = false;
             messages = new List<AgentMessage>();
             cooperation = CooperationStatus.SINGLE;
+
+            hidden_moves = new List<Tuple<Platform, Move>>();
         }
 
         //implements abstract circle interface: used to setup the initial information so that the agent has basic knowledge about the level
         public override void Setup(CountInformation nI, RectangleRepresentation rI, CircleRepresentation cI, ObstacleRepresentation[] oI, ObstacleRepresentation[] rPI, ObstacleRepresentation[] cPI, CollectibleRepresentation[] colI, System.Drawing.Rectangle area, double timeLimit)
         {
-        
+
             messages.Add(new AgentMessage(IST_CIRCLE_PLAYING));
 
             // Create Level Array
@@ -129,11 +133,16 @@ namespace GeometryFriendsAgents
                 cooperation = CooperationStatus.SYNCHRONIZED;
             }
 
-
             if ((DateTime.Now - lastMoveTime).TotalMilliseconds >= 20)
             {
+                currentAction = Moves.NO_ACTION;
 
                 currentPlatform = graph.GetPlatform(new Point(circle_state.x, circle_state.y), CIRCLE_HEIGHT, circle_state.v_y);
+
+                if (currentPlatform.HasValue && currentPlatform.Value.type == platformType.RECTANGLE && !IsRidingRectangle())
+                {
+                    currentPlatform = null;
+                }
 
                 if (!currentPlatform.HasValue && IsRidingRectangle())
                 {
@@ -146,7 +155,7 @@ namespace GeometryFriendsAgents
                     if (IsDifferentPlatform() || IsGetCollectible())
                     {
                         targetPointX_InAir = (currentPlatform.Value.leftEdge + currentPlatform.Value.rightEdge) / 2;
-                        Task.Factory.StartNew(() => SetNextEdge());
+                        Task.Factory.StartNew(() => SetNextEdge(currentPlatform.Value));
                     }
 
                     if (nextMove.HasValue)
@@ -256,7 +265,7 @@ namespace GeometryFriendsAgents
                         currentAction = Moves.JUMP;
                     }
 
-                    if (nextMove.Value.type == movementType.JUMP && cooperation == CooperationStatus.SYNCHRONIZED)
+                    if (nextMove.Value.type == movementType.JUMP && cooperation == CooperationStatus.SYNCHRONIZED && Math.Abs(circle_state.y - nextMove.Value.state.y) < 10)
                     {
                         currentAction = Moves.JUMP;
 
@@ -347,13 +356,13 @@ namespace GeometryFriendsAgents
             return false;
         }
 
-        private void SetNextEdge(List<Move> hidden_moves = null)
+        private void SetNextEdge(Platform platform)
         {
 
             Move? previousMove = nextMove;
 
             nextMove = null;
-            nextMove = subgoalAStar.CalculateShortestPath(currentPlatform.Value, new Point(circle_state.x, circle_state.y),
+            nextMove = subgoalAStar.CalculateShortestPath(platform, new Point(circle_state.x, circle_state.y),
                 Enumerable.Repeat<bool>(true, levelInfo.initialCollectibles.Length).ToArray(),
                 levelInfo.GetObtainedCollectibles(), levelInfo.initialCollectibles);
 
@@ -362,21 +371,15 @@ namespace GeometryFriendsAgents
 
                 if (IsThereConflict())
                 {
-                    hidden_moves = hidden_moves ?? new List<Move>();
-                    hidden_moves.Add(nextMove.Value);
-                    currentPlatform.Value.moves.Remove(nextMove.Value);
-                    Task.Factory.StartNew(() => SetNextEdge(hidden_moves));
+                    hidden_moves.Add(new Tuple<Platform,Move>(platform, nextMove.Value));
+                    platform.moves.Remove(nextMove.Value);
+                    Task.Factory.StartNew(() => SetNextEdge(platform));
                     return;
                 }
 
-                if (hidden_moves != null && hidden_moves.Count > 0)
+                foreach (Tuple<Platform,Move> t in hidden_moves)
                 {
-                    foreach (Move m in hidden_moves)
-                    {
-                        currentPlatform.Value.moves.Add(m);
-                    }
-
-                    hidden_moves.Clear();
+                    t.Item1.moves.Add(t.Item2);
                 }
 
                 if (previousMove.HasValue && cooperation == CooperationStatus.UNSYNCHRONIZED &&
@@ -394,7 +397,7 @@ namespace GeometryFriendsAgents
                     return;
                 }
 
-                if (currentPlatform.Value.type != platformType.RECTANGLE && nextMove.Value.to.type != platformType.RECTANGLE)
+                if (!IsRidingRectangle() && nextMove.Value.to.type != platformType.RECTANGLE)
                 {
                     cooperation = CooperationStatus.SINGLE;
                     messages.Add(new AgentMessage(COOPERATION_FINISHED));
@@ -427,33 +430,6 @@ namespace GeometryFriendsAgents
 
             else
             {
-
-                bool move_direction = nextMove.Value.ToTheRight();
-                bool rectangle_position = (rectangle_state.x - circle_state.x >= 0);
-
-                if (rectangle_position != move_direction)
-                {
-
-                    List<Move> hidden_moves = new List<Move>();
-
-                    for (int m = fromPlatform.moves.Count - 1; m >= 0; m--)
-                    {
-
-                        if (fromPlatform.moves[m].to.id == nextMove.Value.to.id &&
-                            (fromPlatform.moves[m].ToTheRight() == move_direction ||
-                            (move_direction && fromPlatform.moves[m].state.x < 276) ||
-                            (!move_direction && fromPlatform.moves[m].state.x > 924)))
-                        {
-                            hidden_moves.Add(fromPlatform.moves[m]);
-                            fromPlatform.moves.RemoveAt(m);
-                        }
-
-                    }
-
-                    Task.Factory.StartNew( () => SetNextEdge(hidden_moves));
-                    return;
-                }
-
                 messages.Add(new AgentMessage(UNSYNCHRONIZED, rectangle_move));
                 cooperation = CooperationStatus.UNSYNCHRONIZED;
 
@@ -492,7 +468,7 @@ namespace GeometryFriendsAgents
         public bool IsRidingRectangle()
         {
 
-            int rectangleWidth = RECTANGLE_AREA / (int)rectangle_state.height;
+            int rectangleWidth = RECTANGLE_AREA / rectangle_state.height;
 
             if (Math.Abs(circle_state.v_y) < MAX_VELOCITYY &&
                 (circle_state.x >= rectangle_state.x - (rectangleWidth / 2)) &&
@@ -508,28 +484,33 @@ namespace GeometryFriendsAgents
         public bool IsThereConflict()
         {
 
-            if (nextMove.Value.to.type == platformType.RECTANGLE &&
-                ((nextMove.Value.ToTheRight() && nextMove.Value.partner_state.x > nextMove.Value.state.x + 140) || 
-                (!nextMove.Value.ToTheRight() && nextMove.Value.partner_state.x < nextMove.Value.state.x - 140)))
-            {
-                return false;
-            }
-
             if (circle_state.y <= rectangle_state.y + (rectangle_state.height / 2) &&
                 circle_state.y >= rectangle_state.y - (rectangle_state.height / 2))
             {
 
                 int rectangleWidth = RECTANGLE_AREA / rectangle_state.height;
+                bool rectangle_position = (rectangle_state.x >= circle_state.x);
 
-                if (nextMove.Value.ToTheRight() &&
-                    rectangle_state.x >= circle_state.x &&
+                if (nextMove.Value.to.type == platformType.RECTANGLE && nextMove.Value.type == movementType.JUMP &&
+                    ((nextMove.Value.ToTheRight() && rectangle_position && nextMove.Value.partner_state.x >= nextMove.Value.state.x + 150) ||
+                    (!nextMove.Value.ToTheRight() && !rectangle_position && nextMove.Value.partner_state.x <= nextMove.Value.state.x - 150)))
+                {
+                    return false;
+                }
+
+                if (nextMove.Value.to.type == platformType.RECTANGLE && nextMove.Value.type == movementType.JUMP &&
+                    (Math.Abs(rectangle_state.x - nextMove.Value.state.x) < 150 || Math.Abs(nextMove.Value.partner_state.x - nextMove.Value.state.x) < 150))
+                {
+                    return true;
+                }
+
+                if (nextMove.Value.ToTheRight() && rectangle_position &&
                     rectangle_state.x <= nextMove.Value.state.x + (rectangleWidth / 2) + CIRCLE_RADIUS)
                 {
                     return true;
                 }
 
-                if (!nextMove.Value.ToTheRight() &&
-                    rectangle_state.x <= circle_state.x &&
+                if (!nextMove.Value.ToTheRight() && !rectangle_position &&
                     rectangle_state.x >= nextMove.Value.state.x - (rectangleWidth / 2) - CIRCLE_RADIUS)
                 {
                     return true;

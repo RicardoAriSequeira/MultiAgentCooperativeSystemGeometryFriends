@@ -391,11 +391,13 @@ namespace GeometryFriendsAgents
 
         private void SetNextMove()
         {
-            nextMove = null;
-            nextMove = subgoalAStar.CalculateShortestPath(currentPlatform.Value, new LevelRepresentation.Point(rectangle_state.x, rectangle_state.y),
-                Enumerable.Repeat<bool>(true, levelInfo.initialCollectibles.Length).ToArray(),
-                levelInfo.GetObtainedCollectibles(), levelInfo.initialCollectibles);
-            graph.Process();
+            lock (currentPlatform.Value.moves)
+            {
+                nextMove = subgoalAStar.CalculateShortestPath(currentPlatform.Value, new LevelRepresentation.Point(rectangle_state.x, rectangle_state.y),
+                            Enumerable.Repeat<bool>(true, levelInfo.initialCollectibles.Length).ToArray(),
+                            levelInfo.GetObtainedCollectibles(), levelInfo.initialCollectibles);
+                graph.Process();
+            }
 
             if (nextMove.HasValue && nextMove.Value.type == movementType.COOPERATION && cooperation == CooperationStatus.SINGLE)
             {
@@ -433,7 +435,7 @@ namespace GeometryFriendsAgents
 
                         if (item.Attachment.GetType() == typeof(Move))
                         {
-
+                            CleanRides();
                             cooperation = CooperationStatus.SINGLE;
                             Move move = (Move)item.Attachment;
 
@@ -449,6 +451,7 @@ namespace GeometryFriendsAgents
 
                         if (item.Attachment.GetType() == typeof(Move))
                         {
+                            CleanRides();
                             Move move = (Move)item.Attachment;
                             State st = move.partner_state.Copy();
                             Platform? from = graph.GetPlatform(new LevelRepresentation.Point(st.x, st.y), st.height);
