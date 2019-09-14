@@ -190,7 +190,7 @@ namespace GeometryFriendsAgents
                     if (nextMove.HasValue)
                     {
 
-                        if (cooperation == CooperationStatus.SYNCHRONIZED || IsThereConflict())
+                        if (IsThereConflict())
                         {
                             currentAction = Moves.NO_ACTION;
                             return;
@@ -240,7 +240,7 @@ namespace GeometryFriendsAgents
                                 currentAction = Moves.MORPH_DOWN;
                             }
 
-                            else if (nextMove.Value.type == movementType.COOPERATION && cooperation == CooperationStatus.UNSYNCHRONIZED && rectangle_state.height < nextMove.Value.state.height - PIXEL_LENGTH)
+                            else if (nextMove.Value.type == movementType.COOPERATION && cooperation == CooperationStatus.UNSYNCHRONIZED && rectangle_state.height < nextMove.Value.state.height - 5)
                             {
                                 currentAction = Moves.MORPH_UP;
                             }
@@ -300,7 +300,7 @@ namespace GeometryFriendsAgents
                         currentAction = Moves.MORPH_DOWN;
                     }
 
-                    else if (rectangle_state.height < nextMove.Value.state.height - PIXEL_LENGTH &&
+                    else if (rectangle_state.height < nextMove.Value.state.height - (PIXEL_LENGTH / 2) &&
                              (cooperation == CooperationStatus.RIDING ||
                              (nextMove.Value.type == movementType.FALL && Math.Abs(nextMove.Value.state.v_x) == 1) ||
                              nextMove.Value.type == movementType.COLLECT ||
@@ -312,8 +312,13 @@ namespace GeometryFriendsAgents
                     else if (nextMove.Value.type == movementType.TRANSITION)
                         currentAction = nextMove.Value.ToTheRight() ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
 
-                    else if (cooperation == CooperationStatus.RIDING)
+                    else if (cooperation == CooperationStatus.RIDING &&
+                        rectangle_state.height < nextMove.Value.state.height &&
+                        rectangle_state.height > nextMove.Value.state.height - 5)
                         cooperation = CooperationStatus.SYNCHRONIZED;
+
+                    else if (cooperation == CooperationStatus.SYNCHRONIZED)
+                        currentAction = Moves.NO_ACTION;
 
                 }
 

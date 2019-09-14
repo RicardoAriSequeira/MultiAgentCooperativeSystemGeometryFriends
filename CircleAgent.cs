@@ -265,7 +265,8 @@ namespace GeometryFriendsAgents
                         currentAction = Moves.JUMP;
                     }
 
-                    if (nextMove.Value.type == movementType.JUMP && cooperation == CooperationStatus.SYNCHRONIZED && Math.Abs(circle_state.y - nextMove.Value.state.y) < 10)
+                    if (nextMove.Value.type == movementType.JUMP && cooperation == CooperationStatus.SYNCHRONIZED &&
+                            Math.Abs(rectangle_state.height - nextMove.Value.partner_state.height) < 8)
                     {
                         currentAction = Moves.JUMP;
 
