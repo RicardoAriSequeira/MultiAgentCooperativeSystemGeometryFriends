@@ -68,13 +68,14 @@ namespace GeometryFriendsAgents
             return false;
         }
 
-        public Moves GetCurrentAction(State st, int targetPointX, int targetVelocityX, bool rightMove)
+        public Moves GetCurrentAction(State st, int targetPointX, int targetVelocityX)
         {
-            int stateNum = GetStateNum(st, targetPointX, rightMove);
+            bool right_direction = (targetVelocityX >= 0);
+            int stateNum = GetStateNum(st, targetPointX, right_direction);
 
             int currentActionNum;
 
-            float distanceX = rightMove ? st.x - targetPointX : targetPointX - st.x;
+            float distanceX = right_direction ? st.x - targetPointX : targetPointX - st.x;
 
             if (distanceX <= -MAX_D)
             {
@@ -93,11 +94,11 @@ namespace GeometryFriendsAgents
 
             if (currentActionNum == ACCELERATE)
             {
-                currentAction = rightMove ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
+                currentAction = right_direction ? Moves.ROLL_RIGHT : Moves.ROLL_LEFT;
             }
             else
             {
-                currentAction = rightMove ? Moves.ROLL_LEFT : Moves.ROLL_RIGHT;
+                currentAction = right_direction ? Moves.ROLL_LEFT : Moves.ROLL_RIGHT;
             }
 
             return currentAction;

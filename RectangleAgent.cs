@@ -217,7 +217,7 @@ namespace GeometryFriendsAgents
                                     }
 
                                     targetX = Math.Min(Math.Max(targetX, currentPlatform.Value.leftEdge + 40), currentPlatform.Value.rightEdge - 40);
-                                    currentAction = actionSelector.GetCurrentAction(rectangle_state, targetX, 0, nextMove.Value.ToTheRight());
+                                    currentAction = actionSelector.GetCurrentAction(rectangle_state, targetX, 0);
 
                                 }
 
@@ -232,7 +232,7 @@ namespace GeometryFriendsAgents
 
                             else if (nextMove.Value.type == movementType.COOPERATION && cooperation == CooperationStatus.RIDING && Math.Abs(rectangle_state.x - circle_state.x) > 50)
                             {
-                                currentAction = actionSelector.GetCurrentAction(rectangle_state, circle_state.x, 0, true);
+                                currentAction = actionSelector.GetCurrentAction(rectangle_state, circle_state.x, 0);
                             }
 
                             else if (nextMove.Value.type == movementType.COOPERATION && cooperation == CooperationStatus.UNSYNCHRONIZED && rectangle_state.height > nextMove.Value.state.height)
@@ -260,12 +260,12 @@ namespace GeometryFriendsAgents
                                 currentAction = nextMove.Value.ToTheRight() ? Moves.MOVE_RIGHT : Moves.MOVE_LEFT;
                             }
 
-                            else currentAction = actionSelector.GetCurrentAction(rectangle_state, nextMove.Value.state.x, nextMove.Value.state.v_x, nextMove.Value.ToTheRight());
+                            else currentAction = actionSelector.GetCurrentAction(rectangle_state, nextMove.Value.state.x, nextMove.Value.state.v_x);
 
 
                         }
 
-                        else currentAction = actionSelector.GetCurrentAction(rectangle_state, targetPointX_InAir, 0, true);
+                        else currentAction = actionSelector.GetCurrentAction(rectangle_state, targetPointX_InAir, 0);
 
                     }
                 }

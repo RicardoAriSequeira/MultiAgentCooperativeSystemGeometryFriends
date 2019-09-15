@@ -163,14 +163,14 @@ namespace GeometryFriendsAgents
 
                         if (cooperation == CooperationStatus.RIDING)
                         {
-                            currentAction = actionSelector.GetCurrentAction(circle_state, rectangle_state.x, 0, true);
+                            currentAction = actionSelector.GetCurrentAction(circle_state, rectangle_state.x, 0);
                         }
 
                         else if (cooperation == CooperationStatus.UNSYNCHRONIZED)
                         {
                             if (nextMove.Value.type == movementType.JUMP && nextMove.Value.state.v_x != 0 && !IsRidingRectangle())
                             {
-                                currentAction = actionSelector.GetCurrentAction(circle_state, nextMove.Value.GetXToAccelerate(), 0, false);
+                                currentAction = actionSelector.GetCurrentAction(circle_state, nextMove.Value.GetXToAccelerate(), 0);
                             }
 
                             else
@@ -188,12 +188,12 @@ namespace GeometryFriendsAgents
                             }
                             else
                             {
-                                currentAction = actionSelector.GetCurrentAction(circle_state, nextMove.Value.state.x, nextMove.Value.state.v_x, nextMove.Value.ToTheRight());
+                                currentAction = actionSelector.GetCurrentAction(circle_state, nextMove.Value.state.x, nextMove.Value.state.v_x);
                             }
                         }
                         else
                         {
-                            currentAction = actionSelector.GetCurrentAction(circle_state, targetPointX_InAir, 0, true);
+                            currentAction = actionSelector.GetCurrentAction(circle_state, targetPointX_InAir, 0);
                         }
 
                     }
@@ -204,10 +204,7 @@ namespace GeometryFriendsAgents
                         messages.Add(new AgentMessage(COOPERATION_FINISHED));
                     }
 
-                    else
-                    {
-                        currentAction = Moves.NO_ACTION;
-                    }
+                    else currentAction = Moves.NO_ACTION;
                 }
 
                 else
@@ -216,7 +213,7 @@ namespace GeometryFriendsAgents
                     {
                         if ((cooperation == CooperationStatus.SYNCHRONIZED && nextMove.Value.to.type == platformType.RECTANGLE) || cooperation == CooperationStatus.RIDING_HELP)
                         {
-                            currentAction = actionSelector.GetCurrentAction(circle_state, rectangle_state.x, 0, true);
+                            currentAction = actionSelector.GetCurrentAction(circle_state, rectangle_state.x, 0);
                         }
                         else if (nextMove.Value.type == movementType.JUMP || nextMove.Value.type == movementType.FALL)
                         {
@@ -239,7 +236,7 @@ namespace GeometryFriendsAgents
                             }
                             else
                             {
-                                currentAction = actionSelector.GetCurrentAction(circle_state, targetPointX_InAir, 0, true);
+                                currentAction = actionSelector.GetCurrentAction(circle_state, targetPointX_InAir, 0);
                             }
                         }
                     }
