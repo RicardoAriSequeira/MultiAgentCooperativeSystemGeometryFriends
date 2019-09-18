@@ -6,24 +6,21 @@ namespace GeometryFriendsAgents
 {
     class ActionSelector
     {
-        private const int NUM_POSSIBLE_MOVES = 2;
         private const int ACCELERATE = 0;
         private const int DEACCELERATE = 1;
 
-        private const int MAX_H = GameInfo.MAX_RECTANGLE_HEIGHT - GameInfo.MIN_RECTANGLE_HEIGHT;
         private const int MAX_D = 200;
         private const int MAX_V = GameInfo.MAX_VELOCITYX;
 
-        private const int DISCRETIZATION_V = 10;
-        private const int DISCRETIZATION_H = LevelRepresentation.PIXEL_LENGTH;
         private const int DISCRETIZATION_D = 4;
+        private const int DISCRETIZATION_V = 10;
 
-        private const int MAX_DISCRETIZED_V = MAX_V * 2 / DISCRETIZATION_V;
         private const int MAX_DISCRETIZED_D = MAX_D * 2 / DISCRETIZATION_D;
-        private const int MAX_DISCRETIZED_H = MAX_H * 2 / DISCRETIZATION_H;
+        private const int MAX_DISCRETIZED_V = MAX_V * 2 / DISCRETIZATION_V;
 
-        private const int NUM_STATE = MAX_DISCRETIZED_V * MAX_DISCRETIZED_D;
+        private const int NUM_POSSIBLE_MOVES = 2;
         private const int NUM_TARGET_V = MAX_V / (DISCRETIZATION_V * 2);
+        private const int NUM_STATE = MAX_DISCRETIZED_V * MAX_DISCRETIZED_D;
 
         private const int NUM_ROW_QMAP = NUM_STATE;
         private const int NUM_COLUMN_QMAP = NUM_POSSIBLE_MOVES * NUM_TARGET_V;

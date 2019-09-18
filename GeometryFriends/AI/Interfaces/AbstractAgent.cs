@@ -73,9 +73,16 @@ namespace GeometryFriends.AI.Interfaces
         /// Determines if the agent gave up from trying to solve the level.
         /// </summary>
         /// <returns>True if the agent gave up and the level should be ended, false if the agent has not given up.</returns>
+        bool given_up = false;
+
         public virtual bool HasAgentGivenUp()
         {
-            return false;
+            return given_up;
+        }
+
+        public virtual void GiveUp()
+        {
+            given_up = true;
         }
 
         /// <summary>

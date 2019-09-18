@@ -13,6 +13,7 @@ using GeometryFriends.AI.Perceptions.Information;
 using static GeometryFriendsAgents.Graph;
 using static GeometryFriendsAgents.GameInfo;
 using static GeometryFriendsAgents.LevelRepresentation;
+using static GeometryFriendsAgents.ReinforcementLearning;
 
 namespace GeometryFriendsAgents
 {
@@ -22,9 +23,9 @@ namespace GeometryFriendsAgents
     public class RectangleAgent : AbstractRectangleAgent
     {
         // Sensors Information
-        private LevelRepresentation levelInfo;
         private State circle_state;
         private State rectangle_state;
+        private LevelRepresentation levelInfo;
 
         // Graph
         private GraphRectangle graph;
@@ -33,10 +34,9 @@ namespace GeometryFriendsAgents
         private SubgoalAStar subgoalAStar;
 
         // Reinforcement Learning
-        private bool training = false;
+        private bool training = true;
         private ReinforcementLearning RL;
         private ActionSelector actionSelector;
-        private long timeRL;
 
         // Cooperation
         private List<AgentMessage> messages;
@@ -65,7 +65,6 @@ namespace GeometryFriendsAgents
             previous_actions = new Queue<Moves>(AGENTS_MEMORY_SIZE);
 
             graph = new GraphRectangle();
-            timeRL = DateTime.Now.Second;
             subgoalAStar = new SubgoalAStar();
             actionSelector = new ActionSelector();
             levelInfo = new LevelRepresentation();
@@ -73,12 +72,8 @@ namespace GeometryFriendsAgents
             messages = new List<AgentMessage>();
             cooperation = CooperationStatus.SINGLE;
 
-            //ReinforcementLearning.WriteQTable(new float[ReinforcementLearning.N_STATES, ReinforcementLearning.N_ACTIONS]);
-
-            if (training)
-            {
-                RL = new ReinforcementLearning();
-            }
+            //InitializeQTable();  
+            RL = new ReinforcementLearning();
         }
 
         //implements abstract rectangle interface: used to setup the initial information so that the agent has basic knowledge about the level
@@ -100,14 +95,9 @@ namespace GeometryFriendsAgents
             graph.Setup(levelInfo.GetLevelArray(), colI.Length);
             graph.SetPossibleCollectibles(rectangle_state);
 
-            if (training)
-            {
-                int targetX = 600;
-                int targetV = 0;
-                int targetH = 100;
-                bool rightTarget = true;
-                RL.Setup(targetX, targetV, targetH, rightTarget);
-            }
+            int targetV = 0;
+            int targetH = 100;
+            RL.Setup(targetV, targetH, training);
         }
 
         //implements abstract rectangle interface: registers updates from the agent's sensors that it is up to date with the latest environment information
@@ -122,6 +112,7 @@ namespace GeometryFriendsAgents
         //implements abstract rectangle interface: signals if the agent is actually implemented or not
         public override bool ImplementedAgent()
         {
+
             return true;
         }
 
@@ -134,43 +125,30 @@ namespace GeometryFriendsAgents
         //implements abstract rectangle interface: GeometryFriends agents manager gets the current action intended to be actuated in the enviroment for this agent
         public override Moves GetAction()
         {
+            //currentAction = (currentAction == Moves.ROLL_LEFT) ? Moves.MOVE_LEFT : currentAction;
+            //currentAction = (currentAction == Moves.ROLL_RIGHT) ? Moves.MOVE_RIGHT : currentAction;
             //return training ? RL.GetAction(rectangle_state) : currentAction;
-            currentAction = (currentAction == Moves.ROLL_LEFT) ? Moves.MOVE_LEFT : currentAction;
-            currentAction = (currentAction == Moves.ROLL_RIGHT) ? Moves.MOVE_RIGHT : currentAction;
 
-            return currentAction;
+            if (HasAgentGivenUp())
+            {
+                return Moves.NO_ACTION;
+            }
+
+            bool is_goal = RL.IsGoal(rectangle_state);
+
+            if (is_goal)
+            {
+                GiveUp();
+            }
+
+            return RL.GetAction(rectangle_state, is_goal);
+
         }
 
         //implements abstract rectangle interface: updates the agent state logic and predictions
         public override void Update(TimeSpan elapsedGameTime)
         {
-
-            if (training)
-            {
-                //if (timeRL == 60)
-                //    timeRL = 0;
-
-                //if ((timeRL) <= (DateTime.Now.Second) && (timeRL < 60))
-                //{
-                //    if (!(DateTime.Now.Second == 59))
-                //    {
-                //        currentAction = RL.GetAction(rectangleInfo);
-                //        timeRL = timeRL + 1;
-                //    }
-                //    else
-                //        timeRL = 60;
-                //}
-
-                //return;
-
-                //if ((DateTime.Now - lastMoveTime).TotalMilliseconds >= 20)
-                //{
-                //    currentAction = RL.GetAction(rectangleInfo);
-                //    lastMoveTime = DateTime.Now;
-                //}
-
-                return;
-            }
+            return;
 
             if ((DateTime.Now - lastMoveTime).TotalMilliseconds >= 20)
             {
@@ -372,7 +350,6 @@ namespace GeometryFriendsAgents
             }
 
             previousCollectibles = currentCollectibles;
-
             return true;
         }
 
@@ -415,7 +392,7 @@ namespace GeometryFriendsAgents
         {
             if (training)
             {
-                RL.UpdateQTable();
+                RL.UpdateQTable(/*rectangle_state*/);
             }
             Log.LogInformation("RECTANGLE - Collectibles caught = " + collectiblesCaught + ", Time elapsed - " + timeElapsed);
         }
