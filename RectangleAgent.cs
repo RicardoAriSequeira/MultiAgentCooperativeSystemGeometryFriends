@@ -34,7 +34,7 @@ namespace GeometryFriendsAgents
         private SubgoalAStar subgoalAStar;
 
         // Reinforcement Learning
-        private bool training = true;
+        private bool training = false;
         private ReinforcementLearning RL;
         private ActionSelector actionSelector;
 
@@ -72,7 +72,7 @@ namespace GeometryFriendsAgents
             messages = new List<AgentMessage>();
             cooperation = CooperationStatus.SINGLE;
 
-            //InitializeQTable();  
+            InitializeQTable();  
             RL = new ReinforcementLearning();
         }
 
@@ -112,7 +112,6 @@ namespace GeometryFriendsAgents
         //implements abstract rectangle interface: signals if the agent is actually implemented or not
         public override bool ImplementedAgent()
         {
-
             return true;
         }
 
@@ -127,7 +126,7 @@ namespace GeometryFriendsAgents
         {
             //currentAction = (currentAction == Moves.ROLL_LEFT) ? Moves.MOVE_LEFT : currentAction;
             //currentAction = (currentAction == Moves.ROLL_RIGHT) ? Moves.MOVE_RIGHT : currentAction;
-            //return training ? RL.GetAction(rectangle_state) : currentAction;
+            //return currentAction;
 
             if (HasAgentGivenUp())
             {

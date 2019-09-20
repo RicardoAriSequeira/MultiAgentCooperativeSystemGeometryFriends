@@ -55,15 +55,38 @@ namespace GeometryFriendsAgents
 
         public bool IsGoal(State st)
         {
-            int goal_v_discretized = goal.v_x / DISCRETIZATION_V;
 
-            int d_discretized = Math.Abs((goal.x - st.x) / DISCRETIZATION_D);
-            int v_discretized = st.v_x / DISCRETIZATION_V;
-            bool h_discretized = (goal.height - 4 <= st.height && st.height <= goal.height);
-
-            if (v_discretized == goal_v_discretized && d_discretized == 0 && h_discretized)
+            if ((st.height < (goal.height - 4)) || (st.height > goal.height))
             {
-                return true;
+                return false;
+            }
+
+            int target_velocity = Math.Abs(goal.v_x);
+
+            target_velocity = (Math.Abs(target_velocity) <= 1) ? 0 : target_velocity;
+
+            float distanceX = (goal.v_x >= 0) ? st.x - goal.x : goal.x - st.x;
+
+            distanceX = (goal.v_x == 0) ? -Math.Abs(distanceX) : distanceX;
+
+            if (-DISCRETIZATION_D * 2 < distanceX && distanceX <= 0)
+            {
+                float relativeVelocityX = (goal.v_x >= 0) ? st.v_x : -st.v_x;
+
+                if (target_velocity == 0)
+                {
+                    if (target_velocity - DISCRETIZATION_V <= relativeVelocityX && relativeVelocityX < target_velocity + DISCRETIZATION_V)
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    if (target_velocity <= relativeVelocityX && relativeVelocityX < target_velocity + DISCRETIZATION_V * 2)
+                    {
+                        return true;
+                    }
+                }
             }
 
             return false;
@@ -225,7 +248,7 @@ namespace GeometryFriendsAgents
 
         }
 
-        public static void WriteQTable(float[,] QTable)
+        public static void WriteQTable(float[,] QTable, bool wait = true)
         {
 
             NumberFormatInfo nfi = new NumberFormatInfo
@@ -233,6 +256,11 @@ namespace GeometryFriendsAgents
                 NumberDecimalSeparator = ".",
                 NumberDecimalDigits = 5
             };
+
+            if (wait)
+            {
+                WaitForFile("Agents\\QTableRectangle.csv");
+            }
 
             using (var w = new StreamWriter("Agents\\QTableRectangle.csv"))
             {
@@ -257,6 +285,28 @@ namespace GeometryFriendsAgents
 
         }
 
+        public static void WaitForFile(string filename)
+        {
+            //This will lock the execution until the file is ready
+            //TODO: Add some logic to make it async and cancelable
+            while (!IsFileReady(filename)) { }
+        }
+
+        public static bool IsFileReady(string filename)
+        {
+            // If the file can be opened for exclusive access it means that the file
+            // is no longer locked by another process.
+            try
+            {
+                using (FileStream inputStream = File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.None))
+                    return inputStream.Length > 0;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
         public static void InitializeQTable()
         {
             float[,] new_qtable = new float[N_ROWS_QMAP, N_COLUMNS_QMAP];
@@ -269,7 +319,7 @@ namespace GeometryFriendsAgents
             //    }
             //}
 
-            WriteQTable(new_qtable);
+            WriteQTable(new_qtable, false);
         }
 
     }
